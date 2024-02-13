@@ -11,6 +11,8 @@ namespace MPCPlanner
 
         std::vector<DynamicObstacle> dynamic_obstacles;
         ReferencePath reference_path;
+
+        Eigen::Vector2d goal;
     };
 };
 #endif

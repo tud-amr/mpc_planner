@@ -85,8 +85,65 @@ namespace MPCPlanner
 	double Solver::getOutput(int k, std::string &&state_name)
 	{
 		if (k == 0)
-			return _output.x1[_model_map[state_name][1].as<int>()];
+			return _output.x01[_model_map[state_name][1].as<int>()];
 		if (k == 1)
-			return _output.x2[_model_map[state_name][1].as<int>()];
+			return _output.x02[_model_map[state_name][1].as<int>()];
+		if (k == 2)
+			return _output.x03[_model_map[state_name][1].as<int>()];
+		if (k == 3)
+			return _output.x04[_model_map[state_name][1].as<int>()];
+		if (k == 4)
+			return _output.x05[_model_map[state_name][1].as<int>()];
+		if (k == 5)
+			return _output.x06[_model_map[state_name][1].as<int>()];
+		if (k == 6)
+			return _output.x07[_model_map[state_name][1].as<int>()];
+		if (k == 7)
+			return _output.x08[_model_map[state_name][1].as<int>()];
+		if (k == 8)
+			return _output.x09[_model_map[state_name][1].as<int>()];
+		if (k == 9)
+			return _output.x10[_model_map[state_name][1].as<int>()];
+		if (k == 10)
+			return _output.x11[_model_map[state_name][1].as<int>()];
+		if (k == 11)
+			return _output.x12[_model_map[state_name][1].as<int>()];
+		if (k == 12)
+			return _output.x13[_model_map[state_name][1].as<int>()];
+		if (k == 13)
+			return _output.x14[_model_map[state_name][1].as<int>()];
+		if (k == 14)
+			return _output.x15[_model_map[state_name][1].as<int>()];
+		if (k == 15)
+			return _output.x16[_model_map[state_name][1].as<int>()];
+		if (k == 16)
+			return _output.x17[_model_map[state_name][1].as<int>()];
+		if (k == 17)
+			return _output.x18[_model_map[state_name][1].as<int>()];
+		if (k == 18)
+			return _output.x19[_model_map[state_name][1].as<int>()];
+		if (k == 19)
+			return _output.x20[_model_map[state_name][1].as<int>()];
+		// if (k == 20)
+		// 	return _output.x21[_model_map[state_name][1].as<int>()];
+		// if (k == 21)
+		// 	return _output.x22[_model_map[state_name][1].as<int>()];
+		// if (k == 22)
+		// 	return _output.x23[_model_map[state_name][1].as<int>()];
+		// if (k == 23)
+		// 	return _output.x24[_model_map[state_name][1].as<int>()];
+		// if (k == 24)
+		// 	return _output.x25[_model_map[state_name][1].as<int>()];
+		// if (k == 25)
+		// 	return _output.x26[_model_map[state_name][1].as<int>()];
+		// if (k == 26)
+		// 	return _output.x27[_model_map[state_name][1].as<int>()];
+		// if (k == 27)
+		// 	return _output.x28[_model_map[state_name][1].as<int>()];
+		// if (k == 28)
+		// 	return _output.x29[_model_map[state_name][1].as<int>()];
+		// if (k == 29)
+		// 	return _output.x30[_model_map[state_name][1].as<int>()];
+		// }
 	}
-};
+}; // namespace MPCPlanner

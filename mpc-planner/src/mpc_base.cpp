@@ -17,12 +17,9 @@ namespace MPCPlanner
   {
     if (k == 0)
       LOG_INFO("SetParameters()");
-    // LMPCC_INFO(logger_, "SetParameters()");
-
-    LOG_INFO(CONFIG("N"));
 
     // Set the parameters for the solver
-    _solver->setParameter(k, "acceleration", 0.0);
-    _solver->setParameter(k, "angular_velocity", 0.5);
+    _solver->setParameter(k, "acceleration", 0.05);
+    _solver->setParameter(k, "angular_velocity", 0.05);
   }
 };

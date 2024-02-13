@@ -150,8 +150,23 @@ class MPCBaseModule(ObjectiveModule):
 
         self.objectives.append(objective.WeightsObjective(settings))
     
+    # Add a variable that is weighted in the cost
     def weigh_variable(self, var_name, weight_names, **kwargs):
         self.objectives[0].add(var_name, weight_names, **kwargs)
+
+class GoalModule(ObjectiveModule):
+
+    """
+    Weight states and inputs of an MPC problem
+    """
+
+    def __init__(self, settings):
+        super().__init__()
+        self.module_name = "GoalModule"  # Needs to correspond to the c++ name of the module
+        self.import_name = "modules_objectives/goal_module.h"
+        self.description = "Tracks a goal in 2D"
+
+        self.objectives.append(objective.GoalObjective(settings))
 
 class ContouringModule(ObjectiveModule):
 

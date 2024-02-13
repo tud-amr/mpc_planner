@@ -10,12 +10,19 @@ endif()
 set(DEPENDENCIES
   mpc-planner
   mpc-planner-solver
+  ros_tools
+  rclcpp
+  nav_msgs
 )
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(mpc-planner REQUIRED)
 find_package(mpc-planner-solver REQUIRED)
+
+find_package(rclcpp REQUIRED)
+find_package(ros_tools REQUIRED)
+find_package(nav_msgs REQUIRED)
 
 include_directories(
   include
@@ -61,5 +68,14 @@ endif()
 
 install(TARGETS jackal_planner
   DESTINATION lib/${PROJECT_NAME})
+
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME})
+
+install(DIRECTORY config
+  DESTINATION share/${PROJECT_NAME})
+  
+install(DIRECTORY rviz
+  DESTINATION share/${PROJECT_NAME})
 
 ament_package()

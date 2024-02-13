@@ -68,6 +68,31 @@ class WeightsObjective(Objective):
         return cost
 
 
+class GoalObjective(Objective):
+
+    def __init__(self, settings):
+        pass
+
+    def define_parameters(self, params):
+        params.add("goal_weight")
+        params.add("goal_x")
+        params.add("goal_y")
+
+    def get_value(self, model, params, settings, stage_idx):
+        cost = 0
+        pos_x = model.get('x')
+        pos_y = model.get('y')
+
+        goal_weight = params.get("goal_weight")
+
+        goal_x = params.get('goal_x')
+        goal_y = params.get('goal_y')
+
+        cost += goal_weight * ((pos_x - goal_x) ** 2 + (pos_y - goal_y)**2) / (goal_x ** 2 + goal_y ** 2 + 0.01)#(model.system.upper_bound['x'] - model.system.lower_bound['x'])
+
+        return cost
+    
+
 class SplineXY:
 
     def __init__(self, param, spline_nr):
@@ -226,32 +251,6 @@ class PreviewObjective:
         return cost
 
 
-class GoalTrackingObjective:
-
-    def __init__(self, params, weight_list):
-        self.weight_list = weight_list
-
-        self.define_parameters(params)
-
-    def define_parameters(self, params):
-        self.weight_list.append('goal')
-
-        params.add_parameter("goal_x")
-        params.add_parameter("goal_y")
-
-    def get_value(self, z, model, settings, stage_idx):
-        cost = 0
-        pos_x = model.get_state(z, 'x', True)
-        pos_y = model.get_state(z, 'y', True)
-
-        goal_weight = getattr(settings.params, 'goal')
-
-        goal_x = getattr(settings.params, 'goal_x')
-        goal_y = getattr(settings.params, 'goal_y')
-
-        cost += goal_weight * ((pos_x - goal_x) ** 2 + (pos_y - goal_y)**2)
-
-        return cost
 
 class ReferenceVelocityObjective:
     """

@@ -6,6 +6,7 @@
 
 /** @todo Generate */
 #include <mpc-planner/mpc_base.h>
+#include <mpc-planner/goal_module.h>
 
 #include <mpc-planner-util/load_yaml.hpp>
 #include <mpc-planner-util/logging.h>
@@ -27,10 +28,12 @@ namespace MPCPlanner
         // Initialize modules
         _modules.emplace_back(nullptr);
         _modules.back() = std::make_shared<MPCBaseModule>(_solver, &_config);
+        _modules.emplace_back(nullptr);
+        _modules.back() = std::make_shared<GoalModule>(_solver, &_config);
     }
 
     // Given real-time data, solve the MPC problem
-    void Planner::SolveMPC(const State &state, const RealTimeData &data)
+    void Planner::solveMPC(const State &state, const RealTimeData &data)
     {
         // Check if all modules have enough data
         bool is_data_ready = true;
@@ -73,6 +76,11 @@ namespace MPCPlanner
 
         // Return the solution
         // return _solver;
+    }
+
+    double Planner::getSolution(int k, std::string &&var_name)
+    {
+        return _solver->getOutput(k, std::forward<std::string>(var_name));
     }
 
 };

@@ -38,6 +38,7 @@ add_library(${PROJECT_NAME}
 
   # ${MODULE_SOURCES}
   src/mpc_base.cpp
+  src/goal_module.cpp
   # src/modules_objectives/reference_path.cpp
 
   # src/interfaces/interface.cpp

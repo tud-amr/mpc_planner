@@ -10,7 +10,7 @@ sys.path.append(os.path.join(sys.path[0],'..','..', 'mpc-planner-solver-generato
 from util.files import load_settings, default_solver_path, solver_path
 from util.logging import print_value
 
-from control_modules import MPCBaseModule, ContouringModule, ModuleManager
+from control_modules import MPCBaseModule, ContouringModule, ModuleManager, GoalModule
 from generate_solver import generate_solver
 
 
@@ -20,6 +20,7 @@ def define_modules(settings) -> ModuleManager:
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
     
+    modules.add_module(GoalModule(settings))  # Track a goal
     # modules.add_module(ContouringModule(settings, num_segments=5))  # Adds weights to the overall weight list
 
     return modules

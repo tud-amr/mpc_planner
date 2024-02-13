@@ -27,6 +27,9 @@ namespace MPCPlanner
 
     virtual void setParameters(const RealTimeData &data, int k) override;
 
+    // Testing
+    bool isDataReady(const RealTimeData &data) override { return true; };
+
   private:
   };
 };
