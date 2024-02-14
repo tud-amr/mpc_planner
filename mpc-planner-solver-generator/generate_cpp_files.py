@@ -148,6 +148,7 @@ def generate_cpp_code(settings, model):
     for k in range(settings["N"]):
         header_file.write(f"\t\tif(k == {k})\n"
                        f"\t\t\treturn output.x{add_zero_below_10(k+1, N)}[var_index];\n")
+    header_file.write("throw std::runtime_error(\"Invalid k value for getForcesOutput\");\n")
     header_file.write("}\n\n")
         
         

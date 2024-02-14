@@ -2,9 +2,11 @@
 #ifndef __MODEL_H__
 #define __MODEL_H__
 
+#include <mpc-planner-solver/state.h>
+
 #include <mpc-planner-util/load_yaml.hpp>
-#include <vector>
-#include <iostream>
+// #include <vector>
+// #include <iostream>
 #include <memory>
 
 #include <Solver.h>
@@ -30,19 +32,6 @@ extern "C"
 
 namespace MPCPlanner
 {
-	struct State
-	{
-		State();
-
-		void initialize();
-		double get(std::string &&var_name) const;
-		void set(std::string &&var_name, double value);
-
-	private:
-		std::vector<double> _state;
-		YAML::Node _config, _model_map;
-	};
-
 	class Solver
 	{
 

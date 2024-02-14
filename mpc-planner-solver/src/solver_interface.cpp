@@ -9,29 +9,6 @@ extern "C"
 
 namespace MPCPlanner
 {
-
-	State::State()
-	{
-		loadConfigYaml(SYSTEM_CONFIG_PATH(__FILE__, "solver_settings"), _config);
-		loadConfigYaml(SYSTEM_CONFIG_PATH(__FILE__, "model_map"), _model_map);
-		initialize();
-	}
-
-	void State::initialize()
-	{
-		_state = std::vector<double>(_config["nx"].as<int>(), 0.0);
-	}
-
-	double State::get(std::string &&var_name) const
-	{
-		return _state[_model_map[var_name][1].as<int>()];
-	}
-
-	void State::set(std::string &&var_name, double value)
-	{
-		_state[_model_map[var_name][1].as<int>()] = value;
-	}
-
 	Solver::Solver(int solver_id)
 	{
 		_solver_id = solver_id;

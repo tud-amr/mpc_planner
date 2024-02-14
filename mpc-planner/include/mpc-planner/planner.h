@@ -18,7 +18,7 @@ namespace MPCPlanner
         Planner(const YAML::Node &config);
 
     public:
-        void solveMPC(const State &state, const RealTimeData &data);
+        bool solveMPC(const State &state, const RealTimeData &data);
         double getSolution(int k, std::string &&var_name);
 
         void visualize(const State &state, const RealTimeData &data);

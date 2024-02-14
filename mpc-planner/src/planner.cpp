@@ -34,8 +34,10 @@ namespace MPCPlanner
     }
 
     // Given real-time data, solve the MPC problem
-    void Planner::solveMPC(const State &state, const RealTimeData &data)
+    bool Planner::solveMPC(const State &state, const RealTimeData &data)
     {
+        bool success = true;
+
         // Check if all modules have enough data
         bool is_data_ready = true;
         for (auto &module : _modules)
@@ -44,16 +46,11 @@ namespace MPCPlanner
         if (!is_data_ready)
         {
             LOG_WARN("Data is not ready");
-            return;
+            return false;
         }
 
         // Set the initial guess
         _solver->setXinit(state);
-        // _solver->setXinit("x", state.get("x"));
-        // _solver->setXinit("y", state.get("y"));
-        // _solver->setXinit("psi", state.get("psi"));
-        // _solver->setXinit("v", state.get("v"));
-        // LOG_INFO("Initial guess: " << state.get("x") << ", " << state.get("y") << ", " << state.get("psi") << ", " << state.get("v"));
 
         // Update all modules
         for (auto &module : _modules)
@@ -68,16 +65,18 @@ namespace MPCPlanner
 
         // Solve MPC
         int exit_flag = _solver->solve();
-        LOG_VALUE("Exit Flag", exit_flag);
+
+        if (exit_flag != 1)
+        {
+            success = false;
+            LOG_WARN("MPC did not find a solution");
+            LOG_VALUE("Exit Flag", exit_flag); /** @todo: Convertion to text */
+        }
 
         // Verify that the solution is valid
         assert(exit_flag == 1);
 
-        // Print output
-        // LOG_INFO(_solver->getOutput(0, "a") << ", " << _solver->getOutput(0, "w") << ", " << _solver->getOutput(1, "x") << ", " << _solver->getOutput(1, "y"));
-
-        // Return the solution
-        // return _solver;
+        return success;
     }
 
     double Planner::getSolution(int k, std::string &&var_name)
@@ -87,6 +86,7 @@ namespace MPCPlanner
 
     void Planner::visualize(const State &state, const RealTimeData &data)
     {
+        
         for (auto &module : _modules)
             module->visualize(data);
 

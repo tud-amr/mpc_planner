@@ -45,10 +45,7 @@ void JackalPlanner::Loop()
     LOG_INFO("============= Loop =============");
 
     // Print the state
-    LOG_VALUE("State x  ", _state.get("x"));
-    LOG_VALUE("State y  ", _state.get("y"));
-    LOG_VALUE("State psi", _state.get("psi"));
-    LOG_VALUE("State v  ", _state.get("v"));
+    _state.print();
 
     _planner->solveMPC(_state, _data);
 
