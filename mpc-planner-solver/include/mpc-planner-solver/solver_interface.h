@@ -34,20 +34,9 @@ namespace MPCPlanner
 	{
 		State();
 
-		void initialize()
-		{
-			_state = std::vector<double>(_config["nx"].as<int>(), 0.0);
-		}
-
-		double get(std::string &&var_name) const
-		{
-			return _state[_model_map[var_name][1].as<int>()];
-		}
-
-		void set(std::string &&var_name, double value)
-		{
-			_state[_model_map[var_name][1].as<int>()] = value;
-		}
+		void initialize();
+		double get(std::string &&var_name) const;
+		void set(std::string &&var_name, double value);
 
 	private:
 		std::vector<double> _state;
@@ -90,6 +79,8 @@ namespace MPCPlanner
 		void setParameter(int k, std::string &&parameter, double value);
 		double getParameter(int k, std::string &&parameter);
 		void setXinit(std::string &&state_name, double value);
+		void setXinit(const State &state);
+
 		/** @brief Solve the optimization */
 		int solve();
 		double getOutput(int k, std::string &&state_name);

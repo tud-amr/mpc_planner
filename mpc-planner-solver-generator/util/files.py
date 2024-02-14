@@ -1,7 +1,7 @@
 import os, sys
 import yaml
 
-from util.logging import print_success, print_value
+from util.logging import print_success, print_value, print_path
 
 def get_base_path():
     return os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -25,10 +25,10 @@ def load_settings_path(setting_file_name="settings"):
 
 def load_settings(setting_file_name="settings"):
     path = load_settings_path(setting_file_name)
-    print_value("Settings file", path)
+    print_path("Settings", path, end="")
     with open(path, 'r') as stream:
         settings = yaml.safe_load(stream)
-    print_success(f"{setting_file_name} loaded")
+    print_success(f" -> loaded")
     return settings
 
 def default_solver_path(settings):
@@ -46,20 +46,14 @@ def model_map_path():
 def solver_settings_path():
     return os.path.join(save_config_path(), f"solver_settings.yaml")
 
-# def generated_files_path():
-#     return os.path.join(get_solver_package_path(), f"generated/")
+def generated_src_file(settings):
+    return os.path.join(solver_path(settings), f"mpc_planner_generated.cpp")
 
-# def generated_src_file(name):
-#     src_path = os.path.join(generated_files_path(), f"src/")
-#     os.makedirs(src_path, exist_ok=True)
-#     print(f"{src_path}{name}Solver.cpp")
-#     return f"{src_path}{name}Solver.cpp"
-
-# def generated_include_file(name):
-#     include_path = os.path.join(generated_files_path(), f"include/mpc-planner-{name.lower()}/")
-#     os.makedirs(include_path, exist_ok=True)
-#     print(f"{include_path}{name}Solver.h")
-#     return f"{include_path}{name}Solver.h"
+def generated_include_file(settings):
+    include_path = os.path.join(solver_path(settings), f"include/")
+    os.makedirs(include_path, exist_ok=True)
+    print_path("generated header", f"{include_path}mpc_planner_generated.h", tab=True, end="")
+    return f"{include_path}mpc_planner_generated.h"
 
 def solver_name(settings):
     # return settings["name"].capitalize() + "Solver"

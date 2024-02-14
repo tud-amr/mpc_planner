@@ -31,7 +31,10 @@ def open_function(h_file, cpp_file, function_header, optional_header_with_defaul
 def close_function(file):
     file.write(tabs(1) + "}\n\n")
 
-def add_zero_below_10(val):
+def add_zero_below_10(val, N) -> str:
+    if N < 9:
+        return str(val)
+    
     if val < 10:
         return "0" + str(val)
     else:

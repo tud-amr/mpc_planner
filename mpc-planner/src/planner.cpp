@@ -48,10 +48,11 @@ namespace MPCPlanner
         }
 
         // Set the initial guess
-        _solver->setXinit("x", state.get("x"));
-        _solver->setXinit("y", state.get("y"));
-        _solver->setXinit("psi", state.get("psi"));
-        _solver->setXinit("v", state.get("v"));
+        _solver->setXinit(state);
+        // _solver->setXinit("x", state.get("x"));
+        // _solver->setXinit("y", state.get("y"));
+        // _solver->setXinit("psi", state.get("psi"));
+        // _solver->setXinit("v", state.get("v"));
         // LOG_INFO("Initial guess: " << state.get("x") << ", " << state.get("y") << ", " << state.get("psi") << ", " << state.get("v"));
 
         // Update all modules

@@ -13,11 +13,17 @@ class bcolors:
     HEADER = BOLD
 
 
-def print_value(name, value, tab=False):
+def print_value(name, value, tab=False, **kwargs):
+
     if tab:
-        print(" " + bcolors.BOLD + bcolors.UNDERLINE + f"{name}" + bcolors.ENDC + f": {value}")
+        string = " "
     else:
-        print(bcolors.BOLD + bcolors.UNDERLINE + f"{name}" + bcolors.ENDC + f": {value}")
+        string = ""
+    
+    print(string + bcolors.BOLD + bcolors.UNDERLINE + f"{name}" + bcolors.ENDC + f": {value}", **kwargs)
+
+def print_path(name, value, tab=False, **kwargs):
+    print_value(name, os.path.abspath(value), tab, **kwargs)
 
 def print_success(msg):
     print(bcolors.BOLD + bcolors.OKGREEN + f"{msg}" + bcolors.ENDC)

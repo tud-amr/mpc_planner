@@ -4,260 +4,9 @@ import os
 import control_modules
 
 from util.code_generation import tabs, open_function, close_function, add_zero_below_10
-# from util.files import generated_src_file, generated_include_file, solver_name
+from util.files import generated_src_file, generated_include_file, solver_name
 
-
-# generated_h_path = os.path.dirname(os.path.abspath(__file__)) + "/../include/lmpcc_solver/"
-# generated_cpp_path = os.path.dirname(os.path.abspath(__file__)) + "/../src/"
-# generated_external_path = os.path.dirname(os.path.abspath(__file__)) + "/../../lmpcc/include/generated/"
-
-# if not os.path.exists(generated_cpp_path):
-#     os.makedirs(generated_cpp_path)
-# if not os.path.exists(generated_h_path):
-#     os.makedirs(generated_h_path)
-# if not os.path.exists(generated_external_path):
-#     os.makedirs(generated_external_path)
-
-
-
-
-
-# def write_bool(file, tab_level, var_name, var):
-#     file.write(tabs(tab_level))
-#     if var:
-#         file.write(var_name + " = true;\n")
-#     else:
-#         file.write(var_name + " = false;\n")
-
-
-# def write_interface_configuration(settings, model):
-#     file_path_config_header = generated_h_path + "InterfaceDefinition.h"
-#     config_header = open(file_path_config_header, "w")
-#     config_header.write("#ifndef INTERFACE_CONFIG_H\n"
-#                         "#define INTERFACE_CONFIG_H\n\n")
-
-#     # TO PREVENT ERRORS: we will assume that there is an interface with the same name if none is specified
-#     if (not hasattr(settings, 'interfaces') or len(settings.interfaces) == 0):
-#         print('No interfaces specified in settings.interfaces. Assuming an interface with name: {}!'.format(
-#             model.system.name))
-#         settings.interfaces = [model.system.name]
-
-#     for idx, interface in enumerate(settings.interfaces):
-#         # Keep if statement if there are more than one interface defined
-#         if len(settings.interfaces) > 1:
-#             config_header.write("#ifdef SYSTEM_" + interface + "\n")
-
-#         # Otherwise we only have one define, so we do not need the "if" statement
-#         config_header.write("#pragma message \"Configuration: " + interface + " (See SYSTEM_OF_USE in CMakeLists!)\"\n"
-#                                                                               "\t#include <lmpcc_" + model.system.name.lower() + "/" + interface.lower() + "_interface.h>\n"
-#                                                                                                                               "\t#define INTERFACE_CLASS " + interface + "Interface\n")
-
-#         if len(settings.interfaces) > 1:
-#             config_header.write("#endif\n")
-
-#     config_header.write("#endif\n")
-
-
-# def write_solver_configuration(settings, model):
-#     file_path_config_header = generated_h_path + "SolverDefinition.h"
-#     config_header = open(file_path_config_header, "w")
-#     config_header.write("#ifndef SOLVER_CONFIG_H\n"
-#                          "#define SOLVER_CONFIG_H\n\n")
-
-#     config_header.write("#define SOLVER SolverInterface\n"
-#                         "#define SOLVER_CAST(x) ((SolverInterface*)(&(*x)))\n")
-
-#     config_header.write("#endif\n")
-
-#     config_header.close()
-
-
-# def write_solver_include(settings, model):
-#     file_path_config_header = generated_h_path + "SolverInclude.h"
-#     config_header = open(file_path_config_header, "w")
-#     config_header.write("#ifndef SOLVER_INCLUDE_H\n"
-#                          "#define SOLVER_INCLUDE_H\n\n")
-
-#     config_header.write("#include <lmpcc_solver/" + model.system.name + "Solver.h>\n")
-
-#     config_header.write("#endif\n")
-
-#     config_header.close()
-
-# # Useful for triggering DVC updates after solver generation
-# def write_configuration_flag(settings):
-
-#     file_path_configuration = generated_external_path + "Configuration" + settings.config.name
-#     configuration_flag_file = open(file_path_configuration, "w")
-#     date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-#     configuration_flag_file.write("Configuration: " + settings.config.name + "\n")
-#     configuration_flag_file.write("hash: " + str(hash(settings)) + "\n") # Hash the settings (same when the settings do not change!)
-#     # configuration_flag_file.write("Generated: " + str(date_time))
-#     configuration_flag_file.close()
-
-# def write_current_configuration(settings):
-#     """
-#     Writes the current configuration to a file so that it can be checked by other code
-#     """
-#     file_path_configuration = generated_external_path + "CurrentConfiguration"
-#     configuration_flag_file = open(file_path_configuration, "w")
-
-#     configuration_flag_file.write(settings.config.name + "\n")
-#     configuration_flag_file.close()
-
-# def modify_package_xml_file(settings, model):
-#     """
-#     Writes module dependencies in the package.xml
-#     """
-#     line_start = "<!-- START SOLVER DEPENDENT -->"
-#     line_end = "<!-- END SOLVER DEPENDENT -->"
-    
-#     packagexml_path = generated_external_path + "../../package.xml"
-    
-#     # Create a list to store lines to append
-#     new_lines = []
-#     found_start = False
-#     found_end = False
-
-#     # Step 1: Open the file in read mode
-#     with open(packagexml_path, "r") as file:
-#         for line in file:
-#             # Step 3: Check if the current line matches the target line
-#             if line_start in line:
-#                 new_lines.append(line)
-#                 found_start = True  # Set the flag to True
-#                 for module in settings.modules.modules:
-#                     for dep in module.dependencies:
-#                         new_lines.append("\t<depend>" + dep + "</depend>\n")
-        
-#             if line_end in line:
-#                 found_end = True
-            
-#             if found_start and not found_end:
-#                 continue 
-            
-#             # If the target line hasn't been found, add it to the list
-#             new_lines.append(line)
-    
-#     # If nothing was out of place with the tags
-#     if found_start and found_end:
-#         print(f"\tpackage.xml ({os.path.abspath(packagexml_path)})")
-#         with open(packagexml_path, "w") as file:
-#             file.writelines(new_lines)
-
-
-# def write_cmake_file(settings, model):
-#     """
-#     Writes the module cmake dependencies to a file (to only compile used modules)
-#     """
-#     cmake_path = generated_external_path + "../../modules.cmake"
-#     cmake_file = open(cmake_path, "w")
-#     print(f"\tCMakelists.txt ({os.path.abspath(cmake_path)})")
-
-#     dependencies = []
-#     sources = []
-#     for module in settings.modules.modules:
-#         for dep in module.dependencies:
-#             dependencies.append(dep)
-        
-#         if hasattr(module, "import_name"):
-#             sources.append("src/" + module.import_name.replace(".h", ".cpp")) # The source file for the module
-#         for src in module.sources:
-#             sources.append(src)
-        
-#     for dep in dependencies:
-#         cmake_file.write(f"find_package({dep} REQUIRED)\n")
-
-#     cmake_file.write(f"\nset(MODULE_DEPENDENCIES\n")
-#     for dep in dependencies:
-#         cmake_file.write(f"\t{dep}\n")
-#     cmake_file.write(")\n\n")
-    
-#     cmake_file.write("set(MODULE_SOURCES\n")
-#     for src in sources:
-#         cmake_file.write(f"\t{src}\n")
-#     cmake_file.write(")")
-    
-#     cmake_file.close()
-
-# def write_module_file(settings, model):
-#     module_path = generated_external_path
-#     os.makedirs(module_path, exist_ok=True)
-#     module_file = open(module_path + "modules.h", "w")
-#     submodule_file = open(module_path + "submodules.h", "w")
-
-#     submodule_file.write("#ifndef __SUBMODULES__\n")
-#     submodule_file.write("#define __SUBMODULES__\n\n")
-
-#     # Import submodules
-#     for module in settings.modules.modules:
-#         if hasattr(module, 'submodules'):  # Add an import if defined
-#             for submodule in module.submodules:
-#                 # Quickly, check if there are not other modules with the same name
-#                 module_already_included = False
-#                 for module in settings.modules.modules:
-#                     if type(module) == type(submodule):
-#                         module_already_included = True
-#                         break
-#                 if module_already_included:
-#                     break
-
-#                 submodule_file.write("#include <" + submodule.import_name + ">\n")
-#     for module in settings.modules.modules:
-#         module.write_to_solver_interface(submodule_file)
-#     if (not settings.modules.contains_module(control_modules.HomotopyGuidanceConstraintModule)) and (not settings.modules.contains_module(control_modules.HomotopyGuidanceObjectiveModule)):
-#         submodule_file.write("#include <modules_constraints/ellipsoidal_constraints.h>\n")
-#         submodule_file.write("#define GUIDANCE_CONSTRAINTS_TYPE EllipsoidalConstraints\n")
-
-#     submodule_file.write("#endif")
-
-#     module_file.write("#ifndef __MODULES__\n")
-#     module_file.write("#define __MODULES__\n\n")
-
-#     # Import modules
-#     for module in settings.modules.modules:
-#         if hasattr(module, 'import_name'):  # Add an import if defined
-#             module_file.write("#include <" + module.import_name + ">\n")
-
-#     # Initialization of the modules
-#     module_file.write("inline void InitializeModules(std::vector<std::unique_ptr<ControllerModule>>& controller_modules, rclcpp::Node* node,\n\t std::shared_ptr<SolverInterface> solver, MPCConfiguration *config, VehicleRegion *vehicle){\n")
-
-#     for module in settings.modules.modules:
-#         if hasattr(module, 'import_name'): # Some modules may not have C++ components (if they depend on other modules)
-#             module_file.write("\t\tcontroller_modules.emplace_back(nullptr);\n"
-#                                 "\t\tcontroller_modules.back().reset(new " + module.module_name + "(node, solver, config, vehicle));\n")
-
-#     module_file.write("}\n")
-#     module_file.write("#endif")
-
-#     weight_file = open(generated_external_path + "weight_loader.h", "w")
-
-#     weight_file.write("#ifndef __WEIGHT_LOADER__\n")
-#     weight_file.write("#define __WEIGHT_LOADER__\n\n")
-#     # weight_file.write("#include <lmpcc_base/lmpcc_configuration.h>\n")
-#     # weight_file.write("#include <lmpcc/PredictiveControllerConfig.h>\n")
-#     # weight_file.write("#include <lmpcc_solver/SolverInclude.h>\n")
-#     # weight_file.write("#include <ros_tools/base_configuration.h>\n\n")
-
-#     # weight_file.write("class WeightLoader : public RosTools::BaseConfiguration\n{\npublic:\n")
-#     # weight_file.write("\tvoid WeightLoader::DeclareROSParameters(SolverInterface* solver, rclcpp::Node *node){\n")
-#     # for weight in settings.weight_list:
-#     #     weight_file.write("\t\tsolver->weights_." + weight + "_ = node->declare_parameter<double>(\"mpc_weights." + weight + "\");\n")
-    
-#     # weight_file.write("\n\t\tset_param_res_ = node->add_on_set_parameters_callback(\n"
-#     #   "\t\t\tstd::bind(&WeightLoader::UpdateROSParameters, this, std::placeholders::_1));\n")
-#     # weight_file.write("\t}\n")
-    
-#     # weight_file.write("\trcl_interfaces::msg::SetParametersResult WeightLoader::UpdateROSParameters(SolverInterface* solver, const std::vector<rclcpp::Parameter> &parameters){\n")
-#     # for weight in settings.weight_list:
-#     #     weight_file.write("\t\tupdateParam<double>(parameters, \"mpc_weights." + weight + "\", solver->weights_." + weight + ");\n")
-#     # weight_file.write("\t}\n")
-
-    
-#     # weight_file.write("};\n")
-#     weight_file.write("#endif")
-
+from util.logging import print_success
 
 def declare_forces(header_file, cpp_file, name, solver_name):
     header_file.write(\
@@ -375,7 +124,66 @@ def add_get_output(header_file, cpp_file, settings):
     # cpp_file.write("throw std::runtime_expc")
     close_function(cpp_file)
 
-def generate_cpp_code(settings, model):    
+def generate_cpp_code(settings, model):   
+    name = settings["name"].capitalize()
+    forces_solver_name = solver_name(settings)
+
+    header_file = open(generated_include_file(settings), "w")
+    # cpp_file = open(generated_src_file(settings), "w")
+    # cpp_file.write(f"#include \"mpc_planner_generated.h\"\n")
+
+    header_file.write("/** This file was autogenerated by the mpc-planner-solver package at " + datetime.datetime.now().strftime("%I:%M%p on %B %d, %Y") + "*/\n")
+
+    # IMPORTS
+    header_file.write(\
+        "#ifndef __MPC_PLANNER_GENERATED_H__\n"
+        "#define __MPC_PLANNER_GENERATED_H__\n\n"
+        "#include <Solver.h>\n\n")
+    
+    header_file.write("namespace MPCPlanner{\n\n")
+    # cpp_file.write("using namespace MPCPlanner;\n\n")
+         
+    N = settings["N"]
+    header_file.write(f"double getForcesOutput(const {forces_solver_name}_output& output, const int k, const int var_index){{\n")
+    for k in range(settings["N"]):
+        header_file.write(f"\t\tif(k == {k})\n"
+                       f"\t\t\treturn output.x{add_zero_below_10(k+1, N)}[var_index];\n")
+    header_file.write("}\n\n")
+        
+        
+    header_file.write("};\n#endif")
+    
+    print_success(" -> generated")
+    return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def generate_cpp_code_old(settings, model):    
     # print("Auto generated files:")
     # write_interface_configuration(settings, model)
     # write_solver_include(settings, model)

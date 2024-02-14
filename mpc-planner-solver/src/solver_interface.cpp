@@ -1,5 +1,7 @@
 #include "mpc-planner-solver/solver_interface.h"
 
+#include "mpc_planner_generated.h"
+
 extern "C"
 {
 	Solver_extfunc extfunc_eval_ = &Solver_adtool2forces;
@@ -13,6 +15,21 @@ namespace MPCPlanner
 		loadConfigYaml(SYSTEM_CONFIG_PATH(__FILE__, "solver_settings"), _config);
 		loadConfigYaml(SYSTEM_CONFIG_PATH(__FILE__, "model_map"), _model_map);
 		initialize();
+	}
+
+	void State::initialize()
+	{
+		_state = std::vector<double>(_config["nx"].as<int>(), 0.0);
+	}
+
+	double State::get(std::string &&var_name) const
+	{
+		return _state[_model_map[var_name][1].as<int>()];
+	}
+
+	void State::set(std::string &&var_name, double value)
+	{
+		_state[_model_map[var_name][1].as<int>()] = value;
 	}
 
 	Solver::Solver(int solver_id)
@@ -64,6 +81,20 @@ namespace MPCPlanner
 		_params.xinit[_model_map[state_name][1].as<int>() - nu] = value;
 	}
 
+	void Solver::setXinit(const State &state)
+	{
+		for (YAML::const_iterator it = _model_map.begin(); it != _model_map.end(); ++it)
+		{
+			if (it->second[0].as<std::string>() == "x")
+			{
+				// it->first.as<std::string>() is the variable name
+				setXinit(
+					it->first.as<std::string>(),
+					state.get(it->first.as<std::string>()));
+			}
+		}
+	}
+
 	void Solver::setVar(unsigned int k, std::string &&var_name, double value)
 	{
 		int index = _model_map[var_name][1].as<int>();
@@ -84,85 +115,6 @@ namespace MPCPlanner
 
 	double Solver::getOutput(int k, std::string &&state_name)
 	{
-		if (k == 0)
-			return _output.x01[_model_map[state_name][1].as<int>()];
-		if (k == 1)
-			return _output.x02[_model_map[state_name][1].as<int>()];
-		if (k == 2)
-			return _output.x03[_model_map[state_name][1].as<int>()];
-		if (k == 3)
-			return _output.x04[_model_map[state_name][1].as<int>()];
-		if (k == 4)
-			return _output.x05[_model_map[state_name][1].as<int>()];
-		if (k == 5)
-			return _output.x06[_model_map[state_name][1].as<int>()];
-		if (k == 6)
-			return _output.x07[_model_map[state_name][1].as<int>()];
-		if (k == 7)
-			return _output.x08[_model_map[state_name][1].as<int>()];
-		if (k == 8)
-			return _output.x09[_model_map[state_name][1].as<int>()];
-		if (k == 9)
-			return _output.x10[_model_map[state_name][1].as<int>()];
-		if (k == 10)
-			return _output.x11[_model_map[state_name][1].as<int>()];
-		if (k == 11)
-			return _output.x12[_model_map[state_name][1].as<int>()];
-		if (k == 12)
-			return _output.x13[_model_map[state_name][1].as<int>()];
-		if (k == 13)
-			return _output.x14[_model_map[state_name][1].as<int>()];
-		if (k == 14)
-			return _output.x15[_model_map[state_name][1].as<int>()];
-		if (k == 15)
-			return _output.x16[_model_map[state_name][1].as<int>()];
-		if (k == 16)
-			return _output.x17[_model_map[state_name][1].as<int>()];
-		if (k == 17)
-			return _output.x18[_model_map[state_name][1].as<int>()];
-		if (k == 18)
-			return _output.x19[_model_map[state_name][1].as<int>()];
-		if (k == 19)
-			return _output.x20[_model_map[state_name][1].as<int>()];
-		if (k == 20)
-			return _output.x21[_model_map[state_name][1].as<int>()];
-		if (k == 21)
-			return _output.x22[_model_map[state_name][1].as<int>()];
-		if (k == 22)
-			return _output.x23[_model_map[state_name][1].as<int>()];
-		if (k == 23)
-			return _output.x24[_model_map[state_name][1].as<int>()];
-		if (k == 24)
-			return _output.x25[_model_map[state_name][1].as<int>()];
-		if (k == 25)
-			return _output.x26[_model_map[state_name][1].as<int>()];
-		if (k == 26)
-			return _output.x27[_model_map[state_name][1].as<int>()];
-		if (k == 27)
-			return _output.x28[_model_map[state_name][1].as<int>()];
-		if (k == 28)
-			return _output.x29[_model_map[state_name][1].as<int>()];
-		if (k == 29)
-			return _output.x30[_model_map[state_name][1].as<int>()];
-		if (k == 30)
-			return _output.x31[_model_map[state_name][1].as<int>()];
-		if (k == 31)
-			return _output.x32[_model_map[state_name][1].as<int>()];
-		if (k == 32)
-			return _output.x33[_model_map[state_name][1].as<int>()];
-		if (k == 33)
-			return _output.x34[_model_map[state_name][1].as<int>()];
-		if (k == 34)
-			return _output.x35[_model_map[state_name][1].as<int>()];
-		if (k == 35)
-			return _output.x36[_model_map[state_name][1].as<int>()];
-		if (k == 36)
-			return _output.x37[_model_map[state_name][1].as<int>()];
-		if (k == 37)
-			return _output.x38[_model_map[state_name][1].as<int>()];
-		if (k == 38)
-			return _output.x39[_model_map[state_name][1].as<int>()];
-		if (k == 39)
-			return _output.x40[_model_map[state_name][1].as<int>()];
+		return getForcesOutput(_output, k, _model_map[state_name][1].as<int>());
 	}
 }; // namespace MPCPlanner

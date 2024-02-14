@@ -8,7 +8,7 @@ import sys, os
 sys.path.append(os.path.join(sys.path[0],'..','..', 'mpc-planner-solver-generator'))
 
 from util.files import load_settings, default_solver_path, solver_path
-from util.logging import print_value
+from util.logging import print_value, print_path, print_success
 
 from control_modules import MPCBaseModule, ContouringModule, ModuleManager, GoalModule
 from generate_solver import generate_solver
@@ -30,5 +30,6 @@ modules = define_modules(settings)
 
 generate_solver(modules, settings)
 
-print_value("Solver generated at", solver_path(settings), tab=True)
+print_path("Solver path", solver_path(settings), tab=True, end="")
+print_success(" -> generated")
 

@@ -1,5 +1,5 @@
 name: "jackal"
-N: 40
+N: 20
 integrator_step: 0.05
 
 # solver: "acados" # acados or forces

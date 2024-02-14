@@ -43,14 +43,14 @@ def generate_solver(modules=None, settings=None):
     solver_settings['npar'] = settings["params"].length()
 
     # Print settings
-    print_value("N", settings["N"], tab=True)
-    print_value("integrator step", settings["integrator_step"], tab=True)
-    print_success("Done!")
+    # print_value("N", settings["N"], tab=True)
+    # print_value("integrator step", settings["integrator_step"], tab=True)
+    # print_success("Done!")
 
     path = solver_settings_path()
     write_to_yaml(path, solver_settings)
 
-    # generate_cpp_code(settings, model)
+    generate_cpp_code(settings, model)
 
     return solver, simulator
 

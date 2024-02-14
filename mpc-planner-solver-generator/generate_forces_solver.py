@@ -10,7 +10,7 @@ import forcespro.nlp
 import numpy as np
 
 from util.files import solver_name, solver_path, default_solver_path
-from util.logging import print_value, print_success
+from util.logging import print_value, print_success, print_header
 from util.parameters import Parameters
 
 import solver_model
@@ -97,7 +97,10 @@ def generate_forces_solver(modules, settings, model):
     options.init = 2 # Warmstart with specified primal variables!
 
     # Creates code for symbolic model formulation given above, then contacts server to generate new solver
+    print_header("Generating solver")
     generated_solver = solver.generate_solver(options)
+    print_header("Output")
+    
     if os.path.exists(solver_path(settings)) and os.path.isdir(solver_path(settings)): # Remove solver if it exists at the destination
         shutil.rmtree(solver_path(settings))
     shutil.move(default_solver_path(settings), solver_path(settings))  # Move the solver to this directory

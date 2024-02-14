@@ -2,6 +2,7 @@
 #define JACKAL_PLANNER_H
 
 #include <mpc-planner/planner.h>
+
 #include <mpc-planner-solver/solver_interface.h>
 
 #include <mpc-planner-types/realtime_data.h>
@@ -17,6 +18,7 @@
 #include <memory>
 
 using namespace MPCPlanner;
+
 
 class JackalPlanner : public rclcpp::Node
 {
