@@ -124,26 +124,45 @@ namespace MPCPlanner
 			return _output.x19[_model_map[state_name][1].as<int>()];
 		if (k == 19)
 			return _output.x20[_model_map[state_name][1].as<int>()];
-		// if (k == 20)
-		// 	return _output.x21[_model_map[state_name][1].as<int>()];
-		// if (k == 21)
-		// 	return _output.x22[_model_map[state_name][1].as<int>()];
-		// if (k == 22)
-		// 	return _output.x23[_model_map[state_name][1].as<int>()];
-		// if (k == 23)
-		// 	return _output.x24[_model_map[state_name][1].as<int>()];
-		// if (k == 24)
-		// 	return _output.x25[_model_map[state_name][1].as<int>()];
-		// if (k == 25)
-		// 	return _output.x26[_model_map[state_name][1].as<int>()];
-		// if (k == 26)
-		// 	return _output.x27[_model_map[state_name][1].as<int>()];
-		// if (k == 27)
-		// 	return _output.x28[_model_map[state_name][1].as<int>()];
-		// if (k == 28)
-		// 	return _output.x29[_model_map[state_name][1].as<int>()];
-		// if (k == 29)
-		// 	return _output.x30[_model_map[state_name][1].as<int>()];
-		// }
+		if (k == 20)
+			return _output.x21[_model_map[state_name][1].as<int>()];
+		if (k == 21)
+			return _output.x22[_model_map[state_name][1].as<int>()];
+		if (k == 22)
+			return _output.x23[_model_map[state_name][1].as<int>()];
+		if (k == 23)
+			return _output.x24[_model_map[state_name][1].as<int>()];
+		if (k == 24)
+			return _output.x25[_model_map[state_name][1].as<int>()];
+		if (k == 25)
+			return _output.x26[_model_map[state_name][1].as<int>()];
+		if (k == 26)
+			return _output.x27[_model_map[state_name][1].as<int>()];
+		if (k == 27)
+			return _output.x28[_model_map[state_name][1].as<int>()];
+		if (k == 28)
+			return _output.x29[_model_map[state_name][1].as<int>()];
+		if (k == 29)
+			return _output.x30[_model_map[state_name][1].as<int>()];
+		if (k == 30)
+			return _output.x31[_model_map[state_name][1].as<int>()];
+		if (k == 31)
+			return _output.x32[_model_map[state_name][1].as<int>()];
+		if (k == 32)
+			return _output.x33[_model_map[state_name][1].as<int>()];
+		if (k == 33)
+			return _output.x34[_model_map[state_name][1].as<int>()];
+		if (k == 34)
+			return _output.x35[_model_map[state_name][1].as<int>()];
+		if (k == 35)
+			return _output.x36[_model_map[state_name][1].as<int>()];
+		if (k == 36)
+			return _output.x37[_model_map[state_name][1].as<int>()];
+		if (k == 37)
+			return _output.x38[_model_map[state_name][1].as<int>()];
+		if (k == 38)
+			return _output.x39[_model_map[state_name][1].as<int>()];
+		if (k == 39)
+			return _output.x40[_model_map[state_name][1].as<int>()];
 	}
 }; // namespace MPCPlanner

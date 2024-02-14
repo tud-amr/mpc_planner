@@ -19,7 +19,7 @@ namespace MPCPlanner
       LOG_INFO("SetParameters()");
 
     // Set the parameters for the solver
-    _solver->setParameter(k, "acceleration", 0.05);
-    _solver->setParameter(k, "angular_velocity", 0.05);
+    _solver->setParameter(k, "acceleration", CONFIG("acceleration_weight").as<double>());
+    _solver->setParameter(k, "angular_velocity", CONFIG("angular_velocity_weight").as<double>());
   }
 };

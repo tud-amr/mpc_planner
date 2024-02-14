@@ -10,6 +10,7 @@
 
 #include <mpc-planner-util/load_yaml.hpp>
 #include <mpc-planner-util/logging.h>
+#include <mpc-planner-util/visuals.h>
 
 #include <iostream>
 
@@ -51,7 +52,7 @@ namespace MPCPlanner
         _solver->setXinit("y", state.get("y"));
         _solver->setXinit("psi", state.get("psi"));
         _solver->setXinit("v", state.get("v"));
-        LOG_INFO("Initial guess: " << state.get("x") << ", " << state.get("y") << ", " << state.get("psi") << ", " << state.get("v"));
+        // LOG_INFO("Initial guess: " << state.get("x") << ", " << state.get("y") << ", " << state.get("psi") << ", " << state.get("v"));
 
         // Update all modules
         for (auto &module : _modules)
@@ -72,7 +73,7 @@ namespace MPCPlanner
         assert(exit_flag == 1);
 
         // Print output
-        LOG_INFO(_solver->getOutput(0, "a") << ", " << _solver->getOutput(0, "w") << ", " << _solver->getOutput(1, "x") << ", " << _solver->getOutput(1, "y"));
+        // LOG_INFO(_solver->getOutput(0, "a") << ", " << _solver->getOutput(0, "w") << ", " << _solver->getOutput(1, "x") << ", " << _solver->getOutput(1, "y"));
 
         // Return the solution
         // return _solver;
@@ -81,6 +82,28 @@ namespace MPCPlanner
     double Planner::getSolution(int k, std::string &&var_name)
     {
         return _solver->getOutput(k, std::forward<std::string>(var_name));
+    }
+
+    void Planner::visualize(const State &state, const RealTimeData &data)
+    {
+        for (auto &module : _modules)
+            module->visualize(data);
+
+        // Visualize the trajectory
+        auto &publisher = VISUALS.getPublisher("planned_trajectory");
+
+        auto &cylinder = publisher.getNewPointMarker("CYLINDER");
+        cylinder.setScale(2. * _config["robot_radius"].as<double>(), 2. * _config["robot_radius"].as<double>(), 0.01); // Replace with robot size
+        cylinder.setColorInt(0, 0.4);
+
+        Trajectory output_trajectory(_solver->dt, _solver->N);
+        for (int k = 0; k < _solver->N; k++)
+            output_trajectory.add(_solver->getOutput(k, "x"), _solver->getOutput(k, "y"));
+
+        for (int k = 0; k < _solver->N; k++)
+            cylinder.addPointMarker(output_trajectory.position[k]);
+
+        publisher.publish();
     }
 
 };

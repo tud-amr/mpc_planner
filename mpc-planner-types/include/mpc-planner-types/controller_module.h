@@ -35,7 +35,7 @@ namespace MPCPlanner
          * python code.
          */
         ControllerModule(std::shared_ptr<Solver> solver, YAML::Node *config, ModuleType module_type, const std::string &&module_name)
-            : _solver(solver), _config(config), type(module_type)
+            : _solver(solver), _config(config), type(module_type), _name(module_name)
         {
         }
 
@@ -50,7 +50,7 @@ namespace MPCPlanner
         virtual void setParameters(const RealTimeData &data, int k){};
 
         /** @brief Visualize the computations in this module */
-        virtual void visualize(){};
+        virtual void visualize(const RealTimeData &data){};
 
         /** ==== OPTIONAL FUNCTIONS ==== */
         /** @brief Check if the realtime data is complete for this module */
@@ -94,6 +94,7 @@ namespace MPCPlanner
     protected:
         YAML::Node *_config; /* Configuration parameters */
         std::shared_ptr<Solver> _solver;
+        std::string _name;
     };
 };
 #endif

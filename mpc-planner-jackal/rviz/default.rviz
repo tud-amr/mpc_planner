@@ -3,7 +3,9 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+      Expanded:
+        - /Odometry1
+        - /Odometry1/Shape1
       Splitter Ratio: 0.5
     Tree Height: 1112
   - Class: rviz_common/Selection
@@ -47,7 +49,7 @@ Visualization Manager:
       Value: false
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
-      Name: MarkerArray
+      Name: Pedestrians
       Namespaces:
         "": true
       Topic:
@@ -111,7 +113,7 @@ Visualization Manager:
         Color: 255; 25; 0
         Head Length: 0.30000001192092896
         Head Radius: 0.10000000149011612
-        Shaft Length: 1
+        Shaft Length: 0.10000000149011612
         Shaft Radius: 0.05000000074505806
         Value: Arrow
       Topic:
@@ -133,6 +135,30 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /pedestrian_simulator/static_obstacles
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Goal Module
+      Namespaces:
+        "": true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /jackal_planner/goal_module
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /jackal_planner/planned_trajectory
       Value: true
   Enabled: true
   Global Options:
@@ -195,7 +221,7 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7503980398178101
+      Pitch: 0.7453980445861816
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
       Yaw: 3.5753982067108154

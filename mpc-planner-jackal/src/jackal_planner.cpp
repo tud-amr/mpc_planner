@@ -1,5 +1,6 @@
 #include <mpc-planner-jackal/jackal_planner.h>
 
+#include <mpc-planner-util/visuals.h>
 #include <ros_tools/helpers.h>
 
 using namespace MPCPlanner;
@@ -59,6 +60,8 @@ void JackalPlanner::Loop()
     LOG_VALUE("Commanded w", cmd.angular.z);
     _cmd_pub->publish(cmd);
 
+    _planner->visualize(_state, _data);
+
     LOG_INFO("============= End Loop =============");
 }
 
@@ -68,7 +71,7 @@ void JackalPlanner::stateCallback(nav_msgs::msg::Odometry::SharedPtr msg)
     _state.set("x", msg->pose.pose.position.x);
     _state.set("y", msg->pose.pose.position.y);
     _state.set("psi", RosTools::quaternionToAngle(msg->pose.pose.orientation));
-    _state.set("v", msg->twist.twist.linear.x);
+    _state.set("v", std::sqrt(std::pow(msg->twist.twist.linear.x, 2.) + std::pow(msg->twist.twist.linear.y, 2.)));
 }
 
 void JackalPlanner::goalCallback(geometry_msgs::msg::PoseStamped::SharedPtr msg)
@@ -76,6 +79,7 @@ void JackalPlanner::goalCallback(geometry_msgs::msg::PoseStamped::SharedPtr msg)
     LOG_INFO("Goal callback");
     _data.goal(0) = msg->pose.position.x;
     _data.goal(1) = msg->pose.position.y;
+    _data.goal_received = true;
 }
 
 int main(int argc, char **argv)
@@ -83,6 +87,7 @@ int main(int argc, char **argv)
     rclcpp::init(argc, argv);
 
     auto jackal_planner = std::make_shared<JackalPlanner>();
+    VISUALS.init(jackal_planner.get());
 
     rclcpp::spin(jackal_planner);
 

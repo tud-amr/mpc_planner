@@ -52,6 +52,27 @@ namespace MPCPlanner
             return out;
         }
     };
+
+    struct Trajectory
+    {
+        double dt;
+        std::vector<Eigen::Vector2d> position;
+
+        Trajectory(double dt, int length = 10) : dt(dt)
+        {
+            position.reserve(length);
+        };
+
+        void add(const Eigen::Vector2d &p)
+        {
+            position.push_back(p);
+        }
+
+        void add(const double x, const double y)
+        {
+            position.push_back(Eigen::Vector2d(x, y));
+        }
+    };
 };
 
 #endif

@@ -19,8 +19,10 @@ find_package(yaml-cpp REQUIRED)
 if(MPC_PLANNER_ROS STREQUAL "2")
   # message("MPC_PLANNER_ROS 2")
   find_package(rclcpp REQUIRED)
+  find_package(ros_tools REQUIRED)
   list(APPEND DEPENDENCIES 
     rclcpp
+    ros_tools
   )
 endif()
 
@@ -37,7 +39,7 @@ target_include_directories(${PROJECT_NAME} INTERFACE
   "$<INSTALL_INTERFACE:include>"
 )
 target_link_libraries(${PROJECT_NAME} INTERFACE ${YAML_CPP_LIBRARIES})
-ament_target_dependencies(${PROJECT_NAME} INTERFACE)
+ament_target_dependencies(${PROJECT_NAME} INTERFACE ${DEPENDENCIES})
 
 
 if(BUILD_TESTING)

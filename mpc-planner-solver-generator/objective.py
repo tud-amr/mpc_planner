@@ -61,7 +61,9 @@ class WeightsObjective(Objective):
                 weights.append(params.get(cost_weight))
 
             variable = model.get(self._variables_per_function[idx])  # Retrieve the state / input to be weighted
-            
+            _, _, var_range = model.get_bounds(self._variables_per_function[idx])
+            variable = variable / var_range  # Normalize the variable
+
             # Add to the cost
             cost += cost_function(variable, weights)
 
@@ -80,15 +82,17 @@ class GoalObjective(Objective):
 
     def get_value(self, model, params, settings, stage_idx):
         cost = 0
-        pos_x = model.get('x')
-        pos_y = model.get('y')
+        
+        if stage_idx == settings["N"] - 1:
+            pos_x = model.get('x')
+            pos_y = model.get('y')
 
-        goal_weight = params.get("goal_weight")
+            goal_weight = params.get("goal_weight")
 
-        goal_x = params.get('goal_x')
-        goal_y = params.get('goal_y')
+            goal_x = params.get('goal_x')
+            goal_y = params.get('goal_y')
 
-        cost += goal_weight * ((pos_x - goal_x) ** 2 + (pos_y - goal_y)**2) / (goal_x ** 2 + goal_y ** 2 + 0.01)#(model.system.upper_bound['x'] - model.system.lower_bound['x'])
+            cost += goal_weight * ((pos_x - goal_x) ** 2 + (pos_y - goal_y)**2) / (goal_x ** 2 + goal_y ** 2 + 0.01)#(model.system.upper_bound['x'] - model.system.lower_bound['x'])
 
         return cost
     

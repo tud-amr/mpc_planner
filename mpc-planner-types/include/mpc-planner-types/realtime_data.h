@@ -13,6 +13,7 @@ namespace MPCPlanner
         ReferencePath reference_path;
 
         Eigen::Vector2d goal;
+        bool goal_received{false};
     };
 };
 #endif

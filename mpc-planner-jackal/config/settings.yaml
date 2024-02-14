@@ -1,5 +1,5 @@
 name: "jackal"
-N: 20
+N: 40
 integrator_step: 0.05
 
 # solver: "acados" # acados or forces
@@ -7,10 +7,16 @@ solver: "forces" # acados or forces
 
 control_frequency: 20
 num_obstacles: 3
+robot_radius: 0.325
 obstacle_radius: 0.725
 
+# New weights, to be improved
+goal_weight: 10.
+acceleration_weight: 0.05
+angular_velocity_weight: 0.05
+
 weights:
-  goal: 5.
+  goal: 50.
   velocity: 0.02
   acceleration: 0.05
   rotational_velocity: 2. #0.05
