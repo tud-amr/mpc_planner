@@ -40,6 +40,8 @@ namespace MPCPlanner
 
   private:
     std::unique_ptr<Spline2D> _spline{nullptr};
+
+    int _closest_segment{0};
   };
 };
 #endif // __CONTOURING_H_

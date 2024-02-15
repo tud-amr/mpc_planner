@@ -11,14 +11,14 @@ robot_radius: 0.325
 obstacle_radius: 0.725
 
 contouring:
-  num_segments: 5
+  num_segments: 3
   contour: 2.
-  lag: 0.1
+  lag: 0.2
 
 weights:
   goal: 10.
-  velocity: 2.0 #0.3
-  acceleration: 0.05
+  velocity: 3.
+  acceleration: 0.02
   angular_velocity: 0.05 #0.05
 
 reference_velocity: 2.

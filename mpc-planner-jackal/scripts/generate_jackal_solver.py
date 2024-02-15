@@ -27,7 +27,7 @@ def define_modules(settings) -> ModuleManager:
     base_module.weigh_variable(var_name="v", weight_names=["velocity", "reference_velocity"], cost_function=lambda x, w, r: w[0] * (x - w[1]) ** 2 / r**2)
     
     # modules.add_module(GoalModule(settings))  # Track a goal
-    modules.add_module(ContouringModule(settings, num_segments=5))  # Adds weights to the overall weight list
+    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))  # Adds weights to the overall weight list
 
     return modules
 

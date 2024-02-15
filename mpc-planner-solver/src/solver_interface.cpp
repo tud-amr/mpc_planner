@@ -1,5 +1,7 @@
 #include "mpc-planner-solver/solver_interface.h"
 
+#include <mpc-planner-util/logging.h>
+
 #include "mpc_planner_generated.h"
 
 extern "C"
@@ -55,6 +57,7 @@ namespace MPCPlanner
 
 	void Solver::setXinit(std::string &&state_name, double value)
 	{
+		LOG_INFO("set " << state_name << " to " << value);
 		_params.xinit[_model_map[state_name][1].as<int>() - nu] = value;
 	}
 

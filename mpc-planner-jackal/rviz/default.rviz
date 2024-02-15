@@ -164,7 +164,7 @@ Visualization Manager:
       Enabled: true
       Name: Reference Path
       Namespaces:
-        "": true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -184,6 +184,54 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /roadmap/reference_visual
       Value: false
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Current
+      Namespaces:
+        "": true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /jackal_planner/contouring/current
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Path
+      Namespaces:
+        "": true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /jackal_planner/contouring/path
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Points
+      Namespaces:
+        "": true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /jackal_planner/contouring/points
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /jackal_planner/angle
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255
@@ -230,25 +278,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 41.87324523925781
+      Distance: 48.49747085571289
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 11.237320899963379
-        Y: -4.431984901428223
-        Z: -0.01121068000793457
+        X: 4.157172679901123
+        Y: 3.0004420280456543
+        Z: -7.848658561706543
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.9903979897499084
+      Pitch: 1.030397653579712
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.4403984546661377
+      Yaw: 3.7153992652893066
     Saved: ~
 Window Geometry:
   Displays:

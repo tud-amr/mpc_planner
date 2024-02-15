@@ -3,6 +3,7 @@ sys.path.append(os.path.join(sys.path[0],'..','..', 'mpc-planner-solver-generato
 
 # import numpy as np
 import casadi as cd
+import numpy as np
 
 from control_modules import ObjectiveModule
 from objective import Objective
@@ -25,7 +26,7 @@ class SplineXY:
         
         self.s_start = param.get(f"spline{spline_nr}_start")
 
-    def compute_path(self, spline_index):
+    def compute_point(self, spline_index):
         self.path_x = self.x_a * (spline_index - self.s_start) ** 3 + \
                       self.x_b * (spline_index - self.s_start) ** 2 + \
                       self.x_c * (spline_index - self.s_start) + \
@@ -85,11 +86,11 @@ class ContouringObjective:
         lambdas = []  # Merges splines
         for i in range(self.num_segments):
             splines.append(SplineXY(params, i))
-            splines[-1].compute_path(s)
+            splines[-1].compute_point(s)
 
             # No lambda for the first segment (it is not glued to anything prior)
             if i > 0:
-                lambdas.append(1. / (1. + cd.exp((s - splines[-1].s_start + 0.02) / 0.1)))  # Sigmoid
+                lambdas.append(1. / (1. + np.exp((s - splines[-1].s_start + 0.02) / 0.1)))  # Sigmoid
 
         # We iteratively glue paths together here (start with the last path)
         path_x = splines[-1].path_x
@@ -103,7 +104,7 @@ class ContouringObjective:
             path_dx = lambdas[k - 1] * splines[k-1].path_dx + (1. - lambdas[k - 1]) * path_dx
             path_dy = lambdas[k - 1] * splines[k-1].path_dy + (1. - lambdas[k - 1]) * path_dy
 
-        path_norm = cd.sqrt(path_dx ** 2 + path_dy ** 2)
+        path_norm = np.sqrt(path_dx ** 2 + path_dy ** 2)
         path_dx_normalized = path_dx / path_norm
         path_dy_normalized = path_dy / path_norm
 

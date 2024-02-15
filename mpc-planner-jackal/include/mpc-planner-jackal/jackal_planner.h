@@ -46,6 +46,8 @@ private:
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr _cmd_pub;
 
     bool isPathTheSame(nav_msgs::msg::Path::SharedPtr path);
+
+    void visualize();
 };
 
 #endif // JACKAL_PLANNER_H

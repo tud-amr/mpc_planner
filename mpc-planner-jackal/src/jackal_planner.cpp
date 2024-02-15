@@ -81,6 +81,7 @@ void JackalPlanner::Loop()
     _cmd_pub->publish(cmd);
 
     _planner->visualize(_state, _data);
+    visualize();
 
     LOG_DEBUG("============= End Loop =============");
 }
@@ -134,6 +135,16 @@ void JackalPlanner::pathCallback(nav_msgs::msg::Path::SharedPtr msg)
     }
     _data.reference_path.psi.push_back(0.0);
     _planner->onDataReceived(_data, "reference_path");
+}
+
+void JackalPlanner::visualize()
+{
+    auto &publisher = VISUALS.getPublisher("angle");
+    auto &line = publisher.getNewLine();
+
+    line.addLine(Eigen::Vector2d(_state.get("x"), _state.get("y")),
+                 Eigen::Vector2d(_state.get("x") + 1.0 * std::cos(_state.get("psi")), _state.get("y") + 1.0 * std::sin(_state.get("psi"))));
+    publisher.publish();
 }
 
 int main(int argc, char **argv)

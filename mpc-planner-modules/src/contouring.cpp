@@ -23,10 +23,9 @@ namespace MPCPlanner
     }
     // Get the closest point
     double closest_s;
-    int closest_segment;
 
     // Update the closest point
-    _spline->findClosestPoint(Eigen::Vector2d(state.get("x"), state.get("y")), closest_segment, closest_s);
+    _spline->findClosestPoint(Eigen::Vector2d(state.get("x"), state.get("y")), _closest_segment, closest_s);
 
     state.set("spline", closest_s); // We need to initialize the spline state here
   }
@@ -56,6 +55,7 @@ namespace MPCPlanner
       }
       else
       {
+        LOG_WARN("Beyond the spline");
         // If we are beyond the spline, we should use the last spline
         _spline->getParameters(_spline->numSegments() - 1,
                                ax, bx, cx, dx,
@@ -119,11 +119,27 @@ namespace MPCPlanner
     if (_spline.get() == nullptr)
       return;
 
-    // Visualize the points
+    // Visualize the current points
+    auto &publisher_current = VISUALS.getPublisher(_name + "/current");
+    auto &cur_point = publisher_current.getNewPointMarker("CUBE");
+    cur_point.setColorInt(10);
+    cur_point.setScale(0.3, 0.3, 0.3);
+    cur_point.addPointMarker(_spline->getPoint(_spline->getStartOfSegment(_closest_segment)), 0.0);
+    publisher_current.publish();
 
-    // Visualize the spline
-    auto &publisher = VISUALS.getPublisher(_name);
-    auto &line = publisher.getNewLine();
+    // Visualize the points
+    auto &publisher_points = VISUALS.getPublisher(_name + "/points");
+    auto &point = publisher_points.getNewPointMarker("CYLINDER");
+    point.setColor(0., 0., 0.);
+    point.setScale(0.15, 0.15, 0.05);
+
+    for (size_t p = 0; p < data.reference_path.x.size(); p++)
+      point.addPointMarker(Eigen::Vector3d(data.reference_path.x[p], data.reference_path.y[p], 0.1));
+    publisher_points.publish();
+
+    // Visualize the path
+    auto &publisher_path = VISUALS.getPublisher(_name + "/path");
+    auto &line = publisher_path.getNewLine();
     line.setColorInt(5);
     line.setScale(0.1);
 
@@ -136,7 +152,7 @@ namespace MPCPlanner
       p = _spline->getPoint(s);
     }
 
-    publisher.publish();
+    publisher_path.publish();
   }
 
 };
