@@ -8,7 +8,7 @@ namespace MPCPlanner
   class GoalModule : public ControllerModule
   {
   public:
-    GoalModule(std::shared_ptr<Solver> solver, YAML::Node *config);
+    GoalModule(std::shared_ptr<Solver> solver);
 
   public:
     virtual void update(const RealTimeData &data) override;
@@ -16,7 +16,7 @@ namespace MPCPlanner
     virtual void setParameters(const RealTimeData &data, int k) override;
 
     // Testing
-    bool isDataReady(const RealTimeData &data) override { return true; };
+    bool isDataReady(const RealTimeData &data, std::string &missing_data) override;
 
     void visualize(const RealTimeData &data) override;
 

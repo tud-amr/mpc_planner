@@ -20,15 +20,12 @@ namespace MPCPlanner
   class MPCBaseModule : public ControllerModule
   {
   public:
-    MPCBaseModule(std::shared_ptr<Solver> solver, YAML::Node *config);
+    MPCBaseModule(std::shared_ptr<Solver> solver);
 
   public:
     virtual void update(const RealTimeData &data) override;
 
     virtual void setParameters(const RealTimeData &data, int k) override;
-
-    // Testing
-    bool isDataReady(const RealTimeData &data) override { return true; };
 
   private:
   };

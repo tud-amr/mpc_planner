@@ -4,7 +4,6 @@
 #include <mpc-planner-types/realtime_data.h>
 #include <mpc-planner-solver/solver_interface.h>
 
-#include <mpc-planner-util/parameters.h>
 #include <mpc-planner-util/logging.h>
 
 #include <memory>
@@ -34,8 +33,8 @@ namespace MPCPlanner
          * @brief Construct a new Controller Module object. Note that controller module initialization happens in the solver class itself based on the
          * python code.
          */
-        ControllerModule(std::shared_ptr<Solver> solver, YAML::Node *config, ModuleType module_type, const std::string &&module_name)
-            : _solver(solver), _config(config), type(module_type), _name(module_name)
+        ControllerModule(std::shared_ptr<Solver> solver, ModuleType module_type, const std::string &&module_name)
+            : _solver(solver), type(module_type), _name(module_name)
         {
         }
 
@@ -54,7 +53,7 @@ namespace MPCPlanner
 
         /** ==== OPTIONAL FUNCTIONS ==== */
         /** @brief Check if the realtime data is complete for this module */
-        virtual bool isDataReady(const RealTimeData &data) { return true; }; // Default: true
+        virtual bool isDataReady(const RealTimeData &data, std::string& missing_data) { return true; }; // Default: true
 
         /**
          * @brief Check if the objective of this module was reached
@@ -92,7 +91,6 @@ namespace MPCPlanner
         ModuleType type; /* Constraint or Objective type */
 
     protected:
-        YAML::Node *_config; /* Configuration parameters */
         std::shared_ptr<Solver> _solver;
         std::string _name;
     };

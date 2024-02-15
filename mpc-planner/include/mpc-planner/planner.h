@@ -1,9 +1,10 @@
 #ifndef MPC_PLANNER_H
 #define MPC_PLANNER_H
 
-#include <yaml-cpp/yaml.h>
+#include <mpc-planner-types/data_types.h>
 
 #include <memory>
+#include <vector>
 
 namespace MPCPlanner
 {
@@ -12,22 +13,30 @@ namespace MPCPlanner
     class ControllerModule;
     class Solver;
 
+    struct PlannerOutput
+    {
+        Trajectory trajectory;
+        bool success{true};
+
+        PlannerOutput(double dt, int N) : trajectory(dt, N) {}
+
+        PlannerOutput() = default;
+    };
+
     class Planner
     {
     public:
-        Planner(const YAML::Node &config);
+        Planner();
 
     public:
-        bool solveMPC(const State &state, const RealTimeData &data);
+        PlannerOutput solveMPC(const State &state, const RealTimeData &data);
         double getSolution(int k, std::string &&var_name);
 
         void visualize(const State &state, const RealTimeData &data);
 
     private:
-        // std::shared_ptr<YAML::Node> _config;
-        YAML::Node _config;
-
         std::shared_ptr<Solver> _solver;
+        PlannerOutput _output;
 
         std::vector<std::shared_ptr<ControllerModule>> _modules;
     };

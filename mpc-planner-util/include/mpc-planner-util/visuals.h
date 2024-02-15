@@ -49,4 +49,11 @@ private:
     Visuals &operator=(const Visuals &) = delete; // Delete assignment operator
 };
 
+// Tools for visualizing custom data types
+namespace MPCPlanner
+{
+    struct Trajectory;
+    RosTools::ROSMarkerPublisher &visualizeTrajectory(const Trajectory &trajectory, const std::string &topic_name, bool publish = false, double alpha = 0.4);
+};
+
 #endif // VISUALS_H

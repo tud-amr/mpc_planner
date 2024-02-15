@@ -10,15 +10,10 @@ num_obstacles: 3
 robot_radius: 0.325
 obstacle_radius: 0.725
 
-# New weights, to be improved
-goal_weight: 10.
-acceleration_weight: 0.05
-angular_velocity_weight: 0.05
-
 weights:
-  goal: 50.
+  goal: 10.
   velocity: 0.02
   acceleration: 0.05
-  rotational_velocity: 2. #0.05
+  angular_velocity: 0.05 #0.05
 
 reference_velocity: 0.5

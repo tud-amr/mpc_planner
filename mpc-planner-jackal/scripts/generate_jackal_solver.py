@@ -6,11 +6,15 @@ import shutil
 # TODO set up packages properly
 import sys, os
 sys.path.append(os.path.join(sys.path[0],'..','..', 'mpc-planner-solver-generator'))
+sys.path.append(os.path.join(sys.path[0],'..','..', 'mpc-planner-modules', 'scripts'))
 
 from util.files import load_settings, default_solver_path, solver_path
 from util.logging import print_value, print_path, print_success
 
-from control_modules import MPCBaseModule, ContouringModule, ModuleManager, GoalModule
+from goal_module import GoalModule
+from mpc_base import MPCBaseModule
+
+from control_modules import ModuleManager
 from generate_solver import generate_solver
 
 

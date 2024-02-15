@@ -10,6 +10,8 @@ endif()
 set(DEPENDENCIES
   mpc-planner
   mpc-planner-solver
+  mpc-planner-util
+  mpc-planner-types
   ros_tools
   rclcpp
   nav_msgs
@@ -19,6 +21,8 @@ set(DEPENDENCIES
 find_package(ament_cmake REQUIRED)
 find_package(mpc-planner REQUIRED)
 find_package(mpc-planner-solver REQUIRED)
+find_package(mpc-planner-util REQUIRED)
+find_package(mpc-planner-types REQUIRED)
 
 find_package(rclcpp REQUIRED)
 find_package(ros_tools REQUIRED)
@@ -78,4 +82,5 @@ install(DIRECTORY config
 install(DIRECTORY rviz
   DESTINATION share/${PROJECT_NAME})
 
+ament_export_dependencies(${DEPENDENCIES})
 ament_package()

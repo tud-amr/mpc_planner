@@ -49,6 +49,9 @@ def solver_settings_path():
 def generated_src_file(settings):
     return os.path.join(solver_path(settings), f"mpc_planner_generated.cpp")
 
+def planner_path():
+    return get_package_path("mpc-planner")
+
 def generated_include_file(settings):
     include_path = os.path.join(solver_path(settings), f"include/")
     os.makedirs(include_path, exist_ok=True)

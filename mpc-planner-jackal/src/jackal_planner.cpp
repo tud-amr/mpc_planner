@@ -1,6 +1,10 @@
 #include <mpc-planner-jackal/jackal_planner.h>
 
 #include <mpc-planner-util/visuals.h>
+#include <mpc-planner-util/parameters.h>
+#include <mpc-planner-util/logging.h>
+#include <mpc-planner-util/load_yaml.hpp>
+
 #include <ros_tools/helpers.h>
 
 using namespace MPCPlanner;
@@ -10,18 +14,23 @@ JackalPlanner::JackalPlanner() : Node("jackal_planner")
 {
     LOG_INFO("Started Jackal Planner");
 
-    // Load parameters from file
-    loadConfigYaml(SYSTEM_CONFIG_PATH(__FILE__, "settings"), _config);
+    // Initialize the configuration
+    Configuration::getInstance().initialize(SYSTEM_CONFIG_PATH(__FILE__, "settings"));
 
-    _planner = std::make_unique<Planner>(_config);
+    // Initialize the planner
+    _planner = std::make_unique<Planner>();
 
+    // Initialize the ROS interface
     initializeSubscribersAndPublishers();
 
+    // Start the control loop
     _timer = create_timer(
         this,
         this->get_clock(),
-        Duration::from_seconds(1.0 / _config["control_frequency"].as<double>()),
+        Duration::from_seconds(1.0 / CONFIG["control_frequency"].as<double>()),
         std::bind(&JackalPlanner::Loop, this));
+
+    LOG_DIVIDER();
 }
 
 void JackalPlanner::initializeSubscribersAndPublishers()
@@ -42,24 +51,34 @@ void JackalPlanner::initializeSubscribersAndPublishers()
 
 void JackalPlanner::Loop()
 {
-    LOG_INFO("============= Loop =============");
+    LOG_DEBUG("============= Loop =============");
 
     // Print the state
     _state.print();
 
-    _planner->solveMPC(_state, _data);
+    auto output = _planner->solveMPC(_state, _data);
 
-    // Publish the command
+    LOG_VALUE_DEBUG("Success", output.success);
+
     geometry_msgs::msg::Twist cmd;
-    cmd.linear.x = _planner->getSolution(1, "v");
-    cmd.angular.z = _planner->getSolution(0, "w");
-    LOG_VALUE("Commanded v", cmd.linear.x);
-    LOG_VALUE("Commanded w", cmd.angular.z);
+    if (output.success)
+    {
+        // Publish the command
+        cmd.linear.x = _planner->getSolution(1, "v");
+        cmd.angular.z = _planner->getSolution(0, "w");
+        LOG_VALUE_DEBUG("Commanded v", cmd.linear.x);
+        LOG_VALUE_DEBUG("Commanded w", cmd.angular.z);
+    }
+    else
+    {
+        cmd.linear.x = 0.0;
+        cmd.angular.z = 0.0;
+    }
     _cmd_pub->publish(cmd);
 
     _planner->visualize(_state, _data);
 
-    LOG_INFO("============= End Loop =============");
+    LOG_DEBUG("============= End Loop =============");
 }
 
 void JackalPlanner::stateCallback(nav_msgs::msg::Odometry::SharedPtr msg)
@@ -73,7 +92,7 @@ void JackalPlanner::stateCallback(nav_msgs::msg::Odometry::SharedPtr msg)
 
 void JackalPlanner::goalCallback(geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
-    LOG_INFO("Goal callback");
+    LOG_DEBUG("Goal callback");
     _data.goal(0) = msg->pose.position.x;
     _data.goal(1) = msg->pose.position.y;
     _data.goal_received = true;

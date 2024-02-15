@@ -4,9 +4,9 @@ import os
 import control_modules
 
 from util.code_generation import tabs, open_function, close_function, add_zero_below_10
-from util.files import generated_src_file, generated_include_file, solver_name
+from util.files import generated_src_file, generated_include_file, solver_name, get_package_path, planner_path
 
-from util.logging import print_success
+from util.logging import print_success, print_path
 
 def declare_forces(header_file, cpp_file, name, solver_name):
     header_file.write(\
@@ -123,6 +123,47 @@ def add_get_output(header_file, cpp_file, settings):
                        f"\t\t\treturn _output.x{k+1}[_model_map[state_name][1].as<int>()];\n")
     # cpp_file.write("throw std::runtime_expc")
     close_function(cpp_file)
+
+def generate_module_header(modules):
+    path = f"{get_package_path('mpc-planner-modules')}/include/mpc-planner-modules/modules.h"
+    print_path("Module Header", path, end="", tab=True)
+
+    module_header = open(path, "w")
+    
+    module_header.write("#ifndef __MPC_PLANNER_GENERATED_MODULES_H__\n")
+    module_header.write("#define __MPC_PLANNER_GENERATED_MODULES_H__\n\n")
+    for module in modules.modules:
+        module_header.write(f"#include <mpc-planner-modules/{module.import_name}>\n")
+    module_header.write("\n")
+    
+    module_header.write("namespace MPCPlanner\n{\n")
+    module_header.write("\tclass Solver;\n")
+    module_header.write("\tinline void initializeModules(std::vector<std::shared_ptr<ControllerModule>> &modules, std::shared_ptr<Solver> solver)\n\t{\n")
+    
+    for module in modules.modules:
+        module_header.write("\t\tmodules.emplace_back(nullptr);\n")
+        module_header.write("\t\tmodules.back() = std::make_shared<" + module.module_name + ">(solver);\n")
+    module_header.write("\n\t}\n")
+    module_header.write("};")
+    
+    module_header.write("\n#endif")
+    
+    module_header.close()
+    print_success(" -> generated")
+
+
+def generate_module_cmake(modules):
+    path = f"{get_package_path('mpc-planner-modules')}/modules.cmake"
+    print_path("Module CMake", path, end="", tab=True)
+    module_cmake = open(path, "w")
+    # module_cmake.write("set(MODULE_DEPENDENCIES\n")
+    
+    module_cmake.write("set(MODULE_SOURCES\n")
+    for module in modules.modules:
+        module_cmake.write(f"\tsrc/{module.import_name.split('.')[0]}.cpp\n")
+    module_cmake.write(")\n")
+    module_cmake.close()
+    print_success(" -> generated")
 
 def generate_cpp_code(settings, model):   
     name = settings["name"].capitalize()

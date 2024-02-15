@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(mpc-planner)
+project(mpc-planner-modules)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -8,20 +8,18 @@ endif()
 
 # General requirements
 set(DEPENDENCIES
-  rclcpp
-  mpc-planner-util
   mpc-planner-types
+  mpc-planner-util
   mpc-planner-solver
-  mpc-planner-modules
 )
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
 find_package(mpc-planner-util REQUIRED)
 find_package(mpc-planner-types REQUIRED)
 find_package(mpc-planner-solver REQUIRED)
-find_package(mpc-planner-modules REQUIRED)
+
+include(modules.cmake)
 
 ## BUILD ###
 include_directories(
@@ -29,7 +27,7 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
-  src/planner.cpp
+  ${MODULE_SOURCES}
 )
 target_include_directories(${PROJECT_NAME}
   PUBLIC
@@ -41,27 +39,7 @@ ament_target_dependencies(${PROJECT_NAME}
 )
 # target_link_libraries(${PROJECT_NAME})
 
-# TODO: Test node
-# add_executable(test_node src/test_node.cpp)
-# target_include_directories(test_node PUBLIC
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#   $<INSTALL_INTERFACE:include>)
-# target_compile_features(test_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
-# target_link_libraries(test_node ${PROJECT_NAME})
-
-# install(TARGETS test_node
-#   DESTINATION lib/${PROJECT_NAME})
-
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
-  set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # comment the line when this package is in a git repo and when
-  # a copyright and license is added to all source files
-  set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
 endif()
 
 install(

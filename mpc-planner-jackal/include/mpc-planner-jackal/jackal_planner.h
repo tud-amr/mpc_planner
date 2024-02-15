@@ -7,9 +7,6 @@
 
 #include <mpc-planner-types/realtime_data.h>
 
-#include <mpc-planner-util/load_yaml.hpp>
-#include <mpc-planner-util/logging.h>
-
 #include <rclcpp/rclcpp.hpp>
 
 #include <geometry_msgs/msg/pose_stamped.hpp>
@@ -18,7 +15,6 @@
 #include <memory>
 
 using namespace MPCPlanner;
-
 
 class JackalPlanner : public rclcpp::Node
 {
@@ -33,8 +29,6 @@ public:
     void goalCallback(geometry_msgs::msg::PoseStamped::SharedPtr msg);
 
 private:
-    YAML::Node _config;
-
     std::unique_ptr<Planner> _planner;
 
     RealTimeData _data;

@@ -56,22 +56,31 @@ namespace MPCPlanner
     struct Trajectory
     {
         double dt;
-        std::vector<Eigen::Vector2d> position;
+        std::vector<Eigen::Vector2d> positions;
 
-        Trajectory(double dt, int length = 10) : dt(dt)
+        Trajectory(double dt = 0., int length = 10) : dt(dt)
         {
-            position.reserve(length);
+            positions.reserve(length);
         };
 
         void add(const Eigen::Vector2d &p)
         {
-            position.push_back(p);
+            positions.push_back(p);
         }
 
         void add(const double x, const double y)
         {
-            position.push_back(Eigen::Vector2d(x, y));
+            positions.push_back(Eigen::Vector2d(x, y));
         }
+
+        // double getX(int k) const
+        // {
+        //     return positions[k](0);
+        // }
+        // double getY(int k) const
+        // {
+        //     return positions[k](1);
+        // }
     };
 };
 

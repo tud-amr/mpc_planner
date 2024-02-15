@@ -3,24 +3,6 @@ import objective
 
 from util.logging import print_warning, print_value, print_header
 
-# TODO: Fix the prepending of weights
-
-# def initialize_solver():
-#     params = helpers.ParameterStructure()
-#     weight_list = list()  # Anything in the weight list is updated through rqt_reconfigure
-
-#     modules = ModuleManager(params)
-#     modules.add_module(MPCBaseModule(params, weight_list))  # Adds weights to the overall weight list
-#     weights = modules.get_last_added_module().weights
-
-#     return params, modules, weight_list, weights
-
-
-# def end_objectives_start_constraints(params, weight_list, n_discs):
-#     params = params.prepend_weights_to_parameters(weight_list)
-#     return params
-
-
 class ModuleManager:
     """
     The idea of modules is that they can include multiple constraint sets if necessary
@@ -136,37 +118,6 @@ class ObjectiveModule(Module):
 
 
 """ OBJECTIVE MODULES """
-class MPCBaseModule(ObjectiveModule):
-
-    """
-    Weight states and inputs of an MPC problem
-    """
-
-    def __init__(self, settings):
-        super().__init__()
-        self.module_name = "MPCBaseModule"  # Needs to correspond to the c++ name of the module
-        self.import_name = "modules_objectives/mpc_base.h"
-        self.description = "Contains input and state penalties with weights that can be tuned in rqt_reconfigure"
-
-        self.objectives.append(objective.WeightsObjective(settings))
-    
-    # Add a variable that is weighted in the cost
-    def weigh_variable(self, var_name, weight_names, **kwargs):
-        self.objectives[0].add(var_name, weight_names, **kwargs)
-
-class GoalModule(ObjectiveModule):
-
-    """
-    Weight states and inputs of an MPC problem
-    """
-
-    def __init__(self, settings):
-        super().__init__()
-        self.module_name = "GoalModule"  # Needs to correspond to the c++ name of the module
-        self.import_name = "modules_objectives/goal_module.h"
-        self.description = "Tracks a goal in 2D"
-
-        self.objectives.append(objective.GoalObjective(settings))
 
 class ContouringModule(ObjectiveModule):
 
@@ -179,25 +130,7 @@ class ContouringModule(ObjectiveModule):
 
         self.objectives = []
         self.objectives.append(objective.ContouringObjective(settings, num_segments))
-
-# TODO: Reintegrate these classes
-
-# class GoalTrackingModule(Module):
-
-#     """
-#     Track a reference path with contouring control
-#     """
-
-#     def __init__(self, params, weight_list):
-#         super().__init__()
-#         self.module_name = "GoalTracking"  # Needs to correspond to the c++ name of the module
-#         self.import_name = "modules_objectives/goal_tracking.h"
-#         self.type = "objective"
-#         self.description = "Tracks a goal in 2D"
-
-#         self.objectives = []
-#         self.objectives.append(objective.GoalTrackingObjective(params, weight_list))
-
+        
 # class PreviewContouringModule(Module):
 
 #     """

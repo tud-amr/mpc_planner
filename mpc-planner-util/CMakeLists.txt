@@ -10,11 +10,13 @@ set(MPC_PLANNER_ROS "2")
 # General requirements
 set(DEPENDENCIES
   yaml-cpp
+  mpc-planner-types
 )
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(mpc-planner-types REQUIRED)
 
 if(MPC_PLANNER_ROS STREQUAL "2")
   # message("MPC_PLANNER_ROS 2")
@@ -33,13 +35,15 @@ include_directories(
 
 set(ENV{MPC_PLANNER_ROS} ${MPC_PLANNER_ROS})
 
-add_library(${PROJECT_NAME} INTERFACE)
-target_include_directories(${PROJECT_NAME} INTERFACE
+add_library(${PROJECT_NAME}
+  src/visuals.cpp
+)
+target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include>"
 )
-target_link_libraries(${PROJECT_NAME} INTERFACE ${YAML_CPP_LIBRARIES})
-ament_target_dependencies(${PROJECT_NAME} INTERFACE ${DEPENDENCIES})
+target_link_libraries(${PROJECT_NAME} ${YAML_CPP_LIBRARIES})
+ament_target_dependencies(${PROJECT_NAME} ${DEPENDENCIES})
 
 
 if(BUILD_TESTING)

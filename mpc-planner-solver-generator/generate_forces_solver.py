@@ -44,8 +44,6 @@ def generate_forces_solver(modules, settings, model):
     solver.lb = model.lower_bound
     solver.ub = model.upper_bound
 
-    # Functions used in the optimization
-    # Note that we use solver.N = N_bar here!
     for i in range(0, solver.N):
 
         # Python cannot handle lambdas without an additional function that manually creates the lambda with the correct value
@@ -83,7 +81,7 @@ def generate_forces_solver(modules, settings, model):
     options.timing = 1
     options.overwrite = 1
     options.cleanup = 1
-    # options.solver_timeout = 1
+
     floating = True
     if floating:
         options.embedded_timing = 1
@@ -106,4 +104,3 @@ def generate_forces_solver(modules, settings, model):
     shutil.move(default_solver_path(settings), solver_path(settings))  # Move the solver to this directory
 
     return generated_solver, generated_solver.dynamics    
-    # return None, None
