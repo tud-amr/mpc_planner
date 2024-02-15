@@ -45,6 +45,10 @@ void JackalPlanner::initializeSubscribersAndPublishers()
         "~/input/goal", 1,
         std::bind(&JackalPlanner::goalCallback, this, std::placeholders::_1));
 
+    _path_sub = this->create_subscription<nav_msgs::msg::Path>(
+        "~/input/reference_path", 1,
+        std::bind(&JackalPlanner::pathCallback, this, std::placeholders::_1));
+
     _cmd_pub = this->create_publisher<geometry_msgs::msg::Twist>(
         "~/output/command", 1);
 }
@@ -96,6 +100,40 @@ void JackalPlanner::goalCallback(geometry_msgs::msg::PoseStamped::SharedPtr msg)
     _data.goal(0) = msg->pose.position.x;
     _data.goal(1) = msg->pose.position.y;
     _data.goal_received = true;
+}
+
+bool JackalPlanner::isPathTheSame(nav_msgs::msg::Path::SharedPtr msg)
+{
+    // Check if the path is the same
+    if (_data.reference_path.x.size() != msg->poses.size())
+        return false;
+
+    // Check up to the first two points
+    int num_points = std::min(2, (int)_data.reference_path.x.size());
+    for (int i = 0; i < num_points; i++)
+    {
+        if (!_data.reference_path.pointInPath(i, msg->poses[i].pose.position.x, msg->poses[i].pose.position.y))
+            return false;
+    }
+    return true;
+}
+
+void JackalPlanner::pathCallback(nav_msgs::msg::Path::SharedPtr msg)
+{
+    LOG_DEBUG("Path callback");
+
+    if (isPathTheSame(msg))
+        return;
+
+    _data.reference_path.clear();
+
+    for (auto &pose : msg->poses)
+    {
+        _data.reference_path.x.push_back(pose.pose.position.x);
+        _data.reference_path.y.push_back(pose.pose.position.y);
+    }
+    _data.reference_path.psi.push_back(0.0);
+    _planner->onDataReceived(_data, "reference_path");
 }
 
 int main(int argc, char **argv)

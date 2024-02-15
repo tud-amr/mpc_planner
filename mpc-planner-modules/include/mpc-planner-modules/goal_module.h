@@ -11,7 +11,7 @@ namespace MPCPlanner
     GoalModule(std::shared_ptr<Solver> solver);
 
   public:
-    virtual void update(const RealTimeData &data) override;
+    virtual void update(State &state, const RealTimeData &data) override;
 
     virtual void setParameters(const RealTimeData &data, int k) override;
 

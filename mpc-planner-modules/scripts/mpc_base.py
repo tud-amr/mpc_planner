@@ -26,7 +26,7 @@ class WeightsObjective(Objective):
     
     # Weights w are a parameter vector
     # Only add weights if they are not also parameters!
-    def add(self, variable_to_weight, weight_names, cost_function=lambda x, w: w[0] * x ** 2):
+    def add(self, variable_to_weight, weight_names, cost_function=lambda x, w, r: w[0] * x ** 2 / r ** 2):
 
         # # Make sure it's a list if it isn't yet
         if type(weight_names) != list:
@@ -49,10 +49,9 @@ class WeightsObjective(Objective):
 
             variable = model.get(self._variables_per_function[idx])  # Retrieve the state / input to be weighted
             _, _, var_range = model.get_bounds(self._variables_per_function[idx])
-            variable = variable / var_range  # Normalize the variable
 
             # Add to the cost
-            cost += cost_function(variable, weights)
+            cost += cost_function(variable, weights, var_range)
 
         return cost
 

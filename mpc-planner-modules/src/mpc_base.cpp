@@ -11,7 +11,7 @@ namespace MPCPlanner
   {
   }
 
-  void MPCBaseModule::update(const RealTimeData &data)
+  void MPCBaseModule::update(State &state, const RealTimeData &data)
   {
   }
 
@@ -23,5 +23,7 @@ namespace MPCPlanner
     // Set the parameters for the solver
     _solver->setParameter(k, "acceleration", CONFIG["weights"]["acceleration"].as<double>());
     _solver->setParameter(k, "angular_velocity", CONFIG["weights"]["angular_velocity"].as<double>());
+    _solver->setParameter(k, "velocity", CONFIG["weights"]["velocity"].as<double>());
+    _solver->setParameter(k, "reference_velocity", CONFIG["reference_velocity"].as<double>());
   }
 };

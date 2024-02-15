@@ -12,7 +12,7 @@ namespace MPCPlanner
     {
     }
 
-    void GoalModule::update(const RealTimeData &data)
+    void GoalModule::update(State &state, const RealTimeData &data)
     {
     }
 

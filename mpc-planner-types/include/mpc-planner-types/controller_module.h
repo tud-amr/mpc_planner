@@ -43,7 +43,7 @@ namespace MPCPlanner
     public:
         /** ==== MAIN FUNCTIONS ==== */
         /** @brief Update the module (any computations that need to happen before setting solver parameters) */
-        virtual void update(const RealTimeData &data){};
+        virtual void update(State &state, const RealTimeData &data){};
 
         /** @brief Insert computed parameters for the solver */
         virtual void setParameters(const RealTimeData &data, int k){};
@@ -53,7 +53,7 @@ namespace MPCPlanner
 
         /** ==== OPTIONAL FUNCTIONS ==== */
         /** @brief Check if the realtime data is complete for this module */
-        virtual bool isDataReady(const RealTimeData &data, std::string& missing_data) { return true; }; // Default: true
+        virtual bool isDataReady(const RealTimeData &data, std::string &missing_data) { return true; }; // Default: true
 
         /**
          * @brief Check if the objective of this module was reached

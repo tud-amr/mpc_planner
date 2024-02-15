@@ -24,6 +24,9 @@ def objective(modules, z, p, model, settings, stage_idx):
     for module in modules.modules:
         if module.type == "objective":
             cost += module.get_value(model, params, settings, stage_idx)
+    
+    # if stage_idx == 0:
+        # print(cost)
 
     return cost
 

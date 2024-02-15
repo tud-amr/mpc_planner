@@ -11,6 +11,7 @@
 
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <nav_msgs/msg/path.hpp>
 
 #include <memory>
 
@@ -27,6 +28,7 @@ public:
 
     void stateCallback(nav_msgs::msg::Odometry::SharedPtr msg);
     void goalCallback(geometry_msgs::msg::PoseStamped::SharedPtr msg);
+    void pathCallback(nav_msgs::msg::Path::SharedPtr msg);
 
 private:
     std::unique_ptr<Planner> _planner;
@@ -39,8 +41,11 @@ private:
     // Subscribers and publishers
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _state_sub;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr _goal_sub;
+    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr _path_sub;
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr _cmd_pub;
+
+    bool isPathTheSame(nav_msgs::msg::Path::SharedPtr path);
 };
 
 #endif // JACKAL_PLANNER_H

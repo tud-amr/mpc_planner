@@ -29,8 +29,10 @@ namespace MPCPlanner
         Planner();
 
     public:
-        PlannerOutput solveMPC(const State &state, const RealTimeData &data);
+        PlannerOutput solveMPC(State &state, const RealTimeData &data);
         double getSolution(int k, std::string &&var_name);
+
+        void onDataReceived(RealTimeData &data, std::string &&data_name);
 
         void visualize(const State &state, const RealTimeData &data);
 

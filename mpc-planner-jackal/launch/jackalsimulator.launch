@@ -6,6 +6,7 @@
       <!-- <param from="$(find-pkg-share mpc-planner-jackal)/config/settings.yaml"/> -->
         <remap from="~/input/state" to="/jackal_velocity_controller/odom"/>
         <remap from="~/input/goal" to="/goal_pose"/>
+        <remap from="~/input/reference_path" to="roadmap/reference"/>
         <remap from="~/input/dynamic_objects" to="None"/>
         <remap from="~/output/command" to="/cmd_vel"/>
   </node>
@@ -13,7 +14,9 @@
   <include file="$(find-pkg-share pedestrian_simulator)/launch/simulation.launch.py"/>
   <include file="$(find-pkg-share jackal_gazebo)/launch/jackal_world.launch.py"/>
 
-  <include file="$(find-pkg-share roadmap)/launch/roadmap.launch"/>
+  <include file="$(find-pkg-share roadmap)/launch/roadmap.launch">
+    <!-- <arg name="map_file_name" value="maps/straight.xml"/> -->
+  </include>
 
   <node pkg="tf2_ros" exec="static_transform_publisher" name="static_map" output="log" args="0 0 0 0 0 0 odom map"/>
 

@@ -37,6 +37,8 @@ set(ENV{MPC_PLANNER_ROS} ${MPC_PLANNER_ROS})
 
 add_library(${PROJECT_NAME}
   src/visuals.cpp
+  src/spline.cpp
+  src/third_party/tkspline.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -61,6 +63,11 @@ install(
 install(DIRECTORY include/${PROJECT_NAME}
   DESTINATION include/)
 
+install(DIRECTORY include/third_party/
+  DESTINATION include/third_party/)
+
+  # install(DIRECTORY Solver/include/
+  # DESTINATION include/${PROJECT_NAME}/)
 # ament_export_include_directories(include/${PROJECT_NAME})
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(${DEPENDENCIES})

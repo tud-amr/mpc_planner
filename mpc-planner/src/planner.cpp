@@ -24,7 +24,7 @@ namespace MPCPlanner
     }
 
     // Given real-time data, solve the MPC problem
-    PlannerOutput Planner::solveMPC(const State &state, const RealTimeData &data)
+    PlannerOutput Planner::solveMPC(State &state, const RealTimeData &data)
     {
         _output = PlannerOutput(_solver->dt, _solver->N);
 
@@ -46,7 +46,7 @@ namespace MPCPlanner
 
         // Update all modules
         for (auto &module : _modules)
-            module->update(data);
+            module->update(state, data);
 
         // Load parameters
         for (int k = 0; k < _solver->N; k++)
@@ -76,6 +76,12 @@ namespace MPCPlanner
     double Planner::getSolution(int k, std::string &&var_name)
     {
         return _solver->getOutput(k, std::forward<std::string>(var_name));
+    }
+
+    void Planner::onDataReceived(RealTimeData &data, std::string &&data_name)
+    {
+        for (auto &module : _modules)
+            module->onDataReceived(data, std::forward<std::string>(data_name));
     }
 
     void Planner::visualize(const State &state, const RealTimeData &data)

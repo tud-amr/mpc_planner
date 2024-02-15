@@ -38,9 +38,17 @@ namespace MPCPlanner
             psi.reserve(length);
         };
 
-        // void addPose(const geometry_msgs::msg::Pose &pose);
-        // void addPoint(const geometry_msgs::msg::Point &point);
-        void clear();
+        void clear()
+        {
+            x.clear();
+            y.clear();
+            psi.clear();
+        }
+
+        bool pointInPath(int point_num, double other_x, double other_y) const
+        {
+            return (x[point_num] == other_x && y[point_num] == other_y);
+        }
 
         friend std::ostream &operator<<(std::ostream &out, const ReferencePath &path)
         {
