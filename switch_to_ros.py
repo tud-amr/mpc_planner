@@ -25,12 +25,13 @@ def get_ros_mode(file_name)->int:
     # Check if it is in ROS1 or ROS2 mode currently
     print(file_name)
     with open(file_name, 'r') as file:
-        if 'catkin_package' in file.read():
+        content = file.read()
+        if 'catkin_package' in content:
             return 1
-        elif 'find_package(ament_cmake REQUIRED)' in file.read():
+        elif 'find_package(ament_cmake REQUIRED)' in content:
             return 2
         else:
-            raise IOError("CMakeLists.txt is not in ROS1 or ROS2 mode")
+            raise IOError(f"{file_name} is not in ROS1 or ROS2 mode")
 
 def main():
     # Check if the correct number of command line arguments is provided
@@ -70,16 +71,16 @@ def main():
             print(f"Switching to ROS1")
             if cur_ros_mode != 0:
                 # Move the current ROS2 files to the version with a 2
-                for i in range(len(ROS1)):
+                for i in range(len(ROS2)):
                     print(current[i])
-                    print(ROS1[i])
-                    os.rename(current[i], ROS1[i])
+                    print(ROS2[i])
+                    os.rename(current[i], ROS2[i])
 
-            # Now move the ROS2 files to the current
-            for i in range(len(ROS2)):
-                print(ROS2[i])
+            # Now move the ROS1 files to the current
+            for i in range(len(ROS1)):
+                print(ROS1[i])
                 print(current[i])
-                shutil.copyfile(ROS2[i], current[i])
+                shutil.copyfile(ROS1[i], current[i])
 
         elif ros_version == 2:
             if not exists2:
@@ -87,7 +88,7 @@ def main():
 
             print(f"Switching to ROS2")
             if cur_ros_mode != 0:
-                # Move the current ROS2 files to the version with a 2
+                # Move the current ROS1 files to the version with a 1
                 for i in range(len(ROS1)):
                     print(current[i])
                     print(ROS1[i])
