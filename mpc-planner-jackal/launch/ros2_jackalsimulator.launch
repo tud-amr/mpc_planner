@@ -20,7 +20,7 @@
 
   <node pkg="tf2_ros" exec="static_transform_publisher" name="static_map" output="log" args="0 0 0 0 0 0 odom map"/>
 
-  <node pkg="rviz2" exec="rviz2" name="rviz2" args="-d $(find-pkg-share mpc-planner-jackal)/rviz/default.rviz" namespace="/" output="log"/>
+  <node pkg="rviz2" exec="rviz2" name="rviz2" args="-d $(find-pkg-share mpc-planner-jackal)/rviz/ros2.rviz" namespace="/" output="log"/>
   
   <node pkg="rqt_reconfigure" exec="rqt_reconfigure" name="rqt_reconfigure" namespace="/" output="log"/>
 

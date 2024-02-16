@@ -5,7 +5,7 @@
 
 // Still requires ROS support for now, but can be modified to use other visualisation tools
 
-#define MPC_PLANNER_ROS 1
+#define MPC_PLANNER_ROS 2
 
 #if MPC_PLANNER_ROS == 1
 #include <ros_tools/ros_visuals.h>
@@ -19,7 +19,7 @@ public:
         return instance;
     }
 
-    void init(ros::NodeHandle* nh)
+    void init(ros::NodeHandle *nh)
     {
         _name = ros::this_node::getName();
         _nh = nh;
@@ -38,8 +38,8 @@ public:
 private:
     std::unordered_map<std::string, RosTools::ROSMarkerPublisher> _publishers;
 
-    std::string _name{""};  
-    ros::NodeHandle* _nh; // ROS1
+    std::string _name{""};
+    ros::NodeHandle *_nh; // ROS1
 
     std::string frame_id{"map"};
 
