@@ -23,6 +23,8 @@ JackalPlanner::JackalPlanner() : Node("jackal_planner")
     // Initialize the ROS interface
     initializeSubscribersAndPublishers();
 
+    _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
+
     // Start the control loop
     _timer = create_timer(
         this,
@@ -57,6 +59,8 @@ void JackalPlanner::Loop()
 {
     LOG_DEBUG("============= Loop =============");
 
+    _benchmarker->start();
+
     // Print the state
     _state.print();
 
@@ -68,8 +72,8 @@ void JackalPlanner::Loop()
     if (output.success)
     {
         // Publish the command
-        cmd.linear.x = _planner->getSolution(1, "v");
-        cmd.angular.z = _planner->getSolution(0, "w");
+        cmd.linear.x = _planner->getSolution(1, "v");  // = x1
+        cmd.angular.z = _planner->getSolution(0, "w"); // = u0
         LOG_VALUE_DEBUG("Commanded v", cmd.linear.x);
         LOG_VALUE_DEBUG("Commanded w", cmd.angular.z);
     }
@@ -79,6 +83,7 @@ void JackalPlanner::Loop()
         cmd.angular.z = 0.0;
     }
     _cmd_pub->publish(cmd);
+    _benchmarker->stop();
 
     _planner->visualize(_state, _data);
     visualize();

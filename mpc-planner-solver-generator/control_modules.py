@@ -119,17 +119,17 @@ class ObjectiveModule(Module):
 
 """ OBJECTIVE MODULES """
 
-class ContouringModule(ObjectiveModule):
+# class ContouringModule(ObjectiveModule):
 
-    def __init__(self, settings, num_segments):
-        super().__init__()
-        self.module_name = "Contouring"  # Needs to correspond to the c++ name of the module
-        self.import_name = "modules_objectives/contouring.h"
-        self.type = "objective"
-        self.description = "Tracks a 2D reference path with contouring costs"
+#     def __init__(self, settings, num_segments):
+#         super().__init__()
+#         self.module_name = "Contouring"  # Needs to correspond to the c++ name of the module
+#         self.import_name = "modules_objectives/contouring.h"
+#         self.type = "objective"
+#         self.description = "Tracks a 2D reference path with contouring costs"
 
-        self.objectives = []
-        self.objectives.append(objective.ContouringObjective(settings, num_segments))
+#         self.objectives = []
+#         self.objectives.append(objective.ContouringObjective(settings, num_segments))
         
 # class PreviewContouringModule(Module):
 

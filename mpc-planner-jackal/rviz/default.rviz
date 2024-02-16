@@ -221,17 +221,17 @@ Visualization Manager:
         Value: /jackal_planner/contouring/points
       Value: true
     - Class: rviz_default_plugins/MarkerArray
-      Enabled: true
+      Enabled: false
       Name: MarkerArray
       Namespaces:
-        "": true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /jackal_planner/angle
-      Value: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255
@@ -278,25 +278,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 48.49747085571289
+      Distance: 36.85807800292969
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 4.157172679901123
-        Y: 3.0004420280456543
-        Z: -7.848658561706543
+        X: 21.177074432373047
+        Y: -1.9083671569824219
+        Z: 2.1960837841033936
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.030397653579712
+      Pitch: 0.9753977656364441
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.7153992652893066
+      Yaw: 3.7153990268707275
     Saved: ~
 Window Geometry:
   Displays:

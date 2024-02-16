@@ -13,6 +13,8 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/path.hpp>
 
+#include <ros_tools/helpers.h>
+
 #include <memory>
 
 using namespace MPCPlanner;
@@ -37,6 +39,8 @@ private:
     State _state;
 
     rclcpp::TimerBase::SharedPtr _timer;
+
+    std::unique_ptr<RosTools::Benchmarker> _benchmarker;
 
     // Subscribers and publishers
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _state_sub;

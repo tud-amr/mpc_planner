@@ -1,6 +1,6 @@
 name: "jackal"
 N: 20
-integrator_step: 0.05
+integrator_step: 0.2
 
 # solver: "acados" # acados or forces
 solver: "forces" # acados or forces
@@ -12,13 +12,13 @@ obstacle_radius: 0.725
 
 contouring:
   num_segments: 3
-  contour: 2.
-  lag: 0.2
+  contour: 0.5
+  lag: 0.1
 
 weights:
   goal: 10.
-  velocity: 3.
-  acceleration: 0.02
-  angular_velocity: 0.05 #0.05
+  velocity: 0.5
+  acceleration: 0.15
+  angular_velocity: 0.25 #0.05
 
 reference_velocity: 2.

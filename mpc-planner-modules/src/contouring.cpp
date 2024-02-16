@@ -40,18 +40,18 @@ namespace MPCPlanner
     /** @todo: Handling of parameters when the spline parameters go beyond the splines defined */
     for (int i = 0; i < CONFIG["contouring"]["num_segments"].as<int>(); i++)
     {
-
+      int index = _closest_segment + i;
       double ax, bx, cx, dx;
       double ay, by, cy, dy;
       double start;
 
-      if (i < _spline->numSegments())
+      if (index < _spline->numSegments())
       {
-        _spline->getParameters(i,
+        _spline->getParameters(index,
                                ax, bx, cx, dx,
                                ay, by, cy, dy);
 
-        start = _spline->getStartOfSegment(i);
+        start = _spline->getStartOfSegment(index);
       }
       else
       {
@@ -74,6 +74,7 @@ namespace MPCPlanner
         cy = 0.;
         start = _spline->length();
       }
+
       std::string spline_name = "spline" + std::to_string(i) + "_";
 
       _solver->setParameter(k, spline_name + "ax", ax);
