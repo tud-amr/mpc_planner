@@ -15,5 +15,5 @@ namespace MPCPlanner
         Eigen::Vector2d goal;
         bool goal_received{false};
     };
-};
+}
 #endif

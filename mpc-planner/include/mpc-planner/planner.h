@@ -43,6 +43,6 @@ namespace MPCPlanner
         std::vector<std::shared_ptr<ControllerModule>> _modules;
     };
 
-};
+}
 
 #endif

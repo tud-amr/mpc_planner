@@ -3,6 +3,8 @@
 
 #include <Eigen/Dense>
 
+#include <vector>
+
 /** Basic high-level data types for motion planning */
 
 namespace MPCPlanner
@@ -90,6 +92,6 @@ namespace MPCPlanner
         //     return positions[k](1);
         // }
     };
-};
+}
 
 #endif

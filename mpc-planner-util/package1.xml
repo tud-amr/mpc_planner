@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mpc-planner-util</name>
+  <version>0.0.0</version>
+  <description>TODO: Package description</description>
+  <maintainer email="groot.oscar.de@gmail.com">r2c1</maintainer>
+  <license>TODO: License declaration</license>
+
+  <!-- <buildtool_depend>ament_cmake</buildtool_depend> -->
+  <buildtool_depend condition="$ROS_VERSION == 1">catkin</buildtool_depend>
+  <buildtool_depend condition="$ROS_VERSION == 2">ament_cmake</buildtool_depend>
+  <depend>roscpp</depend>
+
+  <depend>mpc-planner-types</depend>
+  <depend>ros_tools</depend>
+
+  <export>
+    <build_type condition="$ROS_VERSION == 1">catkin</build_type>
+    <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>
+  </export>
+</package>

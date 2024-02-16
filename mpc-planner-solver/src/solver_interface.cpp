@@ -24,7 +24,6 @@ namespace MPCPlanner
 		nx = _config["nx"].as<unsigned int>();
 		nvar = _config["nvar"].as<unsigned int>();
 		npar = _config["npar"].as<unsigned int>();
-		// LOG_INFO(nx << ", " << nu << ", " << N);
 		reset();
 	}
 
@@ -57,7 +56,6 @@ namespace MPCPlanner
 
 	void Solver::setXinit(std::string &&state_name, double value)
 	{
-		LOG_INFO("set " << state_name << " to " << value);
 		_params.xinit[_model_map[state_name][1].as<int>() - nu] = value;
 	}
 

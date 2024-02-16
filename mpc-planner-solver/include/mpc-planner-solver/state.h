@@ -23,6 +23,6 @@ namespace MPCPlanner
 
         int _nu;
     };
-};
+}
 
 #endif // STATE_H

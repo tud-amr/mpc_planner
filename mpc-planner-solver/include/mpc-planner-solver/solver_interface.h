@@ -74,5 +74,5 @@ namespace MPCPlanner
 		int solve();
 		double getOutput(int k, std::string &&state_name);
 	};
-};
+}
 #endif
