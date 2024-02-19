@@ -24,7 +24,7 @@ jobs:
         id: setup-python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.8.10
       #----------------------------------------------
       #  -----  install & configure poetry  -----
       #----------------------------------------------
