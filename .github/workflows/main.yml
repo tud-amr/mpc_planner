@@ -70,6 +70,7 @@ jobs:
       #----------------------------------------------
       - name: Pytest coverage comment
         uses: MishaKav/pytest-coverage-comment@main
+        id: coverageComment
         with:
           pytest-xml-coverage-path: ./mpc-planner-solver-generator/coverage.xml
           title: Solver Generation
@@ -81,3 +82,13 @@ jobs:
           report-only-changed-files: false
           remove-link-from-badge: false
           unique-id-for-comment: python3.8.10
+      - name: Create the Badge
+        uses: schneegans/dynamic-badges-action@v1.6.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 8356b652d94441ec2318b597dcf4680d
+          filename: test.json
+          label: Coverage Solver Generation
+          message: ${{ steps.coverageComment.outputs.coverage }}
+          color: ${{ steps.coverageComment.outputs.color }}
+          namedLogo: python
