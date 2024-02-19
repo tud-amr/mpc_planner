@@ -1,6 +1,6 @@
 
-from util.files import load_settings, write_to_yaml, solver_settings_path
-from util.logging import print_value, print_success, print_header
+from util.files import load_settings, write_to_yaml, solver_settings_path, solver_path
+from util.logging import print_value, print_success, print_header, print_path
 
 from generate_cpp_files import generate_cpp_code, generate_module_header, generate_module_cmake
 
@@ -40,6 +40,9 @@ def generate_solver(modules, model, settings=None):
     generate_cpp_code(settings, model)
     generate_module_header(modules)
     generate_module_cmake(modules)
+
+    print_path("Solver path", solver_path(settings), tab=True, end="")
+    print_success(" -> generated")
 
     return solver, simulator
 

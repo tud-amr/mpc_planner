@@ -47,7 +47,8 @@ def test_parameters():
     if found_file:
         file_path = parameter_map_path()
         write_to_yaml(file_path, cur_file)
-        sys.argv[0] = temp
+    
+    sys.argv[0] = temp
 
 def test_model():
     model = solver_model.ContouringSecondOrderUnicycleModel()

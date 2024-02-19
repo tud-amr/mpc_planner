@@ -10,3 +10,5 @@ mpc-planner-solver/config/
 
 mpc-planner-modules/modules.cmake
 mpc-planner-modules/include/mpc-planner-modules/modules.h
+
+*.coverage
