@@ -5,7 +5,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-
 # General requirements
 set(DEPENDENCIES
   mpc-planner-types
@@ -13,47 +12,25 @@ set(DEPENDENCIES
   mpc-planner-solver
 )
 
-# find dependencies
-find_package(ament_cmake REQUIRED)
-find_package(mpc-planner-util REQUIRED)
-find_package(mpc-planner-types REQUIRED)
-find_package(mpc-planner-solver REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+  ${DEPENDENCIES}
+)
+
+catkin_package(
+  CATKIN_DEPENDS ${DEPENDENCIES}
+  INCLUDE_DIRS include include/${PROJECT_NAME}
+  LIBRARIES ${PROJECT_NAME}
+)
 
 include(modules.cmake)
 
 ## BUILD ###
 include_directories(
   include
+  ${catkin_INCLUDE_DIRS}
 )
 
 add_library(${PROJECT_NAME}
   ${MODULE_SOURCES}
 )
-target_include_directories(${PROJECT_NAME}
-  PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-)
-ament_target_dependencies(${PROJECT_NAME}
-  ${DEPENDENCIES}
-)
-# target_link_libraries(${PROJECT_NAME})
-
-if(BUILD_TESTING)
-endif()
-
-install(
-  TARGETS ${PROJECT_NAME}
-  EXPORT export_${PROJECT_NAME}
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-)
-
-install(DIRECTORY include/${PROJECT_NAME}
-  DESTINATION include/)
-
-# ament_export_include_directories(include/${PROJECT_NAME})
-ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(${DEPENDENCIES})
-ament_package()
+add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

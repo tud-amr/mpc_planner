@@ -3,7 +3,7 @@
 #define LOGGING_H
 
 // #ifndef MPC_PLANNER_ROS
-#define MPC_PLANNER_ROS 2
+#define MPC_PLANNER_ROS 1
 // #endif
 
 #if MPC_PLANNER_ROS == 1

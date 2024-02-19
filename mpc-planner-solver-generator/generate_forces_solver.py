@@ -15,7 +15,7 @@ from util.parameters import Parameters
 
 import solver_model
 
-from solver_definition import define_parameters, objective, constraints, constraint_upper_bounds, constraint_lower_bounds
+from solver_definition import define_parameters, objective, constraints, constraint_lower_bounds, constraint_upper_bounds, constraint_number
 
 # Press the green button in the gutter to run the script.
 def generate_forces_solver(modules, settings, model):
@@ -29,7 +29,7 @@ def generate_forces_solver(modules, settings, model):
     params.print()
 
     npar = params.length()
-    nh = len(constraint_lower_bounds(settings))
+    # nh = len(constraint_lower_bounds(settings))
 
     # Load model parameters from the settings
     solver = forcespro.nlp.SymbolicModel(settings["N"])
@@ -50,16 +50,19 @@ def generate_forces_solver(modules, settings, model):
         def objective_with_stage_index(stage_idx):
             return lambda z, p: objective(modules, z, p, model, settings, stage_idx)
 
+        # def constraints_with_stage_index(stage_idx):
+            # return lambda z, p: constraints(modules, z, p, model, settings, stage_idx)
+
         solver.objective[i] = objective_with_stage_index(i)
 
         # For all stages after the initial stage (k = 0)
         if i > 0:
-            solver.ineq[i] = lambda z, p: constraints(z, p, model, settings)
-
-            solver.nh[i] = nh
-
-            solver.hu[i] = constraint_upper_bounds(settings)
-            solver.hl[i] = constraint_lower_bounds(settings)
+            # res = lambda z, p: constraints(z, p, model, settings)
+            # print(res)
+            solver.ineq[i] = lambda z, p: constraints(modules, z, p, model, settings, 0)
+            solver.hl[i] = constraint_lower_bounds(modules)
+            solver.hu[i] = constraint_upper_bounds(modules)
+            solver.nh[i] = constraint_number(modules)
         else:
             solver.nh[i] = 0  # No constraints here
 

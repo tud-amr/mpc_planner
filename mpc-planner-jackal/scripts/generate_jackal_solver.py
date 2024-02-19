@@ -15,6 +15,8 @@ from goal_module import GoalModule
 from mpc_base import MPCBaseModule
 from contouring import ContouringModule
 
+from ellipsoid_constraints import EllipsoidConstraintModule
+
 from control_modules import ModuleManager
 from generate_solver import generate_solver
 
@@ -28,6 +30,8 @@ def define_modules(settings) -> ModuleManager:
     
     # modules.add_module(GoalModule(settings))  # Track a goal
     modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))  # Adds weights to the overall weight list
+
+    modules.add_module(EllipsoidConstraintModule(settings)) 
 
     return modules
 

@@ -10,7 +10,7 @@ class ModuleManager:
     """
 
     def __init__(self, params):
-        # self.constraint_manager = inequality.Constraints(params) TODO
+        # self.constraint_manager = inequality.Constraints(params)
         self.modules = []
 
         self.params = params
@@ -18,9 +18,9 @@ class ModuleManager:
     def add_module(self, module):
         self.modules.append(module)
 
-        if module.type == "constraint":
-            for constraint in module.constraints:
-                self.constraint_manager.add_constraint(constraint)
+        # if module.type == "constraint":
+        #     for constraint in module.constraints:
+        #         self.constraint_manager.add_constraint(constraint)
         
         return module
 
@@ -91,11 +91,12 @@ class ConstraintModule(Module):
     def __init__(self):
         super(ConstraintModule, self).__init__()
         self.type = "constraint"
+
         self.constraints = []
-    
+
     def define_parameters(self, params):
         for constraint in self.constraints:
-            constraint.define_parameters(params)
+            constraint.define_parameters(params)        
 
 
 class ObjectiveModule(Module):

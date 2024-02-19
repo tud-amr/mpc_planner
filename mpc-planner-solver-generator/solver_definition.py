@@ -31,36 +31,56 @@ def objective(modules, z, p, model, settings, stage_idx):
     return cost
 
 # lb <= constraints <= ub
-# Ax <= b
-# infinity <= Ax - b <= 0
-def constraints(z, p, model, settings):
-    constr = []
+def constraints(modules, z, p, model, settings, stage_idx):
+    constraints = []
     
-    if False:
-        params = settings["params"]
-        params.load(p)
-        model.load(z)
+    params = settings["params"]
+    params.load(p)
+    model.load(z)
 
-        vehicle_pos = np.array([model.get('x'), model.get('y')])
-        for m in range(settings["num_obstacles"]):
-            A = np.array([params.get(f"obstacle{m}_A1"),
-                        params.get(f"obstacle{m}_A2")])
-            b = params.get(f"obstacle{m}_b")
+    # if False:
+    #     params = settings["params"]
+    #     params.load(p)
+    #     model.load(z)
 
-            constr.append(A@vehicle_pos - b)
+    #     vehicle_pos = np.array([model.get('x'), model.get('y')])
+    #     for m in range(settings["num_obstacles"]):
+    #         A = np.array([params.get(f"obstacle{m}_A1"),
+    #                     params.get(f"obstacle{m}_A2")])
+    #         b = params.get(f"obstacle{m}_b")
 
-    return constr
+    #         constr.append(A@vehicle_pos - b)
+    for module in modules.modules:
+        if module.type == "constraint":
+            for constraint in module.constraints:
+                constraints += constraint.get_constraints(model, params, settings, stage_idx)
+                
 
-def constraint_upper_bounds(settings):
+    return constraints
+
+def constraint_upper_bounds(modules):
     ub = []
-    if False:
-        for m in range(settings["num_obstacles"]):
-            ub.append(0.)
+    
+    for module in modules.modules:
+        if module.type == "constraint":
+            for constraint in module.constraints:
+                ub += constraint.get_upper_bound()
+    print(ub)
     return ub
 
-def constraint_lower_bounds(settings):
+def constraint_lower_bounds(modules):
     lb = []
-    if False:
-        for m in range(settings["num_obstacles"]):
-            lb.append(-np.inf)
+    for module in modules.modules:
+        if module.type == "constraint":
+            for constraint in module.constraints:
+                lb += constraint.get_lower_bound()
+    print(lb)
     return lb
+
+def constraint_number(modules):
+    nh = 0
+    for module in modules.modules:
+        if module.type == "constraint":
+            for constraint in module.constraints:
+                nh += constraint.nh
+    return nh
