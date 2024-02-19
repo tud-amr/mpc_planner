@@ -85,9 +85,10 @@ jobs:
       - name: Create the Badge
         uses: schneegans/dynamic-badges-action@v1.6.0
         with:
-          gistID: 5e90d640f8c212ab7bbac38f72323f80
-          filename: pytest-coverage-comment__main.json
-          label: Coverage Report
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 8356b652d94441ec2318b597dcf4680d
+          filename: test.json
+          label: Coverage Solver Generation
           message: ${{ steps.coverageComment.outputs.coverage }}
           color: ${{ steps.coverageComment.outputs.color }}
           namedLogo: python
