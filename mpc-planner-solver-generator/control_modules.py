@@ -59,21 +59,21 @@ class Module:
         result = self.description
         return result
 
-    def add_submodule(self, submodule):
+    # def add_submodule(self, submodule):
 
-        if not hasattr(self, "submodules"):
-            self.submodules = []
+    #     if not hasattr(self, "submodules"):
+    #         self.submodules = []
 
-        self.submodules.append(submodule)
-        if hasattr(submodule, "constraints"):
-            self.constraints += submodule.constraints
+    #     self.submodules.append(submodule)
+    #     if hasattr(submodule, "constraints"):
+    #         self.constraints += submodule.constraints
 
-        if hasattr(submodule, "objectives"):
-            self.objectives += submodule.objectives
+    #     if hasattr(submodule, "objectives"):
+    #         self.objectives += submodule.objectives
         
-        self.dependencies += submodule.dependencies # Add submodule dependencies
-        self.sources += submodule.sources
-        self.sources.append(str("src/" + submodule.import_name.replace(".h", ".cpp"))) # Add the base file of the submodule
+    #     self.dependencies += submodule.dependencies # Add submodule dependencies
+    #     self.sources += submodule.sources
+    #     self.sources.append(str("src/" + submodule.import_name.replace(".h", ".cpp"))) # Add the base file of the submodule
 
 class ConstraintModule(Module):
     

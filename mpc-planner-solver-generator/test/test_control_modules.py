@@ -38,9 +38,15 @@ def test_module_manager_objective():
     z[3] = 5.
     p = np.ones((npar))
     obj = objective(modules, z, p, model, settings, 0)
+
+    params.load(p)
+    model.load(z)
+    obj2 = modules.modules[0].get_value(model, params, settings, 0)
+    assert obj == obj2
+
     assert obj > 0
 
-def test_module_manager_objective():
+def test_module_manager_constraints():
     settings = dict()
     settings["n_discs"] = 1
     settings["max_obstacles"] = 1

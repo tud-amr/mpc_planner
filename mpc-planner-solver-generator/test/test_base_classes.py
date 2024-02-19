@@ -1,6 +1,9 @@
 import sys, os
 sys.path.append(os.path.join(sys.path[0],'..'))
 
+import numpy as np
+import casadi
+
 from util.parameters import Parameters
 from util.files import load_settings, get_package_path, parameter_map_path, write_to_yaml
 from util.logging import print_value, print_header, print_success, print_warning, print_path
@@ -67,6 +70,8 @@ def test_model():
     lb, ub, x_range = model.get_bounds("x")
     assert ub > lb
     assert x_range > 0
+
+    res_cd = solver_model.numpy_to_casadi(np.array([1., 2., 3.]))
 
 def test_logging():
     print_value("test", "value")
