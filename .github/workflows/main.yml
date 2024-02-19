@@ -62,4 +62,4 @@ jobs:
       #----------------------------------------------
       # Runs a set of commands using the runners shell
       - name: Run pytest
-        run: PYTHONPATH=src/ poetry run python -m pytest mpc-planner-solver-generation/test/ --cov-config=mpc-planner-solver-generation/test/.coveragerc --cov --cov-fail-under=70
+        run: PYTHONPATH=src/ poetry run python -m pytest mpc-planner-solver-generator/test/ --cov-config=mpc-planner-solver-generator/test/.coveragerc --cov --cov-fail-under=70
