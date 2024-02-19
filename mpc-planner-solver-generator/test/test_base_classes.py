@@ -28,9 +28,15 @@ def test_parameters():
     assert params.get("long variable name") == -1.0
 
     # Load the current file
+    found_file = False
+
     temp = sys.argv[0]
     sys.argv[0] = os.path.join(get_package_path("mpc-planner-solver"), "src", "solver_interface.py")
-    cur_file = load_settings("parameter_map")
+    try:
+        cur_file = load_settings("parameter_map")
+        found_file = True
+    except:
+        pass
 
     # Save the test 
     params.save_map()
@@ -38,9 +44,10 @@ def test_parameters():
     assert settings["num parameters"] == 3
 
     # Restore the previous files
-    file_path = parameter_map_path()
-    write_to_yaml(file_path, cur_file)
-    sys.argv[0] = temp
+    if found_file:
+        file_path = parameter_map_path()
+        write_to_yaml(file_path, cur_file)
+        sys.argv[0] = temp
 
 def test_model():
     model = solver_model.ContouringSecondOrderUnicycleModel()
