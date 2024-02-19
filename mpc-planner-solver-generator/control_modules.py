@@ -1,8 +1,9 @@
-from util.logging import print_warning, print_value, print_header
+from util.logging import print_value, print_header
+
 
 class ModuleManager:
     """
-    The idea of modules is that they can include multiple constraint sets if necessary
+    Modules can bundle objectives and constraints
     In addition, they are directly linked to the c++ code module
     """
 
@@ -21,13 +22,6 @@ class ModuleManager:
 
     def get_last_added_module(self):
         return self.modules[-1]
-
-    def contains_module(self, class_name):
-        for module in self.modules:
-            if type(module) == class_name:
-                return True
-
-        return False
 
     def __str__(self):
         result = "--- MPC Modules ---\n"
@@ -75,6 +69,7 @@ class Module:
     #     self.sources += submodule.sources
     #     self.sources.append(str("src/" + submodule.import_name.replace(".h", ".cpp"))) # Add the base file of the submodule
 
+
 class ConstraintModule(Module):
     
     def __init__(self):
@@ -106,6 +101,7 @@ class ObjectiveModule(Module):
         
         return cost
 
+
 class Objective:
     
     def __init__(self) -> None:
@@ -116,6 +112,7 @@ class Objective:
     
     def get_value(self, model, params, settings, stage_idx) -> float:
         raise IOError("Objective did not return a cost")
+
 
 """ OBJECTIVE MODULES """
 

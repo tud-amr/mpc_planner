@@ -1,19 +1,23 @@
 
-from util.files import load_settings, write_to_yaml, solver_settings_path, solver_path
-from util.logging import print_value, print_success, print_header, print_path
+from util.files import load_settings, write_to_yaml
+from util.files import solver_path, solver_settings_path
 
-from generate_cpp_files import generate_cpp_code, generate_module_header, generate_module_cmake
+from util.logging import print_success, print_header, print_path
 
-import solver_model
+from generate_cpp_files import generate_cpp_code, generate_module_header
+from generate_cpp_files import generate_module_cmake
+
 
 def generate_solver(modules, model, settings=None):
     if settings is None:
         settings = load_settings()
 
-    if settings["solver"] != "acados" and  settings["solver"] != "forces":
-        raise IOError("Unknown solver specified in settings.yaml (should be 'acados' or 'forces')")
+    if settings["solver"] != "acados" and settings["solver"] != "forces":
+        raise IOError("Unknown solver specified in settings.yaml"
+                      "(should be 'acados' or 'forces')")
 
-    print_header(f"Creating {settings['solver'].capitalize()} Solver: {settings['name']}_solver")
+    print_header(f"Creating {settings['solver'].capitalize()}"
+                 "Solver: {settings['name']}_solver")
 
     if settings["solver"] == "forces":
         from generate_forces_solver import generate_forces_solver
@@ -45,6 +49,7 @@ def generate_solver(modules, model, settings=None):
     print_success(" -> generated")
 
     return solver, simulator
+
 
 if __name__ == "__main__":
     generate_solver()
