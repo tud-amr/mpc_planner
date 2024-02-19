@@ -9,12 +9,16 @@ solver: "forces" # acados or forces
 control_frequency: 20
 max_obstacles: 8
 robot_radius: 0.325
-obstacle_radius: 0.725
+obstacle_radius: 0.4
 
 contouring:
   num_segments: 3
-  contour: 0.5
+  contour: 0.005
   lag: 0.1
+
+probabilistic:
+  enable: false
+  risk: 0.05
 
 weights:
   goal: 10.

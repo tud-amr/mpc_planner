@@ -6,7 +6,7 @@ Panels:
       Expanded:
         - /Status1
         - /Planner1
-      Splitter Ratio: 0.7235293984413147
+      Splitter Ratio: 0.75
     Tree Height: 746
   - Class: rviz/Selection
     Name: Selection
@@ -189,6 +189,22 @@ Visualization Manager:
             "": true
           Queue Size: 100
           Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /jackal_planner/obstacles
+          Name: Planner Obstacles
+          Namespaces:
+            "": true
+          Queue Size: 100
+          Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /jackal_planner/obstacle_predictions
+          Name: Planner Obstacle Predictions
+          Namespaces:
+            "": true
+          Queue Size: 100
+          Value: true
       Enabled: true
       Name: Planner
     - Class: rviz/MarkerArray
@@ -227,7 +243,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 38.749267578125
+      Distance: 32.647377014160156
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1

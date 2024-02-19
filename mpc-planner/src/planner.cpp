@@ -41,8 +41,39 @@ namespace MPCPlanner
             return _output;
         }
 
-        // Set the initial guess
+        // Set the initial state
         _solver->setXinit(state);
+
+        // Set the initial guess
+
+        for (int k = 0; k < _solver->N; k++)
+        {
+            if (k == 0)
+            {
+                _solver->setVar(0, "x", state.get("x"));
+                _solver->setVar(0, "y", state.get("y"));
+                _solver->setVar(0, "psi", state.get("psi"));
+                _solver->setVar(0, "v", state.get("v"));
+            }
+            else if (k == _solver->N - 1)
+            {
+                _solver->setVar(k, "x", _solver->getOutput(k, "x"));     // x3 (two states after initial) gets loaded into x2 (one state after initial)
+                _solver->setVar(k, "y", _solver->getOutput(k, "y"));     // x3 (two states after initial) gets loaded into x2 (one state after initial)
+                _solver->setVar(k, "psi", _solver->getOutput(k, "psi")); // x3 (two states after initial) gets loaded into x2 (one state after initial)
+                _solver->setVar(k, "v", _solver->getOutput(k, "v"));     // x3 (two states after initial) gets loaded into x2 (one state after initial)
+            }
+            else
+            {
+                // Set x_{k-1} to x^-_{k}
+                // getOutput x_1 is the current state. I.e., the initial guess for the first stage is in x_2
+                _solver->setVar(k, "x", _solver->getOutput(k + 1, "x"));     // x3 (two states after initial) gets loaded into x2 (one state after initial)
+                _solver->setVar(k, "y", _solver->getOutput(k + 1, "y"));     // x3 (two states after initial) gets loaded into x2 (one state after initial)
+                _solver->setVar(k, "psi", _solver->getOutput(k + 1, "psi")); // x3 (two states after initial) gets loaded into x2 (one state after initial)
+                _solver->setVar(k, "v", _solver->getOutput(k + 1, "v"));     // x3 (two states after initial) gets loaded into x2 (one state after initial)
+            }
+        }
+        // for (int k = 0; k < _solver->N; k++)
+        // LOG_VALUE(std::to_string(k), _solver->getVar(k, "x"));
 
         // Update all modules
         for (auto &module : _modules)
@@ -67,7 +98,7 @@ namespace MPCPlanner
         }
 
         _output.success = true;
-        for (int k = 0; k < _solver->N; k++)
+        for (int k = 1; k < _solver->N; k++)
             _output.trajectory.add(_solver->getOutput(k, "x"), _solver->getOutput(k, "y"));
 
         return _output;
@@ -91,6 +122,9 @@ namespace MPCPlanner
             module->visualize(data);
 
         visualizeTrajectory(_output.trajectory, "planned_trajectory", true);
+
+        visualizeObstacles(data.dynamic_obstacles, "obstacles", true);
+        visualizeObstaclePredictions(data.dynamic_obstacles, "obstacle_predictions", true);
     }
 
 };

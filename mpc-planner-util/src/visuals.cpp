@@ -22,4 +22,42 @@ namespace MPCPlanner
 
         return publisher;
     }
-};
+
+    RosTools::ROSMarkerPublisher &visualizeObstacles(const std::vector<DynamicObstacle> &obstacles, const std::string &topic_name, 
+    bool publish, double alpha)
+    {
+        RosTools::ROSMarkerPublisher &publisher = VISUALS.getPublisher(topic_name);
+        auto &cylinder = publisher.getNewPointMarker("CYLINDER");
+
+        for (auto& obstacle : obstacles)
+        {
+            cylinder.setScale(2. * obstacle.radius, 2. * obstacle.radius, 0.01);
+            cylinder.setColorInt(obstacle.index, CONFIG["max_obstacles"].as<int>(), alpha);
+            cylinder.addPointMarker(obstacle.position, 0.0);
+        }
+
+        if (publish)
+            publisher.publish();
+
+        return publisher;
+    }
+    RosTools::ROSMarkerPublisher &visualizeObstaclePredictions(const std::vector<DynamicObstacle> &obstacles, const std::string &topic_name, 
+    bool publish, double alpha)
+    {
+        RosTools::ROSMarkerPublisher &publisher = VISUALS.getPublisher(topic_name);
+        auto &cylinder = publisher.getNewPointMarker("CYLINDER");
+       
+        for (auto& obstacle : obstacles)
+        {
+            cylinder.setScale(2. * obstacle.radius, 2. * obstacle.radius, 0.01);
+            cylinder.setColorInt(obstacle.index, CONFIG["max_obstacles"].as<int>(), alpha);
+            for(size_t k = 0; k < obstacle.prediction.steps.size(); k++)
+                cylinder.addPointMarker(obstacle.prediction.steps[k].position, 0.0);
+        }
+
+        if (publish)
+            publisher.publish();
+
+        return publisher;
+    }
+}; // namespace MPCPlanner

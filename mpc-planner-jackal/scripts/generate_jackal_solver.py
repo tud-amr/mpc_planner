@@ -17,6 +17,7 @@ from contouring import ContouringModule
 
 from ellipsoid_constraints import EllipsoidConstraintModule
 
+from solver_model import ContouringSecondOrderUnicycleModel
 from control_modules import ModuleManager
 from generate_solver import generate_solver
 
@@ -37,8 +38,9 @@ def define_modules(settings) -> ModuleManager:
 
 settings = load_settings()
 modules = define_modules(settings)
+model = ContouringSecondOrderUnicycleModel()
 
-generate_solver(modules, settings)
+generate_solver(modules, model, settings)
 
 print_path("Solver path", solver_path(settings), tab=True, end="")
 print_success(" -> generated")

@@ -8,10 +8,10 @@
   <arg name="overwrite_pedestrian_scenario" default="false" />
 
   <node pkg="mpc-planner-jackal" type="jackal_planner" name="jackal_planner" respawn="false" output="screen">
-        <remap from="/input/state" to="/jackal_velocity_controller/odom"/>
+        <remap from="/input/state" to="robot_state"/>
         <remap from="/input/goal" to="/goal_pose"/>
         <remap from="/input/reference_path" to="roadmap/reference"/>
-        <remap from="/input/dynamic_objects" to="None"/>
+        <remap from="/input/obstacles" to="/pedestrian_simulator/trajectory_predictions"/>
         <remap from="/output/command" to="/cmd_vel"/>
   </node>
 

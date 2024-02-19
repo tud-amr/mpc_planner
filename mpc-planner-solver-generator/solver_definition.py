@@ -37,19 +37,7 @@ def constraints(modules, z, p, model, settings, stage_idx):
     params = settings["params"]
     params.load(p)
     model.load(z)
-
-    # if False:
-    #     params = settings["params"]
-    #     params.load(p)
-    #     model.load(z)
-
-    #     vehicle_pos = np.array([model.get('x'), model.get('y')])
-    #     for m in range(settings["num_obstacles"]):
-    #         A = np.array([params.get(f"obstacle{m}_A1"),
-    #                     params.get(f"obstacle{m}_A2")])
-    #         b = params.get(f"obstacle{m}_b")
-
-    #         constr.append(A@vehicle_pos - b)
+    
     for module in modules.modules:
         if module.type == "constraint":
             for constraint in module.constraints:
@@ -60,12 +48,10 @@ def constraints(modules, z, p, model, settings, stage_idx):
 
 def constraint_upper_bounds(modules):
     ub = []
-    
     for module in modules.modules:
         if module.type == "constraint":
             for constraint in module.constraints:
                 ub += constraint.get_upper_bound()
-    print(ub)
     return ub
 
 def constraint_lower_bounds(modules):
@@ -74,7 +60,6 @@ def constraint_lower_bounds(modules):
         if module.type == "constraint":
             for constraint in module.constraints:
                 lb += constraint.get_lower_bound()
-    print(lb)
     return lb
 
 def constraint_number(modules):

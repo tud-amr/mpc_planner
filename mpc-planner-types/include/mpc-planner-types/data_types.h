@@ -10,21 +10,80 @@
 namespace MPCPlanner
 {
 
-    struct DynamicObstacle
+    struct StaticObstacle
     {
-        int index;
-        Eigen::Vector2d position;
-        Eigen::Vector2d velocity;
+    };
 
-        DynamicObstacle(int _index, const Eigen::Vector2d &_position, const Eigen::Vector2d &_velocity)
-            : index(_index), position(_position), velocity(_velocity)
+    enum class PredictionType{
+        DETERMINISTIC = 0,
+        GAUSSIAN,
+        NONGAUSSIAN,
+        NONE
+    };
+
+    struct PredictionStep{
+
+        // Mean
+        Eigen::Vector2d position;
+        double angle;
+
+        // Covariance
+        double major_radius;
+        double minor_radius;
+
+        PredictionStep(const Eigen::Vector2d &position, double angle, double major_radius, double minor_radius)
+            : position(position), angle(angle), major_radius(major_radius), minor_radius(minor_radius)
         {
         }
     };
 
-    struct StaticObstacle
-    {
+    struct Prediction{
+
+        PredictionType type;
+
+        std::vector<PredictionStep> steps;
+
+       Prediction()
+            : type(PredictionType::NONE)
+        {
+        }
+
+        Prediction(PredictionType type)
+            : type(type)
+        {
+        }
+
+ 
     };
+
+    struct DynamicObstacle
+    {
+        int index;
+
+        Eigen::Vector2d position;
+        double angle;
+
+        double radius;
+
+        Prediction prediction;
+
+        DynamicObstacle(int _index, const Eigen::Vector2d &_position, double _angle, double _radius)
+            : index(_index), position(_position), angle(_angle), radius(_radius)
+        {
+        }
+    };
+
+    inline Prediction getConstantVelocityPrediction(const Eigen::Vector2d &position, const Eigen::Vector2d &velocity, double dt, int steps)
+    {
+        Prediction prediction(PredictionType::DETERMINISTIC);
+
+        for (int i = 0; i < steps; i++)
+            prediction.steps.push_back(PredictionStep(position + velocity * dt * i, 0., 0., 0.));
+
+        return prediction;
+    }
+
+
 
     struct ReferencePath
     {
@@ -82,15 +141,6 @@ namespace MPCPlanner
         {
             positions.push_back(Eigen::Vector2d(x, y));
         }
-
-        // double getX(int k) const
-        // {
-        //     return positions[k](0);
-        // }
-        // double getY(int k) const
-        // {
-        //     return positions[k](1);
-        // }
     };
 }
 

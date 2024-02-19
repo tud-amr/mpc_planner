@@ -9,7 +9,7 @@
 
 using namespace MPCPlanner;
 
-JackalPlanner::JackalPlanner(ros::NodeHandle& nh)
+JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
 {
 
     LOG_INFO("Started Jackal Planner");
@@ -27,20 +27,24 @@ JackalPlanner::JackalPlanner(ros::NodeHandle& nh)
 
     // Start the control loop
     _timer = nh.createTimer(
-            ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()), 
-            &JackalPlanner::Loop, 
-            this);
+        ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()),
+        &JackalPlanner::Loop,
+        this);
 
     LOG_DIVIDER();
 }
 
-void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle& nh)
+void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
 {
     LOG_INFO("initializeSubscribersAndPublishers");
 
-    _state_sub = nh.subscribe<nav_msgs::Odometry>(
+    // _state_sub = nh.subscribe<nav_msgs::Odometry>(
+    //     "/input/state", 5,
+    //     boost::bind(&JackalPlanner::stateCallback, this, _1));
+
+    _state_sub = nh.subscribe<geometry_msgs::PoseStamped>(
         "/input/state", 5,
-        boost::bind(&JackalPlanner::stateCallback, this, _1));
+        boost::bind(&JackalPlanner::statePoseCallback, this, _1));
 
     _goal_sub = nh.subscribe<geometry_msgs::PoseStamped>(
         "/input/goal", 1,
@@ -49,6 +53,10 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle& nh)
     _path_sub = nh.subscribe<nav_msgs::Path>(
         "/input/reference_path", 1,
         boost::bind(&JackalPlanner::pathCallback, this, _1));
+
+    _obstacle_sub = nh.subscribe<mpc_planner_msgs::obstacle_array>(
+        "/input/obstacles", 1,
+        boost::bind(&JackalPlanner::obstacleCallback, this, _1));
 
     _cmd_pub = nh.advertise<geometry_msgs::Twist>(
         "/output/command", 1);
@@ -90,7 +98,7 @@ void JackalPlanner::Loop(const ros::TimerEvent &event)
     LOG_DEBUG("============= End Loop =============");
 }
 
-void JackalPlanner::stateCallback(const nav_msgs::Odometry::ConstPtr& msg)
+void JackalPlanner::stateCallback(const nav_msgs::Odometry::ConstPtr &msg)
 {
     // LOG_INFO("State callback");
     _state.set("x", msg->pose.pose.position.x);
@@ -99,7 +107,15 @@ void JackalPlanner::stateCallback(const nav_msgs::Odometry::ConstPtr& msg)
     _state.set("v", std::sqrt(std::pow(msg->twist.twist.linear.x, 2.) + std::pow(msg->twist.twist.linear.y, 2.)));
 }
 
-void JackalPlanner::goalCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
+void JackalPlanner::statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
+{
+    _state.set("x", msg->pose.position.x);
+    _state.set("y", msg->pose.position.y);
+    _state.set("psi", msg->pose.orientation.z);
+    _state.set("v", msg->pose.position.z);
+}
+
+void JackalPlanner::goalCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
     LOG_DEBUG("Goal callback");
     _data.goal(0) = msg->pose.position.x;
@@ -107,7 +123,7 @@ void JackalPlanner::goalCallback(const geometry_msgs::PoseStamped::ConstPtr& msg
     _data.goal_received = true;
 }
 
-bool JackalPlanner::isPathTheSame(const nav_msgs::Path::ConstPtr& msg)
+bool JackalPlanner::isPathTheSame(const nav_msgs::Path::ConstPtr &msg)
 {
     // Check if the path is the same
     if (_data.reference_path.x.size() != msg->poses.size())
@@ -123,7 +139,7 @@ bool JackalPlanner::isPathTheSame(const nav_msgs::Path::ConstPtr& msg)
     return true;
 }
 
-void JackalPlanner::pathCallback(const nav_msgs::Path::ConstPtr& msg)
+void JackalPlanner::pathCallback(const nav_msgs::Path::ConstPtr &msg)
 {
     LOG_DEBUG("Path callback");
 
@@ -141,6 +157,49 @@ void JackalPlanner::pathCallback(const nav_msgs::Path::ConstPtr& msg)
     _planner->onDataReceived(_data, "reference_path");
 }
 
+void JackalPlanner::obstacleCallback(const mpc_planner_msgs::obstacle_array::ConstPtr &msg)
+{
+    _data.dynamic_obstacles.clear();
+
+    for (auto &obstacle : msg->obstacles)
+    {
+        // Save the obstacle
+        _data.dynamic_obstacles.emplace_back(
+            obstacle.id,
+            Eigen::Vector2d(obstacle.pose.position.x, obstacle.pose.position.y),
+            RosTools::quaternionToAngle(obstacle.pose),
+            CONFIG["obstacle_radius"].as<double>());
+        auto &dynamic_obstacle = _data.dynamic_obstacles.back();
+
+        if (obstacle.probabilities.size() == 0) // No Predictions!
+            continue;
+
+        // Save the prediction
+        if (obstacle.probabilities.size() == 1) // One mode
+        {
+            const auto &mode = obstacle.gaussians[0];
+            for (size_t k = 0; k < mode.mean.poses.size(); k++)
+            {
+                dynamic_obstacle.prediction.steps.emplace_back(
+                    Eigen::Vector2d(mode.mean.poses[k].pose.position.x, mode.mean.poses[k].pose.position.y),
+                    RosTools::quaternionToAngle(mode.mean.poses[k].pose.orientation),
+                    mode.major_semiaxis[k],
+                    mode.minor_semiaxis[k]);
+            }
+
+            if (mode.major_semiaxis.back() == 0. || !CONFIG["probabilistic"]["enable"].as<bool>())
+                dynamic_obstacle.prediction.type = PredictionType::DETERMINISTIC;
+            else
+                dynamic_obstacle.prediction.type = PredictionType::GAUSSIAN;
+        }
+        else
+        {
+            ROSTOOLS_ASSERT(false, "Multiple modes not yet supported");
+        }
+    }
+    _planner->onDataReceived(_data, "obstacles");
+}
+
 void JackalPlanner::visualize()
 {
     auto &publisher = VISUALS.getPublisher("angle");
@@ -154,7 +213,7 @@ void JackalPlanner::visualize()
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, ros::this_node::getName());
-    
+
     ros::NodeHandle nh;
     auto jackal_planner = std::make_shared<JackalPlanner>(nh);
     VISUALS.init(&nh);

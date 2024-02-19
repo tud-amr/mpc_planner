@@ -13,6 +13,7 @@ set(DEPENDENCIES
   mpc-planner-solver
   mpc-planner-util
   mpc-planner-types
+  mpc_planner_msgs
   ros_tools
   nav_msgs
 )
@@ -25,6 +26,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}
   INCLUDE_DIRS include include/${PROJECT_NAME}
+
   # LIBRARIES ${PROJECT_NAME}
 )
 
@@ -36,7 +38,7 @@ include_directories(
 add_executable(jackal_planner src/ros1_jackal_planner.cpp)
 add_dependencies(jackal_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(jackal_planner
-  ${catkin_LIBRARIES} 
+  ${catkin_LIBRARIES}
   yaml-cpp
 )
 install(

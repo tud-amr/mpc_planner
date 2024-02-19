@@ -6,7 +6,7 @@ from generate_cpp_files import generate_cpp_code, generate_module_header, genera
 
 import solver_model
 
-def generate_solver(modules, settings=None):
+def generate_solver(modules, model, settings=None):
     if settings is None:
         settings = load_settings()
 
@@ -14,9 +14,6 @@ def generate_solver(modules, settings=None):
         raise IOError("Unknown solver specified in settings.yaml (should be 'acados' or 'forces')")
 
     print_header(f"Creating {settings['solver'].capitalize()} Solver: {settings['name']}_solver")
-
-    # Define the model
-    model = solver_model.ContouringSecondOrderUnicycleModel()
 
     if settings["solver"] == "forces":
         from generate_forces_solver import generate_forces_solver
