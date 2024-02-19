@@ -3,6 +3,8 @@
 
 #include <mpc-planner-types/data_types.h>
 
+#include <mpc-planner-util/profiling.h>
+
 #include <memory>
 #include <vector>
 
@@ -41,6 +43,8 @@ namespace MPCPlanner
         PlannerOutput _output;
 
         std::vector<std::shared_ptr<ControllerModule>> _modules;
+
+        std::unique_ptr<Benchmarker> _benchmarker;
     };
 
 }

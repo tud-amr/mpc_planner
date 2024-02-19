@@ -59,7 +59,6 @@ def generated_include_file(settings):
     return f"{include_path}mpc_planner_generated.h"
 
 def solver_name(settings):
-    # return settings["name"].capitalize() + "Solver"
     return "Solver"
     
 def write_to_yaml(filename, data):

@@ -13,7 +13,7 @@ obstacle_radius: 0.4
 
 contouring:
   num_segments: 3
-  contour: 0.005
+  contour: 0.5
   lag: 0.1
 
 probabilistic:

@@ -7,6 +7,10 @@ Defines inequality constraints of different types.
 See control_modules.py for their integration into the controller 
 """
 
+"""
+DEPRECATED
+"""
+
 # Class to aggregate the number of constraints and nh, nparam
 class Constraints:
 

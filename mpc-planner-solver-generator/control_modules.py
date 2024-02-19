@@ -1,6 +1,3 @@
-# import inequality TODO
-import objective
-
 from util.logging import print_warning, print_value, print_header
 
 class ModuleManager:
@@ -9,19 +6,11 @@ class ModuleManager:
     In addition, they are directly linked to the c++ code module
     """
 
-    def __init__(self, params):
-        # self.constraint_manager = inequality.Constraints(params)
+    def __init__(self):
         self.modules = []
 
-        self.params = params
-
     def add_module(self, module):
-        self.modules.append(module)
-
-        # if module.type == "constraint":
-        #     for constraint in module.constraints:
-        #         self.constraint_manager.add_constraint(constraint)
-        
+        self.modules.append(module)        
         return module
 
     def inequality_constraints(self, z, param, settings, model):
@@ -117,6 +106,16 @@ class ObjectiveModule(Module):
         
         return cost
 
+class Objective:
+    
+    def __init__(self) -> None:
+        pass
+    
+    def define_parameters(self, params):
+        raise IOError("Objective did not specify parameters")
+    
+    def get_value(self, model, params, settings, stage_idx) -> float:
+        raise IOError("Objective did not return a cost")
 
 """ OBJECTIVE MODULES """
 

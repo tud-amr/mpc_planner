@@ -1,8 +1,7 @@
 import sys, os
 sys.path.append(os.path.join(sys.path[0],'..','..', 'mpc-planner-solver-generator'))
 
-from control_modules import ObjectiveModule
-from objective import Objective
+from control_modules import ObjectiveModule, Objective
 
 """
 Track a goal in 2D

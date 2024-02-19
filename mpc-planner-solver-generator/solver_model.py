@@ -155,9 +155,3 @@ class ContouringSecondOrderUnicycleModel(DynamicsModel):
                          w,
                          a,
                          v])
-
-
-class RealTimeModel(DynamicsModel):
-
-    def __init__(self, settings):
-        super(RealTimeModel, self).__init__()

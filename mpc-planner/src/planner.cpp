@@ -21,6 +21,8 @@ namespace MPCPlanner
         _solver->reset();
 
         initializeModules(_modules, _solver);
+
+        _benchmarker = std::make_unique<Benchmarker>("optimization");
     }
 
     // Given real-time data, solve the MPC problem
@@ -45,41 +47,12 @@ namespace MPCPlanner
         _solver->setXinit(state);
 
         // Set the initial guess
-
-        for (int k = 0; k < _solver->N; k++)
-        {
-            if (k == 0)
-            {
-                _solver->setVar(0, "x", state.get("x"));
-                _solver->setVar(0, "y", state.get("y"));
-                _solver->setVar(0, "psi", state.get("psi"));
-                _solver->setVar(0, "v", state.get("v"));
-            }
-            else if (k == _solver->N - 1)
-            {
-                _solver->setVar(k, "x", _solver->getOutput(k, "x"));     // x3 (two states after initial) gets loaded into x2 (one state after initial)
-                _solver->setVar(k, "y", _solver->getOutput(k, "y"));     // x3 (two states after initial) gets loaded into x2 (one state after initial)
-                _solver->setVar(k, "psi", _solver->getOutput(k, "psi")); // x3 (two states after initial) gets loaded into x2 (one state after initial)
-                _solver->setVar(k, "v", _solver->getOutput(k, "v"));     // x3 (two states after initial) gets loaded into x2 (one state after initial)
-            }
-            else
-            {
-                // Set x_{k-1} to x^-_{k}
-                // getOutput x_1 is the current state. I.e., the initial guess for the first stage is in x_2
-                _solver->setVar(k, "x", _solver->getOutput(k + 1, "x"));     // x3 (two states after initial) gets loaded into x2 (one state after initial)
-                _solver->setVar(k, "y", _solver->getOutput(k + 1, "y"));     // x3 (two states after initial) gets loaded into x2 (one state after initial)
-                _solver->setVar(k, "psi", _solver->getOutput(k + 1, "psi")); // x3 (two states after initial) gets loaded into x2 (one state after initial)
-                _solver->setVar(k, "v", _solver->getOutput(k + 1, "v"));     // x3 (two states after initial) gets loaded into x2 (one state after initial)
-            }
-        }
-        // for (int k = 0; k < _solver->N; k++)
-        // LOG_VALUE(std::to_string(k), _solver->getVar(k, "x"));
+        _solver->setWarmstart(state);
 
         // Update all modules
         for (auto &module : _modules)
             module->update(state, data);
 
-        // Load parameters
         for (int k = 0; k < _solver->N; k++)
         {
             for (auto &module : _modules)
@@ -87,7 +60,9 @@ namespace MPCPlanner
         }
 
         // Solve MPC
+        _benchmarker->start();
         int exit_flag = _solver->solve();
+        _benchmarker->stop();
 
         if (exit_flag != 1)
         {

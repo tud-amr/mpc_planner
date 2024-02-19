@@ -23,7 +23,7 @@ from generate_solver import generate_solver
 
 
 def define_modules(settings) -> ModuleManager:
-    modules = ModuleManager(settings)
+    modules = ModuleManager()
     base_module = modules.add_module(MPCBaseModule(settings))  # Adds weights to the overall weight list
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")

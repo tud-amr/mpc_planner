@@ -5,8 +5,7 @@
 #include <mpc-planner-solver/state.h>
 
 #include <mpc-planner-util/load_yaml.hpp>
-// #include <vector>
-// #include <iostream>
+
 #include <memory>
 
 #include <Solver.h>
@@ -69,6 +68,7 @@ namespace MPCPlanner
 		double getParameter(int k, std::string &&parameter);
 		void setXinit(std::string &&state_name, double value);
 		void setXinit(const State &state);
+		void setWarmstart(const State &state);
 
 		/** @brief Solve the optimization */
 		int solve();
