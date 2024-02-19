@@ -91,4 +91,4 @@ namespace MPCPlanner
             return findClosestSRecursively(point, mid, high, num_recursions + 1);
     }
 
-};
+}

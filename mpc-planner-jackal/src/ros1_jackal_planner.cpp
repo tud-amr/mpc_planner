@@ -64,6 +64,7 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
 
 void JackalPlanner::Loop(const ros::TimerEvent &event)
 {
+    (void)event;
     LOG_DEBUG("============= Loop =============");
 
     _benchmarker->start();

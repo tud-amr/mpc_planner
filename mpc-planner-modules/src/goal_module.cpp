@@ -8,7 +8,7 @@ namespace MPCPlanner
 {
 
     GoalModule::GoalModule(std::shared_ptr<Solver> solver)
-        : ControllerModule(solver, ModuleType::OBJECTIVE, "goal_module")
+        : ControllerModule(ModuleType::OBJECTIVE, solver, "goal_module")
     {
     }
 

@@ -22,6 +22,11 @@ double State::get(std::string &&var_name) const
     return _state[_model_map[var_name][1].as<int>() - _nu]; // States come after the inputs
 }
 
+Eigen::Vector2d State::getPos() const
+{
+    return Eigen::Vector2d(get("x"), get("y"));
+}
+
 void State::set(std::string &&var_name, double value)
 {
     _state[_model_map[var_name][1].as<int>() - _nu] = value;

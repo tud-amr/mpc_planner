@@ -102,4 +102,4 @@ namespace MPCPlanner
         visualizeObstaclePredictions(data.dynamic_obstacles, "obstacle_predictions", true);
     }
 
-};
+}

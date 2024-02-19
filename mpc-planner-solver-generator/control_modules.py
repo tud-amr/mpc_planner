@@ -27,9 +27,8 @@ class ModuleManager:
         result = "--- MPC Modules ---\n"
         for module in self.modules:
             result += str(module) + "\n"
-
         return result
-    
+
     def print(self):
         print_header("MPC Modules")
         for module in self.modules:
@@ -52,6 +51,9 @@ class Module:
     def __str__(self):
         result = self.description
         return result
+    
+    def add_definitions(self, header_file):
+        pass
 
     # def add_submodule(self, submodule):
 

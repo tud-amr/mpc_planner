@@ -24,7 +24,7 @@ namespace MPCPlanner
 
         int numSegments() const { return _x_spline.m_x_.size(); }
         double getStartOfSegment(int index) const { return _s_vector[index]; };
-        double length() const { return _s_vector.back();}
+        double length() const { return _s_vector.back(); }
 
     private:
         tk::spline _x_spline, _y_spline;
@@ -35,6 +35,6 @@ namespace MPCPlanner
 
         double findClosestSRecursively(const Eigen::Vector2d &point, double low, double high, int num_recursions) const;
     };
-};
+}
 
 #endif // MPC_PLANNER_UTIL_SPLINE_H

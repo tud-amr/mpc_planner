@@ -1,32 +1,33 @@
-import sys, os
-sys.path.append(os.path.join(sys.path[0],'..','..', 'mpc-planner-solver-generator'))
+import os
+import sys
 
 import casadi as cd
 import numpy as np
 
+from util.math import rotation_matrix
 from control_modules import ConstraintModule
 
-def rotation_matrix(angle):
-    return np.array([[cd.cos(angle), -cd.sin(angle)],
-                    [cd.sin(angle), cd.cos(angle)]])
+sys.path.append(os.path.join(sys.path[0], "..", "..", "mpc-planner-solver-generator"))
+
 
 class EllipsoidConstraintModule(ConstraintModule):
-    
+
     def __init__(self, settings):
         super().__init__()
 
         self.n_discs = settings["n_discs"]
         self.max_obstacles = settings["max_obstacles"]
 
-        self.module_name = "EllipsoidConstraints"  # Needs to correspond to the c++ name of the module
+        self.module_name = (
+            "EllipsoidConstraints"  # Needs to correspond to the c++ name of the module
+        )
         self.import_name = "ellipsoid_constraints.h"
         self.description = "Avoid obstacles, modeled as ellipsoids (possibly including Gaussian noise)."
 
-        self.constraints.append(
-            EllipsoidConstraint(self.n_discs, self.max_obstacles))
+        self.constraints.append(EllipsoidConstraint(self.n_discs, self.max_obstacles))
 
-        
-class EllipsoidConstraint():
+
+class EllipsoidConstraint:
 
     def __init__(self, n_discs, max_obstacles):
         self.max_obstacles = max_obstacles
@@ -35,7 +36,7 @@ class EllipsoidConstraint():
         self.nh = max_obstacles * n_discs
 
     def define_parameters(self, params):
-        params.add(f"ego_disc_radius")
+        params.add("ego_disc_radius")
 
         for disc_id in range(self.n_discs):
             params.add(f"ego_disc_{disc_id}_offset")
@@ -65,11 +66,11 @@ class EllipsoidConstraint():
 
     def get_constraints(self, model, params, settings, stage_idx):
         constraints = []
-        pos_x = model.get('x')
-        pos_y = model.get('y')
+        pos_x = model.get("x")
+        pos_y = model.get("y")
         pos = np.array([pos_x, pos_y])
 
-        psi = model.get('psi')
+        psi = model.get("psi")
         # slack = model.get('slack')
 
         rotation_car = rotation_matrix(psi)
@@ -95,11 +96,17 @@ class EllipsoidConstraint():
             # Compute ellipse matrix
             obst_major *= cd.sqrt(chi)
             obst_minor *= cd.sqrt(chi)
-            ab = np.array([[1. / ((obst_major + (r_disc + obst_r)) ** 2), 0],
-                           [0, 1. / ((obst_minor + (r_disc + obst_r)) ** 2)]])
+            ab = np.array(
+                [
+                    [1.0 / ((obst_major + (r_disc + obst_r)) ** 2), 0],
+                    [0, 1.0 / ((obst_minor + (r_disc + obst_r)) ** 2)],
+                ]
+            )
 
             obstacle_rotation = rotation_matrix(obst_psi)
-            obstacle_ellipse_matrix = obstacle_rotation.transpose().dot(ab).dot(obstacle_rotation)
+            obstacle_ellipse_matrix = (
+                obstacle_rotation.transpose().dot(ab).dot(obstacle_rotation)
+            )
 
             for disc_it in range(0, self.n_discs):
                 # Get and compute the disc position
@@ -110,7 +117,11 @@ class EllipsoidConstraint():
 
                 # construct the constraint and append it
                 disc_to_obstacle = disc_pos - obstacle_cog
-                c_disc_obstacle = disc_to_obstacle.transpose().dot(obstacle_ellipse_matrix).dot(disc_to_obstacle)
-                constraints.append(c_disc_obstacle)# + slack)
+                c_disc_obstacle = (
+                    disc_to_obstacle.transpose()
+                    .dot(obstacle_ellipse_matrix)
+                    .dot(disc_to_obstacle)
+                )
+                constraints.append(c_disc_obstacle)  # + slack)
 
         return constraints

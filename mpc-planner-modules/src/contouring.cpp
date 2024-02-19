@@ -8,7 +8,7 @@
 namespace MPCPlanner
 {
   Contouring::Contouring(std::shared_ptr<Solver> solver)
-      : ControllerModule(solver, ModuleType::OBJECTIVE, "contouring")
+      : ControllerModule(ModuleType::OBJECTIVE, solver, "contouring")
   {
     LOG_INFO("Initializing Contouring Module");
   }

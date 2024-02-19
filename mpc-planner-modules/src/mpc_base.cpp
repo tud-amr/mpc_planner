@@ -7,7 +7,7 @@ namespace MPCPlanner
 {
 
   MPCBaseModule::MPCBaseModule(std::shared_ptr<Solver> solver)
-      : ControllerModule(solver, ModuleType::OBJECTIVE, "mpc_base")
+      : ControllerModule(ModuleType::OBJECTIVE, solver, "mpc_base")
   {
   }
 

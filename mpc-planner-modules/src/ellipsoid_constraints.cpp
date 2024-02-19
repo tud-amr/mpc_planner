@@ -10,7 +10,7 @@
 namespace MPCPlanner
 {
   EllipsoidConstraints::EllipsoidConstraints(std::shared_ptr<Solver> solver)
-      : ControllerModule(solver, ModuleType::OBJECTIVE, "contouring")
+      : ControllerModule(ModuleType::CONSTRAINT, solver, "ellipsoid_constraints")
   {
     LOG_INFO("Initializing EllipsoidConstraints Module");
   }

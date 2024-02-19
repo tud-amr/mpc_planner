@@ -3,6 +3,8 @@
 
 #include <mpc-planner-util/load_yaml.hpp>
 
+#include <Eigen/Dense>
+
 #include <vector>
 #include <string>
 
@@ -14,6 +16,7 @@ namespace MPCPlanner
 
         void initialize();
         double get(std::string &&var_name) const;
+        Eigen::Vector2d getPos() const;
         void set(std::string &&var_name, double value);
         void print() const;
 

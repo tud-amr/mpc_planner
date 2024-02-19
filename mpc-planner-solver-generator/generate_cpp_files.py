@@ -77,6 +77,7 @@ def add_reset_solver(header_file, cpp_file):
                         "\t\t\t_params.x0[i] = 0.0;\n")
     close_function(cpp_file)
 
+
 def add_state_and_inputs(header_file, cpp_file, model):
     
     # Inputs references
@@ -91,6 +92,7 @@ def add_state_and_inputs(header_file, cpp_file, model):
         header_file.write("\tdouble& " + model.states[i] + \
                           "(unsigned int k) { return _params.x0[k * nvar + " + str(model.nu + i) + "]; };\n")
 
+
 def add_set_and_get_parameter(header_file, cpp_file):
     
     header_file.write("\t/** @brief Set and get a solver parameter at index index of stage k */\n")
@@ -102,6 +104,7 @@ def add_set_and_get_parameter(header_file, cpp_file):
     cpp_file.write("\t\treturn _params.all_parameters[k*npar + _parameter_map[parameter].as<int>()];\n")
     close_function(cpp_file)
 
+
 def add_solve(header_file, cpp_file, name, forces_solver_name):
     header_file.write("\t/** @brief Solve the optimization */\n")
     open_function(header_file, cpp_file, "int solve()")
@@ -109,11 +112,13 @@ def add_solve(header_file, cpp_file, name, forces_solver_name):
     cpp_file.write("\t\treturn exit_code;\n")
     close_function(cpp_file)
     
+
 # NOTE: Do I need the "-nu" here?
 def add_xinit(header_file, cpp_file, model):
     open_function(header_file, cpp_file, "void setXinit(std::string&& state_name, double value)")
     cpp_file.write("\t\t_params.xinit[_model_map[state_name][1].as<int>() - nu] = value;\n")
     close_function(cpp_file)
+
 
 # NOTE: first output is the initial state
 def add_get_output(header_file, cpp_file, settings):
@@ -123,6 +128,7 @@ def add_get_output(header_file, cpp_file, settings):
                        f"\t\t\treturn _output.x{k+1}[_model_map[state_name][1].as<int>()];\n")
     # cpp_file.write("throw std::runtime_expc")
     close_function(cpp_file)
+
 
 def generate_module_header(modules):
     path = f"{get_package_path('mpc-planner-modules')}/include/mpc-planner-modules/modules.h"
@@ -134,8 +140,15 @@ def generate_module_header(modules):
     module_header.write("#define __MPC_PLANNER_GENERATED_MODULES_H__\n\n")
     for module in modules.modules:
         module_header.write(f"#include <mpc-planner-modules/{module.import_name}>\n")
+        for source in module.sources:
+            module_header.write(f"#include <mpc-planner-modules/{source}>\n")
+
     module_header.write("\n")
     
+    for module in modules.modules:
+        module.add_definitions(module_header)
+    module_header.write("\n")
+
     module_header.write("namespace MPCPlanner\n{\n")
     module_header.write("\tclass Solver;\n")
     module_header.write("\tinline void initializeModules(std::vector<std::shared_ptr<ControllerModule>> &modules, std::shared_ptr<Solver> solver)\n\t{\n")
@@ -164,6 +177,7 @@ def generate_module_cmake(modules):
     module_cmake.write(")\n")
     module_cmake.close()
     print_success(" -> generated")
+
 
 def generate_cpp_code(settings, model):   
     name = settings["name"].capitalize()

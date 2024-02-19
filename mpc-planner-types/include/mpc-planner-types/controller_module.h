@@ -33,8 +33,8 @@ namespace MPCPlanner
          * @brief Construct a new Controller Module object. Note that controller module initialization happens in the solver class itself based on the
          * python code.
          */
-        ControllerModule(std::shared_ptr<Solver> solver, ModuleType module_type, const std::string &&module_name)
-            : _solver(solver), type(module_type), _name(module_name)
+        ControllerModule(ModuleType module_type, std::shared_ptr<Solver> solver, const std::string &&module_name)
+            : type(module_type), _solver(solver), _name(module_name)
         {
         }
 
@@ -43,17 +43,33 @@ namespace MPCPlanner
     public:
         /** ==== MAIN FUNCTIONS ==== */
         /** @brief Update the module (any computations that need to happen before setting solver parameters) */
-        virtual void update(State &state, const RealTimeData &data){};
+        virtual void update(State &state, const RealTimeData &data)
+        {
+            (void)state;
+            (void)data;
+        };
 
         /** @brief Insert computed parameters for the solver */
-        virtual void setParameters(const RealTimeData &data, int k){};
+        virtual void setParameters(const RealTimeData &data, int k)
+        {
+            (void)data;
+            (void)k;
+        };
 
         /** @brief Visualize the computations in this module */
-        virtual void visualize(const RealTimeData &data){};
+        virtual void visualize(const RealTimeData &data)
+        {
+            (void)data;
+        };
 
         /** ==== OPTIONAL FUNCTIONS ==== */
         /** @brief Check if the realtime data is complete for this module */
-        virtual bool isDataReady(const RealTimeData &data, std::string &missing_data) { return true; }; // Default: true
+        virtual bool isDataReady(const RealTimeData &data, std::string &missing_data)
+        {
+            (void)data;
+            (void)missing_data;
+            return true;
+        };
 
         /**
          * @brief Check if the objective of this module was reached
@@ -65,7 +81,11 @@ namespace MPCPlanner
          * @brief Function used to update any class members when new data is received
          * @param data_name The name of the data that was updated (to decide if anything needs to be updated)
          */
-        virtual void onDataReceived(RealTimeData &data, std::string &&data_name){};
+        virtual void onDataReceived(RealTimeData &data, std::string &&data_name)
+        {
+            (void)data;
+            (void)data_name;
+        };
         virtual void onReset(){};
 
         /**
@@ -88,6 +108,7 @@ namespace MPCPlanner
 
         /** ================================== */
 
+    public:
         ModuleType type; /* Constraint or Objective type */
 
     protected:
