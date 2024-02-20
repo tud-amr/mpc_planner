@@ -1,3 +1,7 @@
+[![Test Solver Generation Package](https://github.com/oscardegroot/mpc-planner/actions/workflows/main.yml/badge.svg)](https://github.com/oscardegroot/mpc-planner/actions/workflows/main.yml)
+![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/oscardegroot/8356b652d94441ec2318b597dcf4680d/raw/test.json)
+
+
 # MPC Planner - Solver Generator
 To run the MPC in C++, this package generates an optimization solver with an interface for C++.
 
