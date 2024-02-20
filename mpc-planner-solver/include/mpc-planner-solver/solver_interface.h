@@ -60,8 +60,8 @@ namespace MPCPlanner
 		void reset();
 		~Solver();
 
-		void setVar(unsigned int k, std::string &&var_name, double value);
-		double getVar(unsigned int k, std::string &&var_name);
+		void setEgoPrediction(unsigned int k, std::string &&var_name, double value);
+		double getEgoPrediction(unsigned int k, std::string &&var_name);
 
 		/** @brief Set and get a solver parameter at index index of stage k */
 		void setParameter(int k, std::string &&parameter, double value);

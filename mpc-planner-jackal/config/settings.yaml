@@ -16,6 +16,9 @@ contouring:
   contour: 0.05
   lag: 0.1
 
+linearized_constraints:
+  relax: true
+
 probabilistic:
   enable: false
   risk: 0.05

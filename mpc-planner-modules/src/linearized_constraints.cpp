@@ -19,15 +19,11 @@ namespace MPCPlanner
     _b.resize(CONFIG["n_discs"].as<int>());
     for (int d = 0; d < CONFIG["n_discs"].as<int>(); d++)
     {
-      std::cout << d << std::endl;
-      std::cout << CONFIG["N"].as<int>() << std::endl;
-      // Initialize arrays for the constraints
       _a1[d].resize(CONFIG["N"].as<int>());
       _a2[d].resize(CONFIG["N"].as<int>());
       _b[d].resize(CONFIG["N"].as<int>());
       for (int k = 0; k < CONFIG["N"].as<int>(); k++)
       {
-
         _a1[d][k] = Eigen::ArrayXd(CONFIG["max_obstacles"].as<int>());
         _a2[d][k] = Eigen::ArrayXd(CONFIG["max_obstacles"].as<int>());
         _b[d][k] = Eigen::ArrayXd(CONFIG["max_obstacles"].as<int>());
@@ -39,39 +35,20 @@ namespace MPCPlanner
 
   void LinearizedConstraints::update(State &state, const RealTimeData &data)
   {
+    (void)state;
+
     // Thread safe
     std::vector<DynamicObstacle> copied_obstacles = data.dynamic_obstacles;
     _num_obstacles = copied_obstacles.size();
 
-    // for (auto &obstacle : copied_obstacles)
-    // {
-    //   for (auto &disc : obstacle.discs_)
-    //     disc.radius = 1e-3; // We fully relax the constraints here
-    // }
-
     // For all stages
     for (int k = 0; k < _solver->N; k++)
     {
-      // for (int disc_id = 0; disc_id < CONFIG["n_discs"].as<int>(); disc_id++)
-      // {
-      // Disc &disc = vehicle_prediction[k].discs_[disc_id];
-      // Eigen::Vector2d pos = vehicle_prediction[k].discs_[disc_id].AsVector2d(); // vehicle_->discs_[0].poses_[k];
+      Eigen::Vector2d pos(_solver->getEgoPrediction(k, "x"), _solver->getEgoPrediction(k, "y")); // k+1?
 
-      // Eigen::Vector2d pos = state.getPos();
-      Eigen::Vector2d pos(_solver->getVar(k, "x"), _solver->getVar(k, "y")); // k+1?
-      /** @todo Disc position */
-
-      // Ensure that the vehicle position is collision-free
-      // ProjectToSafety(k, pos, copied_obstacles, solver_interface->area_->DiscRadius());
-
-      // If we projected, load the updated position back into the solver
-      // disc.SetPosition(pos);                                                                 // Save the projected position in the Disc
-      // Eigen::Vector2d associated_vehicle_pos = vehicle_prediction[k].PositionFromDisc(disc); // Translate the disc to the vehicle position
-      // vehicle_prediction[k].SetPosition(associated_vehicle_pos);                             // Save the vehicle position
-      // solver_interface->LoadVehiclePredictionsToInitialPlan(vehicle_prediction);
-
-      /** @todo Radius */
-      double radius = 1e-3;
+      /** @todo Load disc position */
+      projectToSafety(copied_obstacles, k, pos); // Ensure that the vehicle position is collision-free
+      /** @todo Set projected disc position */
 
       // For all obstacles
       for (size_t obs_id = 0; obs_id < copied_obstacles.size(); obs_id++)
@@ -89,10 +66,35 @@ namespace MPCPlanner
         _a2[0][k](obs_id) = diff_y / d;
 
         // Compute b (evaluate point on the collision circle)
+        double radius = copied_obstacle.radius;
+        if (CONFIG["linearized_constraints"]["relax"].as<bool>())
+          radius = 1e-3;
+
         _b[0][k](obs_id) = _a1[0][k](obs_id) * obstacle_pos(0) +
                            _a2[0][k](obs_id) * obstacle_pos(1) -
                            (radius + CONFIG["robot_radius"].as<double>());
-        // }
+      }
+    }
+  }
+
+  void LinearizedConstraints::projectToSafety(const std::vector<DynamicObstacle> &copied_obstacles, int k, Eigen::Vector2d &pos)
+  {
+    if (copied_obstacles.empty()) // There is no anchor
+      return;
+
+    // Project to a collision free position if necessary, considering all the obstacles
+    for (int iterate = 0; iterate < 3; iterate++) // At most 3 iterations
+    {
+      for (auto &obstacle : copied_obstacles)
+      {
+        double radius = obstacle.radius;
+        if (CONFIG["linearized_constraints"]["relax"].as<bool>())
+          radius = 1e-3;
+
+        dr_projection_.douglasRachfordProjection(pos, obstacle.prediction.steps[k].position,
+                                                 copied_obstacles[0].prediction.steps[k].position,
+                                                 radius + CONFIG["robot_radius"].as<double>(),
+                                                 pos);
       }
     }
   }

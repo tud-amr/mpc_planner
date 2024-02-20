@@ -13,10 +13,13 @@ namespace MPCPlanner
 
   void MPCBaseModule::update(State &state, const RealTimeData &data)
   {
+    (void)state;
+    (void)data;
   }
 
   void MPCBaseModule::setParameters(const RealTimeData &data, int k)
   {
+    (void)data;
     if (k == 0)
       LOG_DEBUG("setParameters()");
 
@@ -26,4 +29,4 @@ namespace MPCPlanner
     _solver->setParameter(k, "velocity", CONFIG["weights"]["velocity"].as<double>());
     _solver->setParameter(k, "reference_velocity", CONFIG["reference_velocity"].as<double>());
   }
-};
+} // namespace MPCPlanner

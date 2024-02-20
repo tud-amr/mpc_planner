@@ -29,6 +29,6 @@ namespace MPCPlanner
 
   private:
   };
-};
+}
 
 #endif // __MPC_BASE_H__

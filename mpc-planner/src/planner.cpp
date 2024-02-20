@@ -92,6 +92,7 @@ namespace MPCPlanner
 
     void Planner::visualize(const State &state, const RealTimeData &data)
     {
+        (void)state;
 
         for (auto &module : _modules)
             module->visualize(data);

@@ -3,6 +3,8 @@
 
 #include <mpc-planner-types/controller_module.h>
 
+#include <mpc-planner-util/projection.h>
+
 namespace MPCPlanner
 {
   class LinearizedConstraints : public ControllerModule
@@ -21,9 +23,11 @@ namespace MPCPlanner
   private:
     std::vector<std::vector<Eigen::ArrayXd>> _a1, _a2, _b; // Constraints [disc x step]
 
-    // RosTools::DouglasRachford dr_projection_;
+    DouglasRachford dr_projection_;
 
     int _num_obstacles;
+
+    void projectToSafety(const std::vector<DynamicObstacle> &copied_obstacles, int k, Eigen::Vector2d &pos);
   };
-};
+} // namespace MPCPlanner
 #endif // __LINEARIZED_CONSTRAINTS_H_

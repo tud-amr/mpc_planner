@@ -75,7 +75,11 @@ namespace MPCPlanner
          * @brief Check if the objective of this module was reached
          * @return true If the objective was reached
          */
-        virtual bool isObjectiveReached(const RealTimeData &data) { return true; }; // Default: true
+        virtual bool isObjectiveReached(const RealTimeData &data)
+        {
+            (void)data;
+            return true;
+        }; // Default: true
 
         /**
          * @brief Function used to update any class members when new data is received
@@ -115,5 +119,5 @@ namespace MPCPlanner
         std::shared_ptr<Solver> _solver;
         std::string _name;
     };
-};
+}
 #endif

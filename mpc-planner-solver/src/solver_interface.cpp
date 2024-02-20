@@ -80,22 +80,22 @@ namespace MPCPlanner
 			for (YAML::const_iterator it = _model_map.begin(); it != _model_map.end(); ++it) // For all inputs and states
 			{
 				if (k == 0)
-					setVar(0, it->first.as<std::string>(), initial_state.get(it->first.as<std::string>())); // Load the current state at k = 0
+					setEgoPrediction(0, it->first.as<std::string>(), initial_state.get(it->first.as<std::string>())); // Load the current state at k = 0
 				else if (k == N - 1)
-					setVar(k, it->first.as<std::string>(), getOutput(k, it->first.as<std::string>())); // extrapolate with the terminal state at k = N-1
+					setEgoPrediction(k, it->first.as<std::string>(), getOutput(k, it->first.as<std::string>())); // extrapolate with the terminal state at k = N-1
 				else
-					setVar(k, it->first.as<std::string>(), getOutput(k + 1, it->first.as<std::string>())); // use x_{k+1} to initialize x_{k} (note that both have the initial state)
+					setEgoPrediction(k, it->first.as<std::string>(), getOutput(k + 1, it->first.as<std::string>())); // use x_{k+1} to initialize x_{k} (note that both have the initial state)
 			}
 		}
 	}
 
-	void Solver::setVar(unsigned int k, std::string &&var_name, double value)
+	void Solver::setEgoPrediction(unsigned int k, std::string &&var_name, double value)
 	{
 		int index = _model_map[var_name][1].as<int>();
 		_params.x0[k * nvar + index] = value;
 	}
 
-	double Solver::getVar(unsigned int k, std::string &&var_name)
+	double Solver::getEgoPrediction(unsigned int k, std::string &&var_name)
 	{
 		int index = _model_map[var_name][1].as<int>();
 		return _params.x0[k * nvar + index];

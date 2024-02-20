@@ -43,7 +43,7 @@ namespace MPCPlanner
 
     int _closest_segment{0};
   };
-};
+}
 #endif // __CONTOURING_H_
 
 /**
@@ -62,62 +62,24 @@ void InitPath(const std::vector<double> &x, const std::vector<double> &y);
 
 // void UpdateClosestPoint(SolverInterface *solver_interface_ptr, double &s_guess, double window = 2, int n_tries = 20);
 
-/**
- * @brief Find the closest spline segment in the reference path
- *
- * @param solver_interface_ptr solver interface to retrieve the vehicle position from
- */
 // double InitializeClosestPoint(SolverInterface *solver_interface_ptr);
 
-/**
- * @brief Is the current spline segment at an end?
- *
- * @param index Current spline index
- * @return true If end of current spline segment was reached
- */
 // bool EndOfCurrentSpline(double index);
 
-/**
- * @brief Checks if the end of the path was reached
- *
- * @return true If end of the path was reached
- */
 // bool ReachedEnd();
 
-/**
- * @brief Construct linear road constraints by linearizing the spline boundaries w.r.t. the vehicle position
- *
- * @param solver_interface solver interface to retrieve the vehicle positions from
- * @param halfspaces_out Output halfspaces as vector with entries for each time step
- */
 // void ConstructRoadConstraints(SolverInterface *solver_interface, std::vector<std::vector<RosTools::Halfspace>> &halfspaces_out);
 
-/**
- * @brief Construct linear road constraints by linearizing the received boundaries
- */
 // void ConstructRoadConstraintsFromData(SolverInterface *solver_interface,
 // std::vector<std::vector<RosTools::Halfspace>> &halfspaces_out);
 // Visualization
-/** @brief Draw the reference path (line) and its orientations (arrows)*/
 // void PublishReferencePath();
 
-/** @brief Publish cubes marking the current spline index followed by the vehicle  */
 // void PublishCurrentSplineIndex();
 
-/**
- * @brief Visualize the linearized road boundary constraints (the ones gives) - Debug functionality only
- *
- * @param solver_interface_ptr solver
- * @param halfspaces_out the constraints to plot
- */
 // void PublishLinearRoadBoundaries(SolverInterface *solver_interface_ptr,
 //  const std::vector<std::vector<RosTools::Halfspace>> &halfspaces_out);
 
-/**
- * @brief Visualize road boundaries as a spline (i.e., not linearized)
- *
- * @param solver_interface_ptr solver interface
- */
 // void VisualizeRoad();
 
 // protected:
@@ -139,11 +101,9 @@ void InitPath(const std::vector<double> &x, const std::vector<double> &y);
 // // double min_wapoints_distance_;
 // // double epsilon_;
 
-// /** @brief Read a reference path from ROS Parameters */
 // void ReadReferencePath(std::vector<double> &x_out, std::vector<double> &y_out);
 
 // void ProcessReceivedReferencePath(const PathWithBounds &path);
-// /**   @brief Construct a reference path from a set of waypoints (x, y) */
 // void ConstructReferencePath(const PathWithBounds &path); // Selects which method to use
 
 // // void WaypointsToReferencePath(const std::vector<double> &x, const std::vector<double> &y);
@@ -153,16 +113,6 @@ void InitPath(const std::vector<double> &x, const std::vector<double> &y);
 
 // void ComputeDistanceVector(const std::vector<double> &x, const std::vector<double> &y, std::vector<double> &out);
 
-// /**
-//  * @brief Search for the closest point to the vehicle
-//  *
-//  * @param solver_interface_ptr Solver interface to retrieve the vehicle position
-//  * @param cur_traj_i Current spline index
-//  * @param s_guess Guessed spline value
-//  * @param window Window to search in w.r.t. the guess
-//  * @param n_tries Number of recursions allowed
-//  * @return int The closest spline index
-//  */
 // int RecursiveClosestPointSearch(SolverInterface *solver_interface_ptr, unsigned int cur_traj_i, double &s_guess,
 //                                 double window, int n_tries, int num_recursions);
 
@@ -171,6 +121,6 @@ void InitPath(const std::vector<double> &x, const std::vector<double> &y);
 // void OnWaypointsReceived();
 // }
 // ;
-// * /
 // }
 // ;
+*/

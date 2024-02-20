@@ -15,6 +15,8 @@ namespace MPCPlanner
 
   void Contouring::update(State &state, const RealTimeData &data)
   {
+    (void)data;
+
     LOG_DEBUG("contouring::update()");
     if (_spline.get() == nullptr)
     {
@@ -32,6 +34,7 @@ namespace MPCPlanner
 
   void Contouring::setParameters(const RealTimeData &data, int k)
   {
+    (void)data;
     LOG_DEBUG("contouring::setparameters");
 
     _solver->setParameter(k, "contour", CONFIG["contouring"]["contour"].as<double>());
@@ -112,6 +115,7 @@ namespace MPCPlanner
 
   bool Contouring::isObjectiveReached(const RealTimeData &data)
   {
+    (void)data;
     return false;
   }
 
