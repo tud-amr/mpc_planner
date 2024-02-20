@@ -52,47 +52,47 @@ namespace MPCPlanner
     // For all stages
     for (int k = 0; k < _solver->N; k++)
     {
-      for (int disc_id = 0; disc_id < CONFIG["n_discs"].as<int>(); disc_id++)
+      // for (int disc_id = 0; disc_id < CONFIG["n_discs"].as<int>(); disc_id++)
+      // {
+      // Disc &disc = vehicle_prediction[k].discs_[disc_id];
+      // Eigen::Vector2d pos = vehicle_prediction[k].discs_[disc_id].AsVector2d(); // vehicle_->discs_[0].poses_[k];
+
+      // Eigen::Vector2d pos = state.getPos();
+      Eigen::Vector2d pos(_solver->getVar(k, "x"), _solver->getVar(k, "y")); // k+1?
+      /** @todo Disc position */
+
+      // Ensure that the vehicle position is collision-free
+      // ProjectToSafety(k, pos, copied_obstacles, solver_interface->area_->DiscRadius());
+
+      // If we projected, load the updated position back into the solver
+      // disc.SetPosition(pos);                                                                 // Save the projected position in the Disc
+      // Eigen::Vector2d associated_vehicle_pos = vehicle_prediction[k].PositionFromDisc(disc); // Translate the disc to the vehicle position
+      // vehicle_prediction[k].SetPosition(associated_vehicle_pos);                             // Save the vehicle position
+      // solver_interface->LoadVehiclePredictionsToInitialPlan(vehicle_prediction);
+
+      /** @todo Radius */
+      double radius = 1e-3;
+
+      // For all obstacles
+      for (size_t obs_id = 0; obs_id < copied_obstacles.size(); obs_id++)
       {
-        // Disc &disc = vehicle_prediction[k].discs_[disc_id];
-        // Eigen::Vector2d pos = vehicle_prediction[k].discs_[disc_id].AsVector2d(); // vehicle_->discs_[0].poses_[k];
+        const auto &copied_obstacle = copied_obstacles[obs_id];
+        const Eigen::Vector2d &obstacle_pos = copied_obstacle.prediction.steps[k].position;
 
-        // Eigen::Vector2d pos = state.getPos();
-        Eigen::Vector2d pos(_solver->getVar(k + 1, "x"), _solver->getVar(k + 1, "y"));
-        /** @todo Disc position */
+        double diff_x = obstacle_pos(0) - pos(0);
+        double diff_y = obstacle_pos(1) - pos(1);
 
-        // Ensure that the vehicle position is collision-free
-        // ProjectToSafety(k, pos, copied_obstacles, solver_interface->area_->DiscRadius());
+        double d = (obstacle_pos - pos).norm();
 
-        // If we projected, load the updated position back into the solver
-        // disc.SetPosition(pos);                                                                 // Save the projected position in the Disc
-        // Eigen::Vector2d associated_vehicle_pos = vehicle_prediction[k].PositionFromDisc(disc); // Translate the disc to the vehicle position
-        // vehicle_prediction[k].SetPosition(associated_vehicle_pos);                             // Save the vehicle position
-        // solver_interface->LoadVehiclePredictionsToInitialPlan(vehicle_prediction);
+        // Compute the components of A for this obstacle (normalized normal vector)
+        _a1[0][k](obs_id) = diff_x / d;
+        _a2[0][k](obs_id) = diff_y / d;
 
-        /** @todo Radius */
-        double radius = 1e-3;
-
-        // For all obstacles
-        for (size_t obs_id = 0; obs_id < copied_obstacles.size(); obs_id++)
-        {
-          const auto &copied_obstacle = copied_obstacles[obs_id];
-          const Eigen::Vector2d &obstacle_pos = copied_obstacle.prediction.steps[k].position;
-
-          double diff_x = obstacle_pos(0) - pos(0);
-          double diff_y = obstacle_pos(1) - pos(1);
-
-          double d = (obstacle_pos - pos).norm();
-
-          // Compute the components of A for this obstacle (normalized normal vector)
-          _a1[disc_id][k](obs_id) = diff_x / d;
-          _a2[disc_id][k](obs_id) = diff_y / d;
-
-          // Compute b (evaluate point on the collision circle)
-          _b[disc_id][k](obs_id) = _a1[disc_id][k](obs_id) * obstacle_pos(0) +
-                                   _a2[disc_id][k](obs_id) * obstacle_pos(1) -
-                                   (radius + CONFIG["robot_radius"].as<double>());
-        }
+        // Compute b (evaluate point on the collision circle)
+        _b[0][k](obs_id) = _a1[0][k](obs_id) * obstacle_pos(0) +
+                           _a2[0][k](obs_id) * obstacle_pos(1) -
+                           (radius + CONFIG["robot_radius"].as<double>());
+        // }
       }
     }
   }
@@ -138,6 +138,12 @@ namespace MPCPlanner
 
   void LinearizedConstraints::visualize(const RealTimeData &data)
   {
+    for (int k = 0; k < _solver->N; k++)
+    {
+      for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
+        visualizeLinearConstraint(_a1[0][k](i), _a2[0][k](i), _b[0][k](i), k, _solver->N, _name,
+                                  k == _solver->N - 1 && i == data.dynamic_obstacles.size() - 1); // Publish at the end
+    }
   }
 
 } // namespace MPCPlanner

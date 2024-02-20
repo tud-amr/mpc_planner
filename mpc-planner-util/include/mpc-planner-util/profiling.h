@@ -25,7 +25,7 @@ namespace MPCPlanner
 
             std::cout << "Timing Results for [" << name_ << "]" << std::endl;
             std::cout << "Average (ms): " << average_run_time << std::endl;
-            std::cout << "Max (ms)" << max_duration_ * 1000.0 << std::endl;
+            std::cout << "Max (ms): " << max_duration_ * 1000.0 << std::endl;
         }
 
         void start()

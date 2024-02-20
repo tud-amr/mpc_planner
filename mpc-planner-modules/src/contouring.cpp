@@ -156,7 +156,7 @@ namespace MPCPlanner
     publisher_path.publish();
   }
 
-};
+} // namespace MPCPlanner
 
 // Contouring::Contouring(rclcpp::Node *node, std::shared_ptr<SolverInterface> solver, MPCConfiguration *config, VehicleRegion *vehicle, ModuleType type, std::string &&module_name)
 //     : ControllerModule(node, solver, config, vehicle, type, std::forward<std::string>(module_name))

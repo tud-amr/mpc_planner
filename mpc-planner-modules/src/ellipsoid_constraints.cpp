@@ -122,4 +122,4 @@ namespace MPCPlanner
     //   publisher_path.publish();
   }
 
-}; // namespace MPCPlanner
+} // namespace MPCPlanner

@@ -35,9 +35,9 @@ def define_modules(settings) -> ModuleManager:
         ContouringModule(settings, num_segments=settings["contouring"]["num_segments"])
     )
 
-    modules.add_module(EllipsoidConstraintModule(settings))
+    # modules.add_module(EllipsoidConstraintModule(settings))
     # modules.add_module(GuidanceConstraintModule(settings))
-    # modules.add_module(LinearizedConstraintModule(settings))
+    modules.add_module(LinearizedConstraintModule(settings))
 
     return modules
 

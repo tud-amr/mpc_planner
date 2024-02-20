@@ -111,4 +111,4 @@ namespace MPCPlanner
 	{
 		return getForcesOutput(_output, k, _model_map[state_name][1].as<int>());
 	}
-}; // namespace MPCPlanner
+} // namespace MPCPlanner
