@@ -7,6 +7,7 @@
   <arg name="pedestrian_scenario" default="corridor_opposite" />
   <arg name="overwrite_pedestrian_scenario" default="false" />
 
+  <rosparam command="load" file="$(find mpc-planner-jackal)/config/guidance_planner.yaml"/>
   <node pkg="mpc-planner-jackal" type="jackal_planner" name="jackal_planner" respawn="false" output="screen">
         <remap from="/input/state" to="robot_state"/>
         <remap from="/input/goal" to="/goal_pose"/>

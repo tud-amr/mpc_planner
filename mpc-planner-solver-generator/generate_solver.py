@@ -5,6 +5,7 @@ from util.logging import print_success, print_header, print_path
 
 from generate_cpp_files import generate_cpp_code, generate_module_header
 from generate_cpp_files import generate_module_cmake
+from generate_cpp_files import generate_module_definitions
 
 
 def generate_solver(modules, model, settings=None):
@@ -48,6 +49,7 @@ def generate_solver(modules, model, settings=None):
 
     generate_cpp_code(settings, model)
     generate_module_header(modules)
+    generate_module_definitions(modules)
     generate_module_cmake(modules)
 
     print_path("Solver path", solver_path(settings), tab=True, end="")

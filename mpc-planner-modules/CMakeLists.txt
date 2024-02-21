@@ -10,6 +10,7 @@ set(DEPENDENCIES
   mpc-planner-types
   mpc-planner-util
   mpc-planner-solver
+  guidance_planner # TEMP
 )
 
 find_package(catkin REQUIRED COMPONENTS
@@ -24,7 +25,7 @@ catkin_package(
 
 include(modules.cmake)
 
-## BUILD ###
+# # BUILD ###
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}

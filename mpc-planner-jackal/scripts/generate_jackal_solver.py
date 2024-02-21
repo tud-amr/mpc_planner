@@ -36,8 +36,8 @@ def define_modules(settings) -> ModuleManager:
     )
 
     # modules.add_module(EllipsoidConstraintModule(settings))
-    # modules.add_module(GuidanceConstraintModule(settings))
-    modules.add_module(LinearizedConstraintModule(settings))
+    modules.add_module(GuidanceConstraintModule(settings))
+    # modules.add_module(LinearizedConstraintModule(settings))
 
     return modules
 

@@ -216,10 +216,6 @@ def generate_module_header(modules):
 
     module_header.write("\n")
 
-    for module in modules.modules:
-        module.add_definitions(module_header)
-    module_header.write("\n")
-
     module_header.write("namespace MPCPlanner\n{\n")
     module_header.write("\tclass Solver;\n")
     module_header.write(
@@ -242,6 +238,25 @@ def generate_module_header(modules):
     print_success(" -> generated")
 
 
+def generate_module_definitions(modules):
+    path = f"{get_package_path('mpc-planner-modules')}/include/mpc-planner-modules/definitions.h"
+    print_path("Definition Header", path, end="", tab=True)
+
+    definitions_header = open(path, "w")
+
+    definitions_header.write("#ifndef __MPC_PLANNER_GENERATED_DEFINITIONS_H__\n")
+    definitions_header.write("#define __MPC_PLANNER_GENERATED_DEFINITIONS_H__\n\n")
+
+    for module in modules.modules:
+        module.add_definitions(definitions_header)
+    definitions_header.write("\n")
+
+    definitions_header.write("\n#endif")
+
+    definitions_header.close()
+    print_success(" -> generated")
+
+
 def generate_module_cmake(modules):
     path = f"{get_package_path('mpc-planner-modules')}/modules.cmake"
     print_path("Module CMake", path, end="", tab=True)
@@ -251,6 +266,9 @@ def generate_module_cmake(modules):
     module_cmake.write("set(MODULE_SOURCES\n")
     for module in modules.modules:
         module_cmake.write(f"\tsrc/{module.import_name.split('.')[0]}.cpp\n")
+        for source in module.sources:
+            module_cmake.write(f"\tsrc/{source.split('.')[0]}.cpp\n")
+
     module_cmake.write(")\n")
     module_cmake.close()
     print_success(" -> generated")

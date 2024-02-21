@@ -44,6 +44,13 @@ namespace MPCPlanner
 		free(_solver_memory);
 	}
 
+	Solver &Solver::operator=(const Solver &rhs)
+	{
+		_params = rhs._params;
+
+		return *this;
+	}
+
 	void Solver::setParameter(int k, std::string &&parameter, double value)
 	{
 		_params.all_parameters[k * npar + _parameter_map[parameter].as<int>()] = value;

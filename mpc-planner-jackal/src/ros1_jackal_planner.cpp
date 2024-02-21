@@ -198,7 +198,7 @@ void JackalPlanner::obstacleCallback(const mpc_planner_msgs::obstacle_array::Con
             ROSTOOLS_ASSERT(false, "Multiple modes not yet supported");
         }
     }
-    _planner->onDataReceived(_data, "obstacles");
+    _planner->onDataReceived(_data, "dynamic obstacles");
 }
 
 void JackalPlanner::visualize()

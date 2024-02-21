@@ -220,7 +220,63 @@ Visualization Manager:
       Marker Topic: /jackal_planner/linearized_constraints
       Name: MarkerArray
       Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /guidance_planner/homology
+      Name: MarkerArray
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /guidance_planner/start_and_goals
+      Name: MarkerArray
+      Namespaces:
         "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /lmpcc/homotopy/graph
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /lmpcc/homotopy/geometric_paths
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /lmpcc/homotopy/obstacles_3d
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /jackal_planner/guidance_constraints/planner_0
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /jackal_planner/guidance_constraints/planner_1
+      Name: MarkerArray
+      Namespaces:
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -251,7 +307,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 46.014625549316406
+      Distance: 51.54926681518555
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -259,17 +315,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 10.033164978027344
-        Y: -1.3657357692718506
-        Z: 5.690062999725342
+        X: 13.89445972442627
+        Y: -1.4135189056396484
+        Z: 10.915410041809082
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6303982138633728
+      Pitch: 0.5953982472419739
       Target Frame: <Fixed Frame>
-      Yaw: 3.7154223918914795
+      Yaw: 3.54042911529541
     Saved: ~
 Window Geometry:
   Displays:

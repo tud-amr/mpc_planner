@@ -33,20 +33,18 @@ class GuidanceConstraintModule(ConstraintModule):
         self.import_name = "guidance_constraints.h"
 
         self.dependencies.append("guidance_planner")
-        # self.sources.append(
-        # "src/modules_constraints/linearized_constraints.cpp")
 
-        self.type = "constraint"
-        self.constraints = []
         self.constraints.append(
             LinearConstraints(
                 n_discs=settings["n_discs"], max_obstacles=settings["max_obstacles"]
             )
         )
+        self.sources.append("linearized_constraints.h")
 
         # Initialize the underlying constraints
         self.constraint_submodule = self.constraint_submodule(settings)
         self.constraints.append(self.constraint_submodule.constraints[-1])
+        self.sources.append(self.constraint_submodule.import_name)
 
         # LinearConstraints(max_obstacles + static_obstacles))
         # self.add_submodule(constraint_submodule(params, n_discs, max_obstacles))

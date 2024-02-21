@@ -12,6 +12,7 @@
   <depend>mpc-planner-util</depend>
   <depend>mpc-planner-types</depend>
   <depend>mpc-planner-solver</depend>
+  <depend>guidance_planner</depend>
 
   <export>
     <build_type>catkin</build_type>

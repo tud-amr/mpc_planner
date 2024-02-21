@@ -61,7 +61,15 @@ namespace MPCPlanner
 
         // Solve MPC
         _benchmarker->start();
-        int exit_flag = _solver->solve();
+        int exit_flag = EXIT_CODE_NOT_OPTIMIZED_YET;
+        for (auto &module : _modules)
+        {
+            exit_flag = module->optimize(state, data);
+            if (exit_flag != EXIT_CODE_NOT_OPTIMIZED_YET)
+                break;
+        }
+        if (exit_flag == EXIT_CODE_NOT_OPTIMIZED_YET)
+            exit_flag = _solver->solve();
         _benchmarker->stop();
 
         if (exit_flag != 1)

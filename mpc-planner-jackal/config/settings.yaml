@@ -19,6 +19,10 @@ contouring:
 linearized_constraints:
   relax: true
 
+t-mpc:
+  use_t-mpc++: false
+  enable_constraints: true
+
 probabilistic:
   enable: false
   risk: 0.05

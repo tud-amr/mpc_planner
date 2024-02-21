@@ -96,7 +96,12 @@ namespace MPCPlanner
          * @brief Override to define a custom optimization loop. Note that there can only be ONE customized optimization.
          * @return int exit_code of the solver, return any exit_code other than "EXIT_CODE_NOT_OPTIMIZED_YET" to define this as a custom optimization
          */
-        virtual int optimize() { return EXIT_CODE_NOT_OPTIMIZED_YET; }; // Default: no custom optimization
+        virtual int optimize(State &state, const RealTimeData &data)
+        {
+            (void)state;
+            (void)data;
+            return EXIT_CODE_NOT_OPTIMIZED_YET;
+        }; // Default: no custom optimization
 
         /** @todo: Add reconfigurable parameters! */
 
