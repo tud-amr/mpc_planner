@@ -8,7 +8,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 # set(SYSTEM_TO_USE "Jackal")
-
 set(DEPENDENCIES
   mpc-planner-util
 )
@@ -30,7 +29,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-
 add_library(${PROJECT_NAME}
   src/solver_interface.cpp
   src/state.cpp
@@ -42,3 +40,12 @@ add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 target_link_libraries(${PROJECT_NAME}
   ${PROJECT_SOURCE_DIR}/Solver/lib/libSolver.so
 )
+
+catkin_add_gtest(${PROJECT_NAME}-test test/test_solver.cpp)
+target_link_libraries(${PROJECT_NAME}-test
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  yaml-cpp
+)
+
+# add_rostest(test/${PROJECT_NAME}-test.test)

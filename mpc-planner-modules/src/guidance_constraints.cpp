@@ -304,38 +304,27 @@ namespace MPCPlanner
             if (planner.disabled)
                 continue;
 
-            // Visualize the optimized trajectory
-            Trajectory trajectory;
-            for (int k = 1; k < _solver->N; k++)
-                trajectory.add(planner.local_solver->getOutput(k, "x"), planner.local_solver->getOutput(k, "y"));
-            visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 0.4, planner.id);
-
             // Visualize the warmstart
             Trajectory initial_trajectory;
             for (int k = 1; k < planner.local_solver->N; k++)
                 initial_trajectory.add(planner.local_solver->getEgoPrediction(k, "x"), planner.local_solver->getEgoPrediction(k, "y"));
-            visualizeTrajectory(initial_trajectory, _name + "/warmstart_trajectories", false, 0.4, planner.id + 5);
+            visualizeTrajectory(initial_trajectory, _name + "/warmstart_trajectories", false, 0.4, 20, 20);
 
-            // if (planner.is_original_planner || (!add_original_planner_ && planner.id == 0))
-            //     planner.safety_constraints->Visualize();
+            // Visualize the optimized trajectory
+            if (planner.result.success)
+            {
+                Trajectory trajectory;
+                for (int k = 1; k < _solver->N; k++)
+                    trajectory.add(planner.local_solver->getOutput(k, "x"), planner.local_solver->getOutput(k, "y"));
+                visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 0.4, planner.id);
+            }
 
             // if (planner.result.success)
             //     VisualizeOptimizedPlan(planner); // Visualize the plan
         }
-        // Publish
-        visualizeTrajectory(Trajectory(), _name + "/optimized_trajectories", true, 0.4, 0);
-        visualizeTrajectory(Trajectory(), _name + "/warmstart_trajectories", true, 0.4, 0);
 
-        // plan_markers_->publish();
-
-        // // Visualize the objectives
-        // for (size_t i = 0; i < signal_publishers_.size(); i++)
-        // {
-        //     if (planners_[i].disabled || (!planners_[i].result.success))
-        //         signal_publishers_[i].Publish(std::numeric_limits<double>::quiet_NaN());
-        //     else
-        //         signal_publishers_[i].Publish(planners_[i].result.objective);
-        // }
+        VISUALS.getPublisher(_name + "/optimized_trajectories").publish();
+        VISUALS.getPublisher(_name + "/warmstart_trajectories").publish();
     }
 
     //     void GuidanceConstraints::VisualizeOptimizedPlan(LocalPlanner &planner)

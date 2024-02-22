@@ -1,13 +1,13 @@
 
-#ifndef LOGGING_H
-#define LOGGING_H
+#ifndef __MPC_PLANNER_LOGGING_H_
+#define __MPC_PLANNER_LOGGING_H_
 
 // #ifndef MPC_PLANNER_ROS
 #define MPC_PLANNER_ROS 1
 // #endif
 
 #if MPC_PLANNER_ROS == 1
-#include <ros/console.h>
+#include <ros/ros.h>
 #define LOG_INFO(...) ROS_INFO_STREAM(__VA_ARGS__)
 #define LOG_WARN(...) ROS_WARN_STREAM("\033[33m" << __VA_ARGS__ << "\033[0m")
 #define LOG_ERROR(...) ROS_ERROR_STREAM(__VA_ARGS__)

@@ -97,7 +97,8 @@ namespace MPCPlanner
     struct Trajectory;
     struct DynamicObstacle;
     RosTools::ROSMarkerPublisher &visualizeTrajectory(const Trajectory &trajectory, const std::string &topic_name,
-                                                      bool publish = false, double alpha = 0.4, int color_index = 0);
+                                                      bool publish = false, double alpha = 0.4, int color_index = 0, int color_max = 10,
+                                                      bool publish_trace = true, bool publish_regions = true);
 
     RosTools::ROSMarkerPublisher &visualizeObstacles(const std::vector<DynamicObstacle> &obstacles, const std::string &topic_name,
                                                      bool publish = false, double alpha = 0.6);
