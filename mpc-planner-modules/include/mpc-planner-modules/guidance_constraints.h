@@ -74,7 +74,7 @@ namespace MPCPlanner
         /** @brief Load obstacles into the Homotopy module */
         void onDataReceived(RealTimeData &data, std::string &&data_name) override;
 
-        // void OnReset(SolverInterface *solver_interface) override;
+        void reset() override;
         // void ExportData(RosTools::DataSaver &data_saver) override;
         // void GetMethodName(std::string &name) override;
 

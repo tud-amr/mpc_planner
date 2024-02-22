@@ -38,6 +38,8 @@ namespace MPCPlanner
 
         void visualize(const State &state, const RealTimeData &data);
 
+        void reset(State &state, RealTimeData &data);
+
     private:
         std::shared_ptr<Solver> _solver;
         PlannerOutput _output;

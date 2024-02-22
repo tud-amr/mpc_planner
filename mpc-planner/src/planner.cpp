@@ -38,7 +38,7 @@ namespace MPCPlanner
 
         if (!is_data_ready)
         {
-            LOG_WARN("Data is not ready, missing " + missing_data + "\b");
+            LOG_WARN_THROTTLE(5, "Data is not ready, missing " + missing_data + "\b");
             _output.success = false;
             return _output;
         }
@@ -109,6 +109,17 @@ namespace MPCPlanner
 
         visualizeObstacles(data.dynamic_obstacles, "obstacles", true);
         visualizeObstaclePredictions(data.dynamic_obstacles, "obstacle_predictions", true);
+    }
+
+    void Planner::reset(State &state, RealTimeData &data)
+    {
+        _solver->reset(); // Reset the solver
+
+        for (auto &module : _modules) // Reset modules
+            module->reset();
+
+        state = State();       // Reset the state
+        data = RealTimeData(); // Reset the received data
     }
 
 }

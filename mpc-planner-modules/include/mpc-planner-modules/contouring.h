@@ -38,6 +38,8 @@ namespace MPCPlanner
 
     void visualize(const RealTimeData &data) override;
 
+    void reset() override;
+
   private:
     std::unique_ptr<Spline2D> _spline{nullptr};
 

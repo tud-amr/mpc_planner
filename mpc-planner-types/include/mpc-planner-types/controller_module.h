@@ -90,7 +90,7 @@ namespace MPCPlanner
             (void)data;
             (void)data_name;
         };
-        virtual void onReset(){};
+        virtual void reset(){};
 
         /**
          * @brief Override to define a custom optimization loop. Note that there can only be ONE customized optimization.

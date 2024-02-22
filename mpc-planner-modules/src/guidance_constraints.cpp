@@ -502,11 +502,11 @@ namespace MPCPlanner
         if (data_name == "dynamic obstacles")
         {
             LOG_DEBUG("Guidance Constraints: Received dynamic obstacles");
-            // #pragma omp parallel for num_threads(8)
-            // for (auto &planner : planners_)
-            // {
-            //     planner.safety_constraints->OnDataReceived(planner.local_solver.get(), data, std::forward<std::string>(data_name));
-            // }
+#pragma omp parallel for num_threads(8)
+            for (auto &planner : planners_)
+            {
+                planner.safety_constraints->onDataReceived(data, std::forward<std::string>(data_name));
+            }
 
             std::vector<GuidancePlanner::Obstacle> obstacles;
             for (auto &obstacle : data.dynamic_obstacles)
@@ -523,20 +523,16 @@ namespace MPCPlanner
 
             global_guidance_->LoadObstacles(obstacles, {});
         }
-        else if (data_name == "State")
-        {
-            // global_guidance_->SetStart(_solver
-            // Eigen::Vector2d(solver_->State().x(), solver_->State().y()), solver_->State().psi(),
-            //    solver_->State().v());
-        }
     }
 
-    //     void GuidanceConstraints::OnReset(SolverInterface *solver_interface)
-    //     {
-    //         Contouring::OnReset(solver_interface);
+    void GuidanceConstraints::reset()
+    {
+        _spline.reset(nullptr);
+        global_guidance_->Reset();
 
-    //         global_guidance_->Reset();
-    //     }
+        for (auto &planner : planners_)
+            planner.local_solver->reset();
+    }
 
     //     // void GuidanceConstraints::ReconfigureCallback(SolverInterface *solver_interface, lmpcc::PredictiveControllerConfig &config,
     //     //                                               uint32_t level, bool first_callback)

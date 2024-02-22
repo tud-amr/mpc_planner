@@ -28,7 +28,7 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
     // Start the control loop
     _timer = nh.createTimer(
         ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()),
-        &JackalPlanner::Loop,
+        &JackalPlanner::loop,
         this);
 
     LOG_DIVIDER();
@@ -60,14 +60,25 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
 
     _cmd_pub = nh.advertise<geometry_msgs::Twist>(
         "/output/command", 1);
+
+    // Environment Reset
+    _reset_simulation_pub = nh.advertise<std_msgs::Empty>("/lmpcc/reset_environment", 1);
+    _reset_simulation_client = nh.serviceClient<std_srvs::Empty>("/gazebo/reset_world");
+    _reset_ekf_client = nh.serviceClient<robot_localization::SetPose>("/set_pose");
 }
 
-void JackalPlanner::Loop(const ros::TimerEvent &event)
+void JackalPlanner::loop(const ros::TimerEvent &event)
 {
     (void)event;
     LOG_DEBUG("============= Loop =============");
 
     _benchmarker->start();
+
+    if (_state.get("x") > 32.)
+    {
+        LOG_INFO("Resetting");
+        reset();
+    }
 
     // Print the state
     _state.print();
@@ -209,6 +220,23 @@ void JackalPlanner::visualize()
     line.addLine(Eigen::Vector2d(_state.get("x"), _state.get("y")),
                  Eigen::Vector2d(_state.get("x") + 1.0 * std::cos(_state.get("psi")), _state.get("y") + 1.0 * std::sin(_state.get("psi"))));
     publisher.publish();
+}
+
+void JackalPlanner::reset()
+{
+
+    // Reset the environment
+    for (int j = 0; j < 1; j++)
+    {
+        // ActuateBrake(5.0);
+        ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()).sleep();
+    }
+
+    _reset_simulation_client.call(_reset_msg);
+    _reset_ekf_client.call(_reset_pose_msg);
+    _reset_simulation_pub.publish(std_msgs::Empty());
+
+    _planner->reset(_state, _data);
 }
 
 int main(int argc, char **argv)

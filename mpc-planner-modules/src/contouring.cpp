@@ -160,6 +160,13 @@ namespace MPCPlanner
     publisher_path.publish();
   }
 
+  void Contouring::reset()
+  {
+    _spline.reset(nullptr);
+
+    // goal_reached_ = false;
+  }
+
 } // namespace MPCPlanner
 
 // Contouring::Contouring(rclcpp::Node *node, std::shared_ptr<SolverInterface> solver, MPCConfiguration *config, VehicleRegion *vehicle, ModuleType type, std::string &&module_name)
@@ -382,28 +389,6 @@ namespace MPCPlanner
 //     else
 //       ConstructRoadConstraints(solver_.get(), data.halfspaces_); // Use the width of the road
 //   }
-// }
-
-// void Contouring::OnReset(SolverInterface *solver_interface)
-// {
-//   // Reinitializes the spline (Note: closest point on the spline will be found in the state callback when state_received
-
-//   // Read the reference from ROS Parameters
-//   ReadReferencePath(received_reference_path_.centerline.x,
-//                     received_reference_path_.centerline.y);
-
-//   // Use the read waypoints to construct a reference path
-//   ProcessReceivedReferencePath(received_reference_path_);
-
-//   current_s_ = 0.;
-//   solver_interface->setInitialSpline(current_s_);
-
-//   UpdateClosestPoint(&(*solver_interface), current_s_);
-
-//   goal_reached_ = false;
-
-//   first_run_ = true;
-//   // spline_index_ = 0;
 // }
 
 // void Contouring::OnDataReceived(SolverInterface *solver_interface, RealTimeData &data, std::string &&data_name)
