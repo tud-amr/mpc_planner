@@ -37,7 +37,7 @@ jobs:
         - name: Install basic dependencies
           run: apt-get update && apt-get install git -y
         - name: Setup credentials to access private repositories
-          run: git config --global url."https://${{ secrets.PAT }}@github.com/".insteadOf ssh://git@github.com/        
+          run: git config --global url."https://${{ secrets.PAT_SECRET }}@github.com/".insteadOf ssh://git@github.com/        
         - name: setup ROS environment
           uses: ros-tooling/setup-ros@v0.7
           with:
