@@ -316,7 +316,7 @@ namespace MPCPlanner
                 Trajectory trajectory;
                 for (int k = 1; k < _solver->N; k++)
                     trajectory.add(planner.local_solver->getOutput(k, "x"), planner.local_solver->getOutput(k, "y"));
-                visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 0.4, planner.id);
+                visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 0.4, planner.result.color, global_guidance_->GetConfig()->n_paths_);
             }
 
             // if (planner.result.success)

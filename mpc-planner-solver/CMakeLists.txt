@@ -47,5 +47,3 @@ target_link_libraries(${PROJECT_NAME}-test
   ${catkin_LIBRARIES}
   yaml-cpp
 )
-
-# add_rostest(test/${PROJECT_NAME}-test.test)

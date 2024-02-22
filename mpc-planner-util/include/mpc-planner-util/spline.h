@@ -22,7 +22,7 @@ namespace MPCPlanner
                            double &ax, double &bx, double &cx, double &dx,
                            double &ay, double &by, double &cy, double &dy) const;
 
-        int numSegments() const { return _x_spline.m_x_.size(); }
+        int numSegments() const { return _x_spline.m_x_.size() - 1; }
         double getStartOfSegment(int index) const { return _s_vector[index]; };
         double length() const { return _s_vector.back(); }
 
