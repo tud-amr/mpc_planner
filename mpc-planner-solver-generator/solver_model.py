@@ -3,6 +3,7 @@ import numpy as np
 
 from util.files import model_map_path, write_to_yaml
 
+
 # Returns discretized dynamics of a given model (see below)
 def discrete_dynamics(z, model, integrator_stepsize):
     import forcespro.nlp
@@ -17,10 +18,11 @@ def discrete_dynamics(z, model, integrator_stepsize):
 
     return forcespro.nlp.integrate(
         model.continuous_model,
-        z[model.nu:model.nu+model.nx],
-        z[0:model.nu],
+        z[model.nu : model.nu + model.nx],
+        z[0 : model.nu],
         integrator=forcespro.nlp.integrators.RK4,
-        stepsize=integrator_stepsize)
+        stepsize=integrator_stepsize,
+    )
 
 
 def numpy_to_casadi(x: np.array) -> cd.SX:
@@ -29,8 +31,9 @@ def numpy_to_casadi(x: np.array) -> cd.SX:
         if result is None:
             result = param
         else:
-            result = cd.vertcat(result,param)
+            result = cd.vertcat(result, param)
     return result
+
 
 class DynamicsModel:
 
@@ -48,27 +51,29 @@ class DynamicsModel:
         return self.nu + self.nx
 
     def acados_symbolics(self):
-        x = cd.SX.sym('x', self.nx)  # [px, py, vx, vy]
-        u = cd.SX.sym('u', self.nu)  # [ax, ay]
+        x = cd.SX.sym("x", self.nx)  # [px, py, vx, vy]
+        u = cd.SX.sym("u", self.nu)  # [ax, ay]
         z = cd.vertcat(u, x)
         self.load(z)
         return z
 
     def get_acados_dynamics(self):
-        self._x_dot = cd.SX.sym('x_dot', self.nx)
+        self._x_dot = cd.SX.sym("x_dot", self.nx)
 
-        f_expl = numpy_to_casadi(self.continuous_model(self._z[self.nu:], self._z[:self.nu]))
+        f_expl = numpy_to_casadi(
+            self.continuous_model(self._z[self.nu :], self._z[: self.nu])
+        )
         f_impl = self._x_dot - f_expl
         return f_expl, f_impl
 
     def get_acados_x(self):
-        return self._z[self.nu:]
+        return self._z[self.nu :]
 
     def get_acados_x_dot(self):
         return self._x_dot
 
     def get_acados_u(self):
-        return self._z[:self.nu]
+        return self._z[: self.nu]
 
     def load(self, z):
         self._z = z
@@ -93,17 +98,35 @@ class DynamicsModel:
             i = self.inputs.index(state_or_input)
             return self._z[i]
         else:
-            raise IOError(f"Requested a state or input `{state_or_input}' that was neither a state nor an input for the selected model")
+            raise IOError(
+                f"Requested a state or input `{state_or_input}' that was neither a state nor an input for the selected model"
+            )
+
+    def set_bounds(self, lower_bound, upper_bound):
+        assert len(lower_bound) == len(upper_bound) == len(self.lower_bound)
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
 
     def get_bounds(self, state_or_input):
         if state_or_input in self.states:
             i = self.states.index(state_or_input)
-            return self.lower_bound[self.nu + i], self.upper_bound[self.nu + i],  self.upper_bound[self.nu + i] - self.lower_bound[self.nu + i]
+            return (
+                self.lower_bound[self.nu + i],
+                self.upper_bound[self.nu + i],
+                self.upper_bound[self.nu + i] - self.lower_bound[self.nu + i],
+            )
         elif state_or_input in self.inputs:
             i = self.inputs.index(state_or_input)
-            return self.lower_bound[i], self.upper_bound[i], self.upper_bound[i] - self.lower_bound[i]
+            return (
+                self.lower_bound[i],
+                self.upper_bound[i],
+                self.upper_bound[i] - self.lower_bound[i],
+            )
         else:
-            raise IOError(f"Requested a state or input `{state_or_input}' that was neither a state nor an input for the selected model")
+            raise IOError(
+                f"Requested a state or input `{state_or_input}' that was neither a state nor an input for the selected model"
+            )
+
 
 class SecondOrderUnicycleModel(DynamicsModel):
 
@@ -112,11 +135,11 @@ class SecondOrderUnicycleModel(DynamicsModel):
         self.nu = 2  # number of control variables
         self.nx = 4  # number of states
 
-        self.states = ['x', 'y', 'psi', 'v']
-        self.inputs = ['a', 'w']
+        self.states = ["x", "y", "psi", "v"]
+        self.inputs = ["a", "w"]
 
-        self.lower_bound = [-2., -2., -200., -200., -np.pi, -2.0]
-        self.upper_bound = [2., 2., 200., 200., np.pi, 3.0]
+        self.lower_bound = [-2.0, -2.0, -200.0, -200.0, -np.pi, -2.0]
+        self.upper_bound = [2.0, 2.0, 200.0, 200.0, np.pi, 3.0]
 
     def continuous_model(self, x, u):
 
@@ -125,10 +148,8 @@ class SecondOrderUnicycleModel(DynamicsModel):
         psi = x[2]
         v = x[3]
 
-        return np.array([v * cd.cos(psi),
-                         v * cd.sin(psi),
-                         w,
-                         a])
+        return np.array([v * cd.cos(psi), v * cd.sin(psi), w, a])
+
 
 class ContouringSecondOrderUnicycleModel(DynamicsModel):
 
@@ -137,11 +158,11 @@ class ContouringSecondOrderUnicycleModel(DynamicsModel):
         self.nu = 2  # number of control variables
         self.nx = 5  # number of states
 
-        self.states = ['x', 'y', 'psi', 'v', 'spline']
-        self.inputs = ['a', 'w']
+        self.states = ["x", "y", "psi", "v", "spline"]
+        self.inputs = ["a", "w"]
 
-        self.lower_bound = [-2., -2., -200., -200., -np.pi, -2.0, 0.0]
-        self.upper_bound = [2., 2., 200., 200., np.pi, 3.0, 2000.0]
+        self.lower_bound = [-2.0, -2.0, -200.0, -200.0, -np.pi, -2.0, 0.0]
+        self.upper_bound = [2.0, 2.0, 200.0, 200.0, np.pi, 3.0, 2000.0]
 
     def continuous_model(self, x, u):
 
@@ -150,8 +171,21 @@ class ContouringSecondOrderUnicycleModel(DynamicsModel):
         psi = x[2]
         v = x[3]
 
-        return np.array([v * cd.cos(psi),
-                         v * cd.sin(psi),
-                         w,
-                         a,
-                         v])
+        return np.array([v * cd.cos(psi), v * cd.sin(psi), w, a, v])
+
+
+class ContouringPointMassModel(DynamicsModel):
+
+    def __init__(self):
+        super().__init__()
+        self.nu = 2
+        self.nx = 4
+
+        self.states = ["x", "y", "vx", "vy"]
+        self.inputs = ["ax", "ay"]
+
+        self.lower_bound = [-1.0, -1.0, -200.0, -200.0, -1.0, -1.0]
+        self.upper_bound = [1.0, 1.0, 200.0, 200.0, 1.0, 1.0]
+
+    def continuous_model(self, x, u):
+        return np.array([x[2], x[3], u[0], u[1]])

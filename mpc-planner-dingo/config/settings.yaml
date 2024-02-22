@@ -1,0 +1,36 @@
+name: "dingo"
+N: 20
+integrator_step: 0.2
+n_discs: 1
+
+# solver: "acados" # acados or forces
+solver: "forces" # acados or forces
+
+control_frequency: 20
+max_obstacles: 8
+robot_radius: 0.325
+obstacle_radius: 0.4
+
+contouring:
+  num_segments: 3
+  contour: 0.05
+  lag: 0.1
+
+linearized_constraints:
+  relax: true
+
+t-mpc:
+  use_t-mpc++: false
+  enable_constraints: true
+
+probabilistic:
+  enable: false
+  risk: 0.05
+
+weights:
+  goal: 10.
+  velocity: 0.5
+  acceleration: 0.15
+  angular_velocity: 0.25 #0.05
+
+reference_velocity: 1.0
