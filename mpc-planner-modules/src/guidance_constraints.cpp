@@ -3,13 +3,14 @@
 #include <mpc-planner-util/parameters.h>
 #include <mpc-planner-util/visuals.h>
 
+#include <omp.h>
+
 namespace MPCPlanner
 {
     GuidanceConstraints::LocalPlanner::LocalPlanner(int _id, bool _is_original_planner)
         : id(_id), is_original_planner(_is_original_planner)
     {
-        std::cout << "planner with id: " << _id << ", " << id << std::endl;
-        local_solver = std::make_shared<Solver>(_id);
+        local_solver = std::make_shared<Solver>(_id + 1); // Populate 1-n_solvers (leave 0 for the regular solver)
         guidance_constraints = std::make_unique<LinearizedConstraints>(local_solver);
         safety_constraints = std::make_unique<GUIDANCE_CONSTRAINTS_TYPE>(local_solver);
     }
@@ -62,25 +63,29 @@ namespace MPCPlanner
 
         /** @note Reference path */
         // Temporary
-        // bool enable_two_way_road_ = true;
-        // double road_width_left_ = 3.5;
-        // double road_width_right_ = 3.5;
+        bool enable_two_way_road_ = false;
+        double road_width_left_ = 3.5;
+        double road_width_right_ = 3.5;
 
-        // int current_segment;
-        // double current_s;
-        // _spline->findClosestPoint(state.getPos(), current_segment, current_s);
+        int current_segment;
+        double current_s;
+        _spline->findClosestPoint(state.getPos(), current_segment, current_s);
 
-        // double road_width_left = enable_two_way_road_ ? road_width_left_ * 3. : road_width_left_;
-        // global_guidance_->LoadReferencePath(std::max(0., current_s), _spline,
-        //                                     road_width_left - CONFIG["robot_radius"].as<double>() - 0.1,
-        //                                     road_width_right_ - CONFIG["robot_radius"].as<double>() - 0.1);
+        double road_width_left = enable_two_way_road_ ? road_width_left_ * 3. : road_width_left_;
+        _guidance_spline = std::make_unique<RosTools::CubicSpline2D<tk::spline>>(
+            _spline->getXSpline(),
+            _spline->getYSpline()); // Construct a spline from the given points
 
-        global_guidance_->SetGoals({GuidancePlanner::Goal(state.getPos() + Eigen::Vector2d(4., 0.), 0.),
-                                    GuidancePlanner::Goal(state.getPos() + Eigen::Vector2d(4., 3.), 1.),
-                                    GuidancePlanner::Goal(state.getPos() + Eigen::Vector2d(4., -3.), 1.)});
+        global_guidance_->LoadReferencePath(std::max(0., current_s), _guidance_spline,
+                                            road_width_left - CONFIG["robot_radius"].as<double>() - 0.1,
+                                            road_width_right_ - CONFIG["robot_radius"].as<double>() - 0.1);
+
+        // global_guidance_->SetGoals({GuidancePlanner::Goal(state.getPos() + Eigen::Vector2d(4., 0.), 0.),
+        //                             GuidancePlanner::Goal(state.getPos() + Eigen::Vector2d(4., 3.), 1.),
+        //                             GuidancePlanner::Goal(state.getPos() + Eigen::Vector2d(4., -3.), 1.)});
         LOG_DEBUG("Running Guidance Search");
         global_guidance_->Update(); // data); /** @note The main update */
-        LOG_VALUE("Number of Guidance Trajectories", global_guidance_->NumberOfGuidanceTrajectories());
+        // LOG_VALUE("Number of Guidance Trajectories", global_guidance_->NumberOfGuidanceTrajectories());
 
         // Initialize the solver with the best (= 0) guidance trajectory, if configured
         // if (config_->enable_guidance_)
@@ -99,10 +104,10 @@ namespace MPCPlanner
     int GuidanceConstraints::optimize(State &state, const RealTimeData &data)
     {
         // Required for parallel call to the solvers when using Forces
-        // omp_set_nested(1);
-        // omp_set_max_active_levels(2);
-        // omp_set_dynamic(0);
-        LOG_INFO("Guidance Constraints: optimize");
+        omp_set_nested(1);
+        omp_set_max_active_levels(2);
+        omp_set_dynamic(0);
+        LOG_DEBUG("Guidance Constraints: optimize");
 
         if (!CONFIG["t-mpc"]["use_t-mpc++"].as<bool>() && !global_guidance_->Succeeded())
             return 0;
@@ -143,7 +148,7 @@ namespace MPCPlanner
             {
                 LOG_DEBUG("Planner [" << planner.id << "]: Loading guidance into the solver and constructing constraints");
 
-                // InitializeSolverWithGuidance(solver.get());
+                initializeSolverWithGuidance(planner);
                 // solver->LoadInitialVehiclePredictions(); // Load vehicle predictions for constraint construction
 
                 planner.guidance_constraints->update(state, data); // Updates linearization of constraints
@@ -162,6 +167,7 @@ namespace MPCPlanner
             }
 
             // SOLVE OPTIMIZATION
+            // planner.local_solver->printParameters(1);
             LOG_DEBUG("Planner [" << planner.id << "]: Solving ...");
             planner.result.exit_code = solver->solve();
             // solver_results_[i].exit_code =ellipsoidal_constraints_[solver->solver_id_].Optimize(solver.get()); // IF THIS OPTIMIZATION EXISTS!
@@ -178,9 +184,9 @@ namespace MPCPlanner
             }
             else
             {
-                auto &guidance_trajectory = global_guidance_->GetGuidanceTrajectory(planner.local_solver->_solver_id);
-                planner.result.guidance_ID = guidance_trajectory.topology_class; // We were using this guidance
-                planner.result.color = guidance_trajectory.color_;               // A color index to visualize with
+                auto &guidance_trajectory = global_guidance_->GetGuidanceTrajectory(planner.id); // planner.local_solver->_solver_id);
+                planner.result.guidance_ID = guidance_trajectory.topology_class;                 // We were using this guidance
+                planner.result.color = guidance_trajectory.color_;                               // A color index to visualize with
 
                 if (guidance_trajectory.previously_selected_) // Prefer the selected trajectory
                     planner.result.objective *= 1. / global_guidance_->GetConfig()->selection_weight_consistency_;
@@ -188,9 +194,7 @@ namespace MPCPlanner
             }
         }
 
-        // return 0;
-
-        // omp_set_dynamic(1);
+        omp_set_dynamic(1);
 
         // // DECISION MAKING
         best_planner_index_ = FindBestPlanner();
@@ -202,16 +206,17 @@ namespace MPCPlanner
 
         auto &best_planner = planners_[best_planner_index_];
         auto &best_solver = best_planner.local_solver;
-        LOG_INFO("Best Planner ID: " << best_planner.id);
+        // LOG_INFO("Best Planner ID: " << best_planner.id);
 
         // // VISUALIZATION
-        // best_planner.guidance_constraints->Visualize();
-        // best_planner.safety_constraints->Visualize();
+        best_planner.guidance_constraints->visualize(data);
+        best_planner.safety_constraints->visualize(data);
         // // Communicate to the guidance which topology class we follow (none if it was the original planner)
         global_guidance_->OverrideSelectedTrajectory(best_planner.result.guidance_ID, best_planner.is_original_planner);
 
         _solver->_output = best_solver->_output; // Load the solution into the main lmpcc solver
-
+        _solver->_info = best_solver->_info;
+        _solver->_params = best_solver->_params;
         // // Now that we have copied the best solver data (which will get propagated), propagate the solvers here
         // for (auto &planner : planners_)
         // {
@@ -222,29 +227,31 @@ namespace MPCPlanner
         return best_planner.result.exit_code; // Return its exit code
     }
 
-    // void GuidanceConstraints::InitializeSolverWithGuidance(SolverInterface *solver)
-    // {
-    //     // Initialize the solver with the guidance trajectory
-    //     // int trajectory_index = solver->solver_id_ == 0 ? 0 : solver->solver_id_ - 1;
-    //     RosTools::CubicSpline2D<tk::spline> &trajectory_spline = global_guidance_->GetGuidanceTrajectory(solver->solver_id_).spline.GetTrajectory();
+    void GuidanceConstraints::initializeSolverWithGuidance(LocalPlanner &planner)
+    {
+        auto &solver = planner.local_solver;
 
-    //     // Initialize the solver in the selected local optimum
-    //     // I.e., set for each k, x(k), y(k) ...
-    //     for (size_t k = 0; k < solver->FORCES_N; k++) // note that the 0th velocity is the current velocity
-    //     {
-    //         int index = k + 1;
-    //         // if (config_->debug_boolean1_)
-    //         //   index = k;
-    //         Eigen::Vector2d cur_position = trajectory_spline.GetPoint((double)(index)*solver->DT); // The plan is one ahead
-    //         // global_guidance_->ProjectToFreeSpace(cur_position, k + 1);
+        // // Initialize the solver with the guidance trajectory
+        // RosTools::CubicSpline2D<tk::spline> &trajectory_spline = global_guidance_->GetGuidanceTrajectory(solver->_solver_id).spline.GetTrajectory();
+        RosTools::CubicSpline2D<tk::spline> &trajectory_spline = global_guidance_->GetGuidanceTrajectory(planner.id).spline.GetTrajectory();
 
-    //         Eigen::Vector2d cur_velocity = trajectory_spline.GetVelocity((double)(index)*solver->DT); // The plan is one ahead
-    //         solver->InitialPlan(k).set_x(cur_position(0));
-    //         solver->InitialPlan(k).set_y(cur_position(1));
-    //         solver->InitialPlan(k).set_psi(std::atan2(cur_velocity(1), cur_velocity(0)));
-    //         solver->InitialPlan(k).set_v(cur_velocity.norm());
-    //     }
-    // }
+        // Initialize the solver in the selected local optimum
+        // I.e., set for each k, x(k), y(k) ...
+        // The time indices are wrong here I think
+        for (int k = 1; k < solver->N; k++) // note that the 0th velocity is the current velocity
+        {
+            // int index = k + 1;
+            int index = k + 1;
+            Eigen::Vector2d cur_position = trajectory_spline.GetPoint((double)(index)*solver->dt); // The plan is one ahead
+            // global_guidance_->ProjectToFreeSpace(cur_position, k + 1);
+            solver->setEgoPrediction(k, "x", cur_position(0));
+            solver->setEgoPrediction(k, "y", cur_position(1));
+
+            Eigen::Vector2d cur_velocity = trajectory_spline.GetVelocity((double)(index)*solver->dt); // The plan is one ahead
+            solver->setEgoPrediction(k, "psi", std::atan2(cur_velocity(1), cur_velocity(0)));
+            solver->setEgoPrediction(k, "v", cur_velocity.norm());
+        }
+    }
 
     // void GuidanceConstraints::SetParameters(LocalPlanner &planner, const RealTimeData &data, int N_iter, int &param_idx)
     // {
@@ -279,29 +286,35 @@ namespace MPCPlanner
             }
         }
         return best_index;
-    };
+    }
 
     /** @brief Visualize the computations in this module  */
     void GuidanceConstraints::visualize(const RealTimeData &data)
     {
+        (void)data;
         LOG_DEBUG("Guidance Constraints: Visualize()");
 
         // Contouring::Visualize();
 
         // global_guidance_->Visualize(highlight_selected_guidance_, visualized_guidance_trajectory_nr_);
-        global_guidance_->Visualize(false, 0);
-
-        for (auto &planner : planners_)
+        global_guidance_->Visualize(false, -1);
+        for (size_t i = 0; i < planners_.size(); i++)
         {
+            auto &planner = planners_[i];
             if (planner.disabled)
                 continue;
 
+            // Visualize the optimized trajectory
             Trajectory trajectory;
             for (int k = 1; k < _solver->N; k++)
                 trajectory.add(planner.local_solver->getOutput(k, "x"), planner.local_solver->getOutput(k, "y"));
+            visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 0.4, planner.id);
 
-            LOG_INFO("Topic: " << _name + "/planner_" + std::to_string(planner.id));
-            visualizeTrajectory(trajectory, _name + "/planner_" + std::to_string(planner.id), true);
+            // Visualize the warmstart
+            Trajectory initial_trajectory;
+            for (int k = 1; k < planner.local_solver->N; k++)
+                initial_trajectory.add(planner.local_solver->getEgoPrediction(k, "x"), planner.local_solver->getEgoPrediction(k, "y"));
+            visualizeTrajectory(initial_trajectory, _name + "/warmstart_trajectories", false, 0.4, planner.id + 5);
 
             // if (planner.is_original_planner || (!add_original_planner_ && planner.id == 0))
             //     planner.safety_constraints->Visualize();
@@ -309,6 +322,9 @@ namespace MPCPlanner
             // if (planner.result.success)
             //     VisualizeOptimizedPlan(planner); // Visualize the plan
         }
+        // Publish
+        visualizeTrajectory(Trajectory(), _name + "/optimized_trajectories", true, 0.4, 0);
+        visualizeTrajectory(Trajectory(), _name + "/warmstart_trajectories", true, 0.4, 0);
 
         // plan_markers_->publish();
 

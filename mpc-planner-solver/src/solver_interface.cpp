@@ -1,6 +1,7 @@
 #include "mpc-planner-solver/solver_interface.h"
 
 #include <mpc-planner-util/logging.h>
+#include <mpc-planner-util/parameters.h>
 
 #include "mpc_planner_generated.h"
 
@@ -24,6 +25,7 @@ namespace MPCPlanner
 		nx = _config["nx"].as<unsigned int>();
 		nvar = _config["nvar"].as<unsigned int>();
 		npar = _config["npar"].as<unsigned int>();
+		dt = CONFIG["integrator_step"].as<double>();
 		reset();
 	}
 
@@ -117,5 +119,13 @@ namespace MPCPlanner
 	double Solver::getOutput(int k, std::string &&state_name)
 	{
 		return getForcesOutput(_output, k, _model_map[state_name][1].as<int>());
+	}
+
+	void Solver::printParameters(int k)
+	{
+		for (auto it = _parameter_map.begin(); it != _parameter_map.end(); ++it)
+		{
+			LOG_VALUE(it->first.as<std::string>(), getParameter(k, it->first.as<std::string>()));
+		}
 	}
 } // namespace MPCPlanner

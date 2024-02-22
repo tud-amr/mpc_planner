@@ -44,7 +44,7 @@ namespace MPCPlanner
     // For all stages
     for (int k = 0; k < _solver->N; k++)
     {
-      Eigen::Vector2d pos(_solver->getEgoPrediction(k, "x"), _solver->getEgoPrediction(k, "y")); // k+1?
+      Eigen::Vector2d pos(_solver->getEgoPrediction(k, "x"), _solver->getEgoPrediction(k, "y")); // k = 0 is initial state
 
       /** @todo Load disc position */
       projectToSafety(copied_obstacles, k, pos); // Ensure that the vehicle position is collision-free

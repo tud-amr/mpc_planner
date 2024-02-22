@@ -35,6 +35,6 @@
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc-planner-jackal)/rviz/ros1.rviz" output="screen"/>
 
-  <!-- <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" output="log"/> -->
+  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" output="log"/>
 
 </launch>  

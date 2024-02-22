@@ -26,6 +26,9 @@ namespace MPCPlanner
         double getStartOfSegment(int index) const { return _s_vector[index]; };
         double length() const { return _s_vector.back(); }
 
+        tk::spline &getXSpline() { return _x_spline; }
+        tk::spline &getYSpline() { return _y_spline; }
+
     private:
         tk::spline _x_spline, _y_spline;
 

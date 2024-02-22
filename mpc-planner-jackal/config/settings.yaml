@@ -29,7 +29,7 @@ probabilistic:
 
 weights:
   goal: 10.
-  velocity: 2.0 #0.5
+  velocity: 0.5
   acceleration: 0.15
   angular_velocity: 0.25 #0.05
 

@@ -98,7 +98,7 @@ namespace MPCPlanner
 
         // void SetParameters(LocalPlanner &planner, const RealTimeData &data, int N_iter, int &param_idx);
 
-        // void InitializeSolverWithGuidance(SolverInterface *solver);
+        void initializeSolverWithGuidance(LocalPlanner &planner);
 
         int FindBestPlanner();
 
@@ -118,6 +118,7 @@ namespace MPCPlanner
 
         // To set the goals
         std::unique_ptr<Spline2D> _spline{nullptr};
+        std::unique_ptr<RosTools::CubicSpline2D<tk::spline>> _guidance_spline{nullptr}; /**@todo Use Spline2D instead of CubicSpline2D*/
 
         // Configuration parameters
         // bool add_original_planner_, enable_guidance_constraints_, enable_guidance_warmstart_;

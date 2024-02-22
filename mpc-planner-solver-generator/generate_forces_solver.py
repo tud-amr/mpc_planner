@@ -15,12 +15,18 @@ from util.parameters import Parameters
 
 import solver_model
 
-from solver_definition import define_parameters, objective, constraints, constraint_lower_bounds, constraint_upper_bounds, constraint_number
+from solver_definition import (
+    define_parameters,
+    objective,
+    constraints,
+    constraint_lower_bounds,
+    constraint_upper_bounds,
+    constraint_number,
+)
 
 
 # Press the green button in the gutter to run the script.
 def generate_forces_solver(modules, settings, model):
-    
 
     params = Parameters()
     define_parameters(modules, params, settings)
@@ -66,8 +72,12 @@ def generate_forces_solver(modules, settings, model):
             solver.nh[i] = 0  # No constraints here
 
     # Equalities are specified on all stages
-    solver.eq = lambda z, p: solver_model.discrete_dynamics(z, model, settings["integrator_step"])
-    solver.E = np.concatenate([np.zeros((model.nx, model.nu)), np.eye(model.nx)], axis=1)
+    solver.eq = lambda z, p: solver_model.discrete_dynamics(
+        z, model, settings["integrator_step"]
+    )
+    solver.E = np.concatenate(
+        [np.zeros((model.nx, model.nu)), np.eye(model.nx)], axis=1
+    )
 
     # Initial stage (k = 0) specifies the states
     solver.xinitidx = range(model.nu, model.get_nvar())
@@ -89,20 +99,29 @@ def generate_forces_solver(modules, settings, model):
         options.embedded_timing = 1
         options.license.use_floating_license = 1
 
+    multi_solver = True
+    if multi_solver:
+        options.threadSafeStorage = 1
+        options.nlp.max_num_threads = 5
+
     """
     PRIMAL DUAL INTERIOR POINT (Default Solver!) 
     """
     options.maxit = 500  # Maximum number of iterations
     # options.mu0 = 20
-    options.init = 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
+    options.init = 2  # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
 
     # Creates code for symbolic model formulation given above, then contacts server to generate new solver
     print_header("Generating solver")
     generated_solver = solver.generate_solver(options)
     print_header("Output")
-    
-    if os.path.exists(solver_path(settings)) and os.path.isdir(solver_path(settings)): # Remove solver if it exists at the destination
-        shutil.rmtree(solver_path(settings))
-    shutil.move(default_solver_path(settings), solver_path(settings))  # Move the solver to this directory
 
-    return generated_solver, generated_solver.dynamics    
+    if os.path.exists(solver_path(settings)) and os.path.isdir(
+        solver_path(settings)
+    ):  # Remove solver if it exists at the destination
+        shutil.rmtree(solver_path(settings))
+    shutil.move(
+        default_solver_path(settings), solver_path(settings)
+    )  # Move the solver to this directory
+
+    return generated_solver, generated_solver.dynamics

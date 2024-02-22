@@ -303,10 +303,19 @@ def generate_cpp_code(settings, model):
         f"double getForcesOutput(const {forces_solver_name}_output& output, const int k, const int var_index){{\n"
     )
     for k in range(settings["N"]):
+        header_file.write(f"\t\tif(k == {k})\n")
+        if k == 0:
+            header_file.write(
+                f'\t\t\t{{\n'
+                f'\t\t\t\tif(var_index >= {model.nu})'
+                f'\t\t\t\t\tLOG_WARN("getForcesOutput for k = 0 returns the initial state.");\n'
+            )
         header_file.write(
-            f"\t\tif(k == {k})\n"
             f"\t\t\treturn output.x{add_zero_below_10(k+1, N)}[var_index];\n"
         )
+        if k == 0:
+            header_file.write("\t\t}\n")
+
     header_file.write(
         'throw std::runtime_error("Invalid k value for getForcesOutput");\n'
     )

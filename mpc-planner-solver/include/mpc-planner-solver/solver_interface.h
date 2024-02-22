@@ -74,6 +74,9 @@ namespace MPCPlanner
 		/** @brief Solve the optimization */
 		int solve();
 		double getOutput(int k, std::string &&state_name);
+
+		// Debugging functions
+		void printParameters(int k);
 	};
 }
 #endif
