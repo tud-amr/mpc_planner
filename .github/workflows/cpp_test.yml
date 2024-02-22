@@ -1,5 +1,5 @@
 # This is a basic workflow to help you get started with Actions
-name: Test Solver Generation Package
+name: Test ROS C++
 
 # Controls when the workflow will run
 on: 
@@ -34,6 +34,8 @@ jobs:
       container:
         image: ${{ matrix.docker_image }}
       steps:
+        - name: Setup credentials to access private repositories
+          run: git config --global url.https://${{ secrets.PAT_SECRET }}@github.com
         - name: setup ROS environment
           uses: ros-tooling/setup-ros@v0.7
           with:
