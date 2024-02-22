@@ -35,7 +35,7 @@ jobs:
         image: ${{ matrix.docker_image }}
       steps:
         - name: Install basic dependencies
-          run: sudo apt-get update && sudo apt-get install git-all
+          run: apt-get update && apt-get install git-all
         - name: Setup credentials to access private repositories
           run: git config --global url.https://${{ secrets.PAT_SECRET }}@github.com
         - name: setup ROS environment
