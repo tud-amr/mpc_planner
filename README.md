@@ -3,7 +3,18 @@
 
 
 # robot-Agnostic Trajectory Optimization (ATO)
-This package implements robot agnostic Model Predictive Control (MPC) for motion planning in dynamic environments.
+This package implements robot agnostic Model Predictive Control (MPC) for motion planning in dynamic environments in ROS1/ROS2 C++.
+
+If you find this repository useful for your research, please consider citing one of the papers below:
+
+**Related Publications:**
+
+- **Topology-Driven Model Predictive Control (T-MPC)** O. de Groot, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Topology-Driven Parallel Trajectory Optimization in Dynamic Environments.” arXiv, Jan. 11, 2024. Accessed: Jan. 15, 2024. [Online]. Available: http://arxiv.org/abs/2401.06021
+- **Safe Horizon Model Predictive Control (SH-MPC)** O. de Groot, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Scenario-Based Motion Planning with Bounded Probability of Collision.” arXiv, Jul. 03, 2023. Accessed: Jul. 10, 2023. [Online]. Available: https://arxiv.org/pdf/2307.01070.pdf
+- **Scenario-based Model Predictive Contouring Control (S-MPCC)** O. de Groot, B. Brito, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Scenario-Based Trajectory Optimization in Uncertain Dynamic Environments,” IEEE RA-L, pp. 5389–5396, 2021.
+
+
+
 
 
 ## Installation (Solver Generation)
@@ -51,7 +62,9 @@ Each system should define its own launch files to launch requirements and this p
 roslaunch mpc-planner-jackal jackalsimulator.launch
 ```
 
-that contains
+<details>
+<summary>Example Launch File</summary>
+Example launch file for the jackal:
 
 ```xml
   <rosparam command="load" file="$(find mpc-planner-jackal)/config/guidance_planner.yaml"/>
@@ -63,7 +76,33 @@ that contains
         <remap from="/output/command" to="/cmd_vel"/>
   </node>
 ```
+</details>
+
+
 
 **Example Output:**
 
-<img src="docs/jackalsimulator.gif" width="600" />
+<img src="docs/jackalsimulator.gif" width="400" />
+
+
+## Adding your system
+See the `jackal` system for an example (best to copy that package and replace all occurences of `jackal` with your robot name):
+
+- **Solver Generation:** [mpc-planner-jackal/scripts/generate_jackal_solver.py](./mpc-planner-jackal/scripts/generate_jackal_solver.py)
+
+- **ROS1 Controller:** [mpc-planner-jackal/src/ros1_planner.cpp](./mpc-planner-jackal/src/ros1_planner.cpp)
+
+- **ROS2 Controller:** [mpc-planner-jackal/src/ros2_planner.cpp](./mpc-planner-jackal/src/ros2_planner.cpp)
+
+
+## ROS Compatibility
+This package supports `ROS1` and `ROS2`. A script is provided to switch `CMakelists.txt` and `package.xml` files for the respective version. To switch to `ROS2`, use:
+
+```
+poetry run python switch_to_ros.py 2
+```
+
+Note:
+
+- Changes to `CMakelists.txt` and `package.xml` are saved first to the respective files ending with `1` or `2`.
+- The system level packages, e.g., `mpc-planner-jackal` still do need different control files for `ROS1` and `ROS2`, but both versions can be available in one repository.

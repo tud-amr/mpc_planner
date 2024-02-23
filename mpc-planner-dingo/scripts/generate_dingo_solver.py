@@ -7,6 +7,10 @@ import numpy as np
 sys.path.append(os.path.join(sys.path[0], "..", "..", "mpc-planner-solver-generator"))
 sys.path.append(os.path.join(sys.path[0], "..", "..", "mpc-planner-modules", "scripts"))
 
+# SET YOUR FORCES PATH HERE (can also be in PYTHONPATH)
+forces_path = os.path.join(os.path.expanduser("~"), "forces_pro_client")
+sys.path.append(forces_path)
+
 from util.files import load_settings
 
 from mpc_base import MPCBaseModule

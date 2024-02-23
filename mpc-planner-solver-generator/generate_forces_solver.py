@@ -2,9 +2,7 @@ import os
 import sys
 import shutil
 
-# SET YOUR FORCES PATH HERE
-forces_path = os.path.join(os.path.expanduser("~"), "forces_pro_client")
-sys.path.append(forces_path)
+
 import forcespro.nlp
 
 import numpy as np
