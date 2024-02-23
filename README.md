@@ -95,6 +95,8 @@ See the `jackal` system for an example (best to copy that package and replace al
 - **ROS2 Controller:** [mpc-planner-jackal/src/ros2_planner.cpp](./mpc-planner-jackal/src/ros2_planner.cpp)
 
 
+For current systems, check the individual `README.md`.
+
 ## ROS Compatibility
 This package supports `ROS1` and `ROS2`. A script is provided to switch `CMakelists.txt` and `package.xml` files for the respective version. To switch to `ROS2`, use:
 
