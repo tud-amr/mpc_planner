@@ -7,6 +7,7 @@ git clone https://github.com/oscardegroot/ros_tools.git
 git clone https://github.com/oscardegroot/roadmap.git
 git clone https://github.com/oscardegroot/pedestrian_simulator.git
 git clone https://github.com/oscardegroot/pedsim_original.git
+git clone https://github.com/oscardegroot/guidance_planner.git
 ```
 
 
