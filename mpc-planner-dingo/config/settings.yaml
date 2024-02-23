@@ -26,6 +26,7 @@ t-mpc:
 probabilistic:
   enable: false
   risk: 0.05
+  propagate_uncertainty: true
 
 weights:
   goal: 10.

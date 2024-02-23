@@ -1,5 +1,7 @@
 #include <mpc-planner-dingo/ros1_planner.h>
 
+#include <mpc-planner/data_preparation.h>
+
 #include <mpc-planner-util/visuals.h>
 #include <mpc-planner-util/parameters.h>
 #include <mpc-planner-util/logging.h>
@@ -202,13 +204,18 @@ void dingoPlanner::obstacleCallback(const mpc_planner_msgs::obstacle_array::Cons
             if (mode.major_semiaxis.back() == 0. || !CONFIG["probabilistic"]["enable"].as<bool>())
                 dynamic_obstacle.prediction.type = PredictionType::DETERMINISTIC;
             else
+            {
                 dynamic_obstacle.prediction.type = PredictionType::GAUSSIAN;
+                propagatePredictionUncertainty(dynamic_obstacle.prediction);
+            }
         }
         else
         {
             ROSTOOLS_ASSERT(false, "Multiple modes not yet supported");
         }
     }
+    ensureObstacleSize(_data.dynamic_obstacles, _state);
+
     _planner->onDataReceived(_data, "dynamic obstacles");
 }
 

@@ -71,6 +71,7 @@ namespace MPCPlanner
             : index(_index), position(_position), angle(_angle), radius(_radius)
         {
         }
+        
     };
 
     inline Prediction getConstantVelocityPrediction(const Eigen::Vector2d &position, const Eigen::Vector2d &velocity, double dt, int steps)
