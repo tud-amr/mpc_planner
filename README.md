@@ -31,7 +31,19 @@ poetry run python mpc-planner-jackal/scripts/generate_jackal_solver.py
 ```
 
 ## Installation (Planning)
-To install dependencies, run:
+Install basic dependencies:
+
+```bash
+sudo apt-get install libeigen3-dev pkg-config libomp-dev
+```
+
+In your `catkin_ws/src` directory:
+
+```bash
+git clone https://github.com/asr-ros/asr_rapidxml.git
+```
+
+To install other dependencies, run:
 
 ```bash
 rosdep install --from-paths src --ignore-src -r -y
