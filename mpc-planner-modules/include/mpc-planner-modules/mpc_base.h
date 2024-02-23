@@ -13,7 +13,7 @@
 #ifndef __MPC_BASE_H__
 #define __MPC_BASE_H__
 
-#include <mpc-planner-types/controller_module.h>
+#include <mpc-planner-modules/controller_module.h>
 
 namespace MPCPlanner
 {

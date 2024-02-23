@@ -1,7 +1,7 @@
 #ifndef __MPC_GOAL_MODULE_H__
 #define __MPC_GOAL_MODULE_H__
 
-#include <mpc-planner-types/controller_module.h>
+#include <mpc-planner-modules/controller_module.h>
 
 namespace MPCPlanner
 {

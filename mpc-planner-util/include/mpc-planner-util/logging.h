@@ -16,6 +16,7 @@
 #define LOG_WARN_THROTTLE(rate, ...) ROS_WARN_STREAM_THROTTLE(rate, "\033[33m" << __VA_ARGS__ << "\033[0m")
 #define LOG_ERROR_THROTTLE(rate, ...) ROS_ERROR_STREAM_THROTTLE(rate, __VA_ARGS__)
 #define LOG_DEBUG_THROTTLE(rate, ...) ROS_DEBUG_STREAM_THROTTLE(rate, __VA_ARGS__)
+#define LOG_HOOK() LOG_INFO(__FILE__ << " Line " << __LINE__);
 #elif MPC_PLANNER_ROS == 2
 #include <rclcpp/rclcpp.hpp>
 #include <filesystem>

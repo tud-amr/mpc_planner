@@ -30,7 +30,7 @@ inline void ensureObstacleSize(std::vector<DynamicObstacle> &obstacles, const St
   if (obstacles.size() > max_obstacles)
   {
     std::vector<double> distances;
-    LOG_INFO("Received " << obstacles.size() << " > " << max_obstacles << " obstacles. Keeping the closest.");
+    LOG_DEBUG("Received " << obstacles.size() << " > " << max_obstacles << " obstacles. Keeping the closest.");
 
     Eigen::Vector2d obstacle_pos;
     Eigen::Vector2d vehicle_pos = state.getPos();
@@ -60,7 +60,7 @@ inline void ensureObstacleSize(std::vector<DynamicObstacle> &obstacles, const St
   }
   else if (obstacles.size() < max_obstacles)
   {
-    LOG_INFO("Received " << obstacles.size() << " < " << max_obstacles << " obstacles. Adding dummies.");
+    LOG_DEBUG("Received " << obstacles.size() << " < " << max_obstacles << " obstacles. Adding dummies.");
 
     for (size_t cur_size = obstacles.size(); cur_size < max_obstacles; cur_size++)
     {

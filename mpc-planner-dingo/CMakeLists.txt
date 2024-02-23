@@ -26,8 +26,6 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}
   INCLUDE_DIRS include include/${PROJECT_NAME}
-
-  # LIBRARIES ${PROJECT_NAME}
 )
 
 include_directories(

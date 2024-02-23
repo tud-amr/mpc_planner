@@ -1,7 +1,7 @@
 #ifndef __LINEARIZED_CONSTRAINTS_H_
 #define __LINEARIZED_CONSTRAINTS_H_
 
-#include <mpc-planner-types/controller_module.h>
+#include <mpc-planner-modules/controller_module.h>
 
 #include <mpc-planner-util/projection.h>
 

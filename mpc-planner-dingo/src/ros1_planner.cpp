@@ -7,6 +7,9 @@
 #include <mpc-planner-util/logging.h>
 #include <mpc-planner-util/load_yaml.hpp>
 
+#include <std_msgs/Int32.h>
+#include <std_msgs/Float32.h>
+
 #include <ros_tools/helpers.h>
 
 using namespace MPCPlanner;
@@ -24,6 +27,8 @@ dingoPlanner::dingoPlanner(ros::NodeHandle &nh)
 
     // Initialize the ROS interface
     initializeSubscribersAndPublishers(nh);
+
+    startEnvironment();
 
     _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
 
@@ -67,11 +72,48 @@ void dingoPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
     _reset_simulation_pub = nh.advertise<std_msgs::Empty>("/lmpcc/reset_environment", 1);
     _reset_simulation_client = nh.serviceClient<std_srvs::Empty>("/gazebo/reset_world");
     _reset_ekf_client = nh.serviceClient<robot_localization::SetPose>("/set_pose");
+
+    // Pedestrian simulator
+    _ped_horizon_pub = nh.advertise<std_msgs::Int32>("/pedestrian_simulator/horizon", 1);
+    _ped_integrator_step_pub = nh.advertise<std_msgs::Float32>("/pedestrian_simulator/integrator_step", 1);
+    _ped_clock_frequency_pub = nh.advertise<std_msgs::Float32>("/pedestrian_simulator/clock_frequency", 1);
+    _ped_start_client = nh.serviceClient<std_srvs::Empty>("/pedestrian_simulator/start");
+}
+
+void dingoPlanner::startEnvironment()
+{
+    LOG_INFO("Starting pedestrian simulator");
+    for (int i = 0; i < 20; i++)
+    {
+        std_msgs::Int32 horizon_msg;
+        horizon_msg.data = CONFIG["N"].as<int>();
+        _ped_horizon_pub.publish(horizon_msg);
+
+        std_msgs::Float32 integrator_step_msg;
+        integrator_step_msg.data = CONFIG["integrator_step"].as<double>();
+        _ped_integrator_step_pub.publish(integrator_step_msg);
+
+        std_msgs::Float32 clock_frequency_msg;
+        clock_frequency_msg.data = CONFIG["control_frequency"].as<double>();
+        _ped_clock_frequency_pub.publish(clock_frequency_msg);
+
+        std_srvs::Empty empty_msg;
+
+        if (_ped_start_client.call(empty_msg))
+            break;
+        else
+        {
+            LOG_INFO_THROTTLE(3, "Waiting for pedestrian simulator to start");
+            ros::Duration(1.0).sleep();
+        }
+    }
+    LOG_INFO("Environment ready.");
 }
 
 void dingoPlanner::loop(const ros::TimerEvent &event)
 {
     (void)event;
+
     LOG_DEBUG("============= Loop =============");
 
     _benchmarker->start();
@@ -103,6 +145,7 @@ void dingoPlanner::loop(const ros::TimerEvent &event)
         cmd.linear.x = 0.0;
         cmd.angular.z = 0.0;
     }
+
     _cmd_pub.publish(cmd);
     _benchmarker->stop();
 
@@ -118,7 +161,8 @@ void dingoPlanner::stateCallback(const nav_msgs::Odometry::ConstPtr &msg)
     _state.set("x", msg->pose.pose.position.x);
     _state.set("y", msg->pose.pose.position.y);
     _state.set("psi", RosTools::quaternionToAngle(msg->pose.pose.orientation));
-    _state.set("v", std::sqrt(std::pow(msg->twist.twist.linear.x, 2.) + std::pow(msg->twist.twist.linear.y, 2.)));
+    // _state.set("v", std::sqrt(std::pow(msg->twist.twist.linear.x, 2.) + std::pow(msg->twist.twist.linear.y, 2.)));
+    _state.set("v", msg->twist.twist.linear.x);
 }
 
 void dingoPlanner::statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)

@@ -30,19 +30,20 @@ namespace MPCPlanner
 
     std::vector<DynamicObstacle> copied_obstacles = data.dynamic_obstacles;
 
-    for (auto &obstacle : copied_obstacles)
+    for (size_t i = 0; i < copied_obstacles.size(); i++)
     {
+      const auto &obstacle = copied_obstacles[i];
 
       if (obstacle.prediction.type == PredictionType::GAUSSIAN)
       {
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(obstacle.index) + "_x", obstacle.prediction.steps[k].position(0));
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(obstacle.index) + "_y", obstacle.prediction.steps[k].position(1));
+        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_x", obstacle.prediction.steps[k].position(0));
+        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_y", obstacle.prediction.steps[k].position(1));
 
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(obstacle.index) + "_minor", obstacle.prediction.steps[k].minor_radius);
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(obstacle.index) + "_major", obstacle.prediction.steps[k].major_radius);
+        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_minor", obstacle.prediction.steps[k].minor_radius);
+        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_major", obstacle.prediction.steps[k].major_radius);
 
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(obstacle.index) + "_risk", CONFIG["probabilistic"]["risk"].as<double>());
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(obstacle.index) + "_r", CONFIG["obstacle_radius"].as<double>());
+        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_risk", CONFIG["probabilistic"]["risk"].as<double>());
+        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_r", CONFIG["obstacle_radius"].as<double>());
       }
     }
   }

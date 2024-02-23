@@ -13,7 +13,7 @@ obstacle_radius: 0.4
 
 contouring:
   num_segments: 3
-  contour: 0.05
+  contour: 0.01
   lag: 0.1
 
 linearized_constraints:
@@ -30,7 +30,7 @@ probabilistic:
 
 weights:
   goal: 10.
-  velocity: 0.5
+  velocity: 0.3
   acceleration: 0.15
   angular_velocity: 0.25 #0.05
 

@@ -31,6 +31,8 @@ public:
 
     void initializeSubscribersAndPublishers(ros::NodeHandle &nh);
 
+    void startEnvironment();
+
     void loop(const ros::TimerEvent &event);
 
     void stateCallback(const nav_msgs::Odometry::ConstPtr &msg);
@@ -58,6 +60,8 @@ private:
     ros::Subscriber _obstacle_sub;
 
     ros::Publisher _cmd_pub;
+    ros::Publisher _ped_horizon_pub, _ped_integrator_step_pub, _ped_clock_frequency_pub;
+    ros::ServiceClient _ped_start_client;
 
     std_srvs::Empty _reset_msg;
     robot_localization::SetPose _reset_pose_msg;

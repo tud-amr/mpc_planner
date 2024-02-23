@@ -1,7 +1,7 @@
 #ifndef __ELLIPSOID_CONSTRAINTS_H_
 #define __ELLIPSOID_CONSTRAINTS_H_
 
-#include <mpc-planner-types/controller_module.h>
+#include <mpc-planner-modules/controller_module.h>
 
 namespace MPCPlanner
 {

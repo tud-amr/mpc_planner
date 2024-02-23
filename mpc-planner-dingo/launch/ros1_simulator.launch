@@ -4,8 +4,7 @@
 
   <arg name="gui" default="false" />
   <arg name="project_name" default="" />
-  <arg name="pedestrian_scenario" default="corridor_opposite" />
-  <arg name="overwrite_pedestrian_scenario" default="false" />
+  <arg name="pedestrian_scenario" default="dingo/12_corridor.xml" />
 
   <rosparam command="load" file="$(find mpc-planner-dingo)/config/guidance_planner.yaml"/>
   <node pkg="mpc-planner-dingo" type="dingo_planner" name="dingo_planner" respawn="false" output="screen">
@@ -16,11 +15,9 @@
         <remap from="/output/command" to="/cmd_vel"/>
   </node>
 
- <include file="$(find pedestrian_simulator)/launch/simulation.launch">
-        <arg name="horizon" value="20"/>
-        <arg name="prediction_step" value="0.2"/>
-        <arg name="update_frequency" value="50"/>
-        <arg name="pedestrian_scenario" value="$(arg pedestrian_scenario)"/>
+  <rosparam command="load" file="$(find mpc-planner-dingo)/config/settings.yaml"/>
+  <include file="$(find pedestrian_simulator)/launch/simulation.launch">
+    <arg name="pedestrian_scenario" value="$(arg pedestrian_scenario)"/>
   </include>
 
   <include file="$(find dingo_gazebo)/launch/empty_world.launch">

@@ -1,7 +1,7 @@
 #ifndef __CONTOURING_H_
 #define __CONTOURING_H_
 
-#include <mpc-planner-types/controller_module.h>
+#include <mpc-planner-modules/controller_module.h>
 
 #include <mpc-planner-util/spline.h>
 

@@ -7,7 +7,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
 endif()
 
-# set(SYSTEM_TO_USE "Jackal")
 set(DEPENDENCIES
   mpc-planner-util
 )
@@ -16,6 +15,9 @@ set(DEPENDENCIES
 find_package(catkin REQUIRED COMPONENTS
   ${DEPENDENCIES}
 )
+
+find_package(Eigen3 REQUIRED)
+add_definitions(${EIGEN_DEFINITIONS})
 
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}
@@ -27,6 +29,7 @@ include_directories(
   include
   Solver/include
   ${catkin_INCLUDE_DIRS}
+  ${EIGEN_INCLUDE_DIRS}
 )
 
 add_library(${PROJECT_NAME}
@@ -46,4 +49,10 @@ target_link_libraries(${PROJECT_NAME}-test
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
   yaml-cpp
+)
+
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )

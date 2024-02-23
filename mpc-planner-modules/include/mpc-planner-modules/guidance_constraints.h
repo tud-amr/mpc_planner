@@ -16,7 +16,7 @@
 
 #include <mpc-planner-modules/linearized_constraints.h>
 
-#include <mpc-planner-types/controller_module.h>
+#include <mpc-planner-modules/controller_module.h>
 #include <mpc-planner-solver/solver_interface.h>
 
 #include <mpc-planner-util/spline.h>
