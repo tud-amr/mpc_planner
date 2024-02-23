@@ -24,7 +24,7 @@ t-mpc:
   enable_constraints: true
 
 probabilistic:
-  enable: false
+  enable: true
   risk: 0.05
   propagate_uncertainty: true
 
@@ -33,5 +33,8 @@ weights:
   velocity: 0.5
   acceleration: 0.15
   angular_velocity: 0.25 #0.05
+
+visualization:
+  draw_every: 5 # stages
 
 reference_velocity: 1.0

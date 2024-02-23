@@ -17,8 +17,10 @@
   </node>
 
  <include file="$(find pedestrian_simulator)/launch/simulation.launch">
+        <arg name="horizon" value="20"/>
+        <arg name="prediction_step" value="0.2"/>
+        <arg name="update_frequency" value="50"/>
         <arg name="pedestrian_scenario" value="$(arg pedestrian_scenario)"/>
-        <arg name="overwrite_pedestrian_scenario" value="$(arg overwrite_pedestrian_scenario)"/>
   </include>
 
   <include file="$(find dingo_gazebo)/launch/empty_world.launch">

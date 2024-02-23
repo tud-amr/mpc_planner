@@ -16,9 +16,8 @@ set(DEPENDENCIES
 
 find_package(catkin REQUIRED COMPONENTS
   ${DEPENDENCIES}
-  REQUIRED
-  Eigen3
 )
+find_package(Eigen3 REQUIRED)
 
 add_definitions(${EIGEN_DEFINITIONS})
 

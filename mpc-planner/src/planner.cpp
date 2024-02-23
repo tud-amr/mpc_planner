@@ -38,7 +38,7 @@ namespace MPCPlanner
 
         if (!is_data_ready)
         {
-            LOG_WARN_THROTTLE(5, "Data is not ready, missing " + missing_data + "\b");
+            LOG_WARN_THROTTLE(3, "Data is not ready, missing " + missing_data + "\b");
             _output.success = false;
             return _output;
         }

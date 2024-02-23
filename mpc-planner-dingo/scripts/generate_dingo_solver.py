@@ -16,6 +16,7 @@ from util.files import load_settings
 from mpc_base import MPCBaseModule
 from contouring import ContouringModule
 
+from gaussian_constraints import GaussianConstraintModule
 from ellipsoid_constraints import EllipsoidConstraintModule
 from guidance_constraints import GuidanceConstraintModule
 from linearized_constraints import LinearizedConstraintModule
@@ -44,6 +45,7 @@ def define_modules(settings) -> ModuleManager:
     # modules.add_module(EllipsoidConstraintModule(settings))
     modules.add_module(GuidanceConstraintModule(settings))
     # modules.add_module(LinearizedConstraintModule(settings))
+    # modules.add_module(GaussianConstraintModule(settings))
 
     return modules
 
