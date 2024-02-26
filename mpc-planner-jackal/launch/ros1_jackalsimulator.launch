@@ -4,23 +4,20 @@
 
   <arg name="gui" default="false" />
   <arg name="project_name" default="" />
-  <arg name="pedestrian_scenario" default="corridor_opposite" />
-  <arg name="overwrite_pedestrian_scenario" default="false" />
+  <arg name="pedestrian_scenario" default="random_social/8_corridor.xml" />
 
   <rosparam command="load" file="$(find mpc-planner-jackal)/config/guidance_planner.yaml"/>
   <node pkg="mpc-planner-jackal" type="jackal_planner" name="jackal_planner" respawn="false" output="screen">
-        <remap from="/input/state" to="robot_state"/>
+        <remap from="/input/state_pose" to="robot_state"/>
         <remap from="/input/goal" to="/goal_pose"/>
         <remap from="/input/reference_path" to="roadmap/reference"/>
-        <remap from="/input/obstacles" to="/pedestrian_simulator/trajectory_predictions"/>
+        <remap from="/input/obstacles_sim" to="/pedestrian_simulator/trajectory_predictions"/>
         <remap from="/output/command" to="/cmd_vel"/>
   </node>
 
- <include file="$(find pedestrian_simulator)/launch/simulation.launch">
-        <arg name="pedestrian_scenario" value="$(arg pedestrian_scenario)"/>
-        <arg name="overwrite_pedestrian_scenario" value="$(arg overwrite_pedestrian_scenario)"/>
+  <include file="$(find pedestrian_simulator)/launch/simulation.launch">
+    <arg name="pedestrian_scenario" value="$(arg pedestrian_scenario)"/>
   </include>
-
   <include file="$(find jackal_gazebo)/launch/jackal_world.launch">
     <arg name="gui" value="$(arg gui)" />
   </include>

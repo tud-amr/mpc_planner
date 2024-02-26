@@ -18,6 +18,7 @@
   <depend>ros_tools</depend>
 
   <depend>nav_msgs</depend>
+  <depend>derived_object_msgs</depend>
 
   <exec_depend>jackal_simulator</exec_depend>
   <exec_depend>roadmap</exec_depend>

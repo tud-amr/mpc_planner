@@ -13,9 +13,12 @@
 
 #include <ros/ros.h>
 
+#include <std_msgs/Int32.h>
+#include <std_msgs/Float32.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
+#include <derived_object_msgs/ObjectArray.h>
 
 #include <std_srvs/Empty.h>
 #include <robot_localization/SetPose.h>
@@ -31,13 +34,16 @@ public:
 
     void initializeSubscribersAndPublishers(ros::NodeHandle &nh);
 
+    void startEnvironment();
+
     void loop(const ros::TimerEvent &event);
 
     void stateCallback(const nav_msgs::Odometry::ConstPtr &msg);
     void statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg); /** @note: Connects to the JackalSimulator */
     void goalCallback(const geometry_msgs::PoseStamped::ConstPtr &msg);
     void pathCallback(const nav_msgs::Path::ConstPtr &msg);
-    void obstacleCallback(const mpc_planner_msgs::obstacle_array::ConstPtr &msg);
+    void obstacleSimCallback(const mpc_planner_msgs::obstacle_array::ConstPtr &msg);
+    void obstacleCallback(const derived_object_msgs::ObjectArray::ConstPtr &msg);
 
     void reset();
 
@@ -52,10 +58,13 @@ private:
     std::unique_ptr<RosTools::Benchmarker> _benchmarker;
 
     // Subscribers and publishers
-    ros::Subscriber _state_sub;
+    ros::Subscriber _state_sub, _state_pose_sub;
     ros::Subscriber _goal_sub;
     ros::Subscriber _path_sub;
-    ros::Subscriber _obstacle_sub;
+    ros::Subscriber _obstacle_sub, _obstacle_sim_sub;
+
+    ros::Publisher _ped_horizon_pub, _ped_integrator_step_pub, _ped_clock_frequency_pub;
+    ros::ServiceClient _ped_start_client;
 
     ros::Publisher _cmd_pub;
 

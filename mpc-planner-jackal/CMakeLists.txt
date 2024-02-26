@@ -16,6 +16,7 @@ set(DEPENDENCIES
   mpc_planner_msgs
   ros_tools
   nav_msgs
+  derived_object_msgs
 )
 
 # find dependencies

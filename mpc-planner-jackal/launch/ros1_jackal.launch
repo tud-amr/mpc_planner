@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <arg name="gui" default="false" />
+  <arg name="project_name" default="" />
+  <arg name="pedestrian_scenario" default="corridor_opposite" />
+  <arg name="overwrite_pedestrian_scenario" default="false" />
+
+  <rosparam command="load" file="$(find mpc-planner-jackal)/config/guidance_planner.yaml"/>
+  <node pkg="mpc-planner-jackal" type="jackal_planner" name="jackal_planner" respawn="false" output="screen">
+        <remap from="/input/state" to="robot_state"/>
+        <remap from="/input/state_pose" to="none_state_pose"/>
+        <remap from="/input/goal" to="/goal_pose"/>
+        <remap from="/input/reference_path" to="roadmap/reference"/>
+        <remap from="/input/obstacles_sim" to="none_obstacles_sim"/>
+        <remap from="/input/obstacles" to="/dynamic_objects"/>
+        <remap from="/output/command" to="/cmd_vel"/>
+  </node>
+
+ <!-- <include file="$(find pedestrian_simulator)/launch/simulation.launch">
+        <arg name="pedestrian_scenario" value="$(arg pedestrian_scenario)"/>
+        <arg name="overwrite_pedestrian_scenario" value="$(arg overwrite_pedestrian_scenario)"/>
+  </include> -->
+
+    <!-- Start the vicon bridge -->
+
+    <!-- Bundle dynamic obstacles in one convenient message -->
+  <include file="$(find obstacle_bundle_util)/launch/bundle_obstacles.launch">
+    <arg name="num_dynamic_obstacles" value="1"/>
+    <arg name="num_static_obstacles" value="0"/>
+    <arg name="obstacle_radius" value="0.4"/>
+  </include>
+
+  <include file="$(find roadmap)/launch/roadmap.launch">
+    <arg name="map_file_name" value="maps/straight.xml"/>
+  </include>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc-planner-jackal)/rviz/ros1.rviz" output="screen"/>
+
+  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" output="log"/>
+
+</launch>  

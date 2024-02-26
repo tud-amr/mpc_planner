@@ -23,6 +23,8 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
     // Initialize the ROS interface
     initializeSubscribersAndPublishers(nh);
 
+    startEnvironment();
+
     _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
 
     // Start the control loop
@@ -38,12 +40,12 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
 {
     LOG_INFO("initializeSubscribersAndPublishers");
 
-    // _state_sub = nh.subscribe<nav_msgs::Odometry>(
-    //     "/input/state", 5,
-    //     boost::bind(&JackalPlanner::stateCallback, this, _1));
-
-    _state_sub = nh.subscribe<geometry_msgs::PoseStamped>(
+    _state_sub = nh.subscribe<nav_msgs::Odometry>(
         "/input/state", 5,
+        boost::bind(&JackalPlanner::stateCallback, this, _1));
+
+    _state_pose_sub = nh.subscribe<geometry_msgs::PoseStamped>(
+        "/input/state_pose", 5,
         boost::bind(&JackalPlanner::statePoseCallback, this, _1));
 
     _goal_sub = nh.subscribe<geometry_msgs::PoseStamped>(
@@ -54,7 +56,11 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
         "/input/reference_path", 1,
         boost::bind(&JackalPlanner::pathCallback, this, _1));
 
-    _obstacle_sub = nh.subscribe<mpc_planner_msgs::obstacle_array>(
+    _obstacle_sim_sub = nh.subscribe<mpc_planner_msgs::obstacle_array>(
+        "/input/obstacles_sim", 1,
+        boost::bind(&JackalPlanner::obstacleSimCallback, this, _1));
+
+    _obstacle_sub = nh.subscribe<derived_object_msgs::ObjectArray>(
         "/input/obstacles", 1,
         boost::bind(&JackalPlanner::obstacleCallback, this, _1));
 
@@ -65,6 +71,42 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
     _reset_simulation_pub = nh.advertise<std_msgs::Empty>("/lmpcc/reset_environment", 1);
     _reset_simulation_client = nh.serviceClient<std_srvs::Empty>("/gazebo/reset_world");
     _reset_ekf_client = nh.serviceClient<robot_localization::SetPose>("/set_pose");
+
+    // Pedestrian simulator
+    _ped_horizon_pub = nh.advertise<std_msgs::Int32>("/pedestrian_simulator/horizon", 1);
+    _ped_integrator_step_pub = nh.advertise<std_msgs::Float32>("/pedestrian_simulator/integrator_step", 1);
+    _ped_clock_frequency_pub = nh.advertise<std_msgs::Float32>("/pedestrian_simulator/clock_frequency", 1);
+    _ped_start_client = nh.serviceClient<std_srvs::Empty>("/pedestrian_simulator/start");
+}
+
+void JackalPlanner::startEnvironment()
+{
+    LOG_INFO("Starting pedestrian simulator");
+    for (int i = 0; i < 20; i++)
+    {
+        std_msgs::Int32 horizon_msg;
+        horizon_msg.data = CONFIG["N"].as<int>();
+        _ped_horizon_pub.publish(horizon_msg);
+
+        std_msgs::Float32 integrator_step_msg;
+        integrator_step_msg.data = CONFIG["integrator_step"].as<double>();
+        _ped_integrator_step_pub.publish(integrator_step_msg);
+
+        std_msgs::Float32 clock_frequency_msg;
+        clock_frequency_msg.data = CONFIG["control_frequency"].as<double>();
+        _ped_clock_frequency_pub.publish(clock_frequency_msg);
+
+        std_srvs::Empty empty_msg;
+
+        if (_ped_start_client.call(empty_msg))
+            break;
+        else
+        {
+            LOG_INFO_THROTTLE(3, "Waiting for pedestrian simulator to start");
+            ros::Duration(1.0).sleep();
+        }
+    }
+    LOG_INFO("Environment ready.");
 }
 
 void JackalPlanner::loop(const ros::TimerEvent &event)
@@ -169,7 +211,7 @@ void JackalPlanner::pathCallback(const nav_msgs::Path::ConstPtr &msg)
     _planner->onDataReceived(_data, "reference_path");
 }
 
-void JackalPlanner::obstacleCallback(const mpc_planner_msgs::obstacle_array::ConstPtr &msg)
+void JackalPlanner::obstacleSimCallback(const mpc_planner_msgs::obstacle_array::ConstPtr &msg)
 {
     _data.dynamic_obstacles.clear();
 
@@ -208,6 +250,34 @@ void JackalPlanner::obstacleCallback(const mpc_planner_msgs::obstacle_array::Con
         {
             ROSTOOLS_ASSERT(false, "Multiple modes not yet supported");
         }
+    }
+    _planner->onDataReceived(_data, "dynamic obstacles");
+}
+
+void JackalPlanner::obstacleCallback(const derived_object_msgs::ObjectArray::ConstPtr &msg)
+{
+    _data.dynamic_obstacles.clear();
+
+    for (auto &object : msg->objects)
+    {
+        // Save the obstacle
+        _data.dynamic_obstacles.emplace_back(
+            object.id,
+            Eigen::Vector2d(object.pose.position.x, object.pose.position.y),
+            RosTools::quaternionToAngle(object.pose),
+            CONFIG["obstacle_radius"].as<double>());
+        auto &dynamic_obstacle = _data.dynamic_obstacles.back();
+
+        Eigen::Vector2d velocity = Eigen::Vector2d(object.twist.linear.x, object.twist.linear.y);
+
+        // Make a constant velocity prediction
+        dynamic_obstacle.prediction = getConstantVelocityPrediction(
+            dynamic_obstacle.position,
+            velocity,
+            CONFIG["intergrator_step"].as<double>(),
+            CONFIG["N"].as<int>());
+
+        dynamic_obstacle.prediction.type = PredictionType::DETERMINISTIC;
     }
     _planner->onDataReceived(_data, "dynamic obstacles");
 }
