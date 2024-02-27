@@ -93,7 +93,7 @@ namespace MPCPlanner
 				else if (k == N - 1)
 					setEgoPrediction(k, it->first.as<std::string>(), getOutput(k, it->first.as<std::string>())); // extrapolate with the terminal state at k = N-1
 				else
-					setEgoPrediction(k, it->first.as<std::string>(), getOutput(k + 1, it->first.as<std::string>())); // use x_{k+1} to initialize x_{k} (note that both have the initial state)
+					setEgoPrediction(k, it->first.as<std::string>(), getOutput(k, it->first.as<std::string>())); // use x_{k+1} to initialize x_{k} (note that both have the initial state)
 			}
 		}
 	}

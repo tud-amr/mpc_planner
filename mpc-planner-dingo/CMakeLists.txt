@@ -23,6 +23,8 @@ find_package(catkin REQUIRED COMPONENTS
   ${DEPENDENCIES}
 )
 
+find_package(yaml-cpp REQUIRED)
+
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}
   INCLUDE_DIRS include include/${PROJECT_NAME}

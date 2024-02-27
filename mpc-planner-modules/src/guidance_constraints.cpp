@@ -166,6 +166,10 @@ namespace MPCPlanner
                 planner.safety_constraints->setParameters(data, k);   // Set this solver's parameters
             }
 
+            /** @todo Set timeout */
+            // planner.local_solver->_params.solver_timeout(1. / (config_->clock_frequency_) - (ros::Time::now() - data.control_loop_time_).seconds() - 0.005);
+            planner.local_solver->_params.solver_timeout = 1. / CONFIG["control_frequency"].as<double>() - 20. / 1000.;
+            // planner.local_solver->_params.
             // SOLVE OPTIMIZATION
             // planner.local_solver->printParameters(1);
             LOG_DEBUG("Planner [" << planner.id << "]: Solving ...");

@@ -92,7 +92,7 @@ def generate_forces_solver(modules, settings, model):
     options.overwrite = 1
     options.cleanup = 1
 
-    floating = True
+    floating = False
     if floating:
         options.embedded_timing = 1
         options.license.use_floating_license = 1
@@ -102,12 +102,16 @@ def generate_forces_solver(modules, settings, model):
         options.threadSafeStorage = 1
         options.nlp.max_num_threads = 5
 
+    timeout = True
+    if timeout:
+        options.solver_timeout = 1
+
     """
     PRIMAL DUAL INTERIOR POINT (Default Solver!) 
     """
     options.maxit = 500  # Maximum number of iterations
-    # options.mu0 = 20
-    options.init = 2  # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
+    options.mu0 = 20
+    options.init = 0  # 2  # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
 
     # Creates code for symbolic model formulation given above, then contacts server to generate new solver
     print_header("Generating solver")

@@ -42,13 +42,17 @@ namespace MPCPlanner
                                                      bool publish, double alpha)
     {
         RosTools::ROSMarkerPublisher &publisher = VISUALS.getPublisher(topic_name);
-        auto &cylinder = publisher.getNewPointMarker("CYLINDER");
+        // auto &cylinder = publisher.getNewPointMarker("CYLINDER");
+        auto &ped = publisher.getNewModelMarker();
 
         for (auto &obstacle : obstacles)
         {
-            cylinder.setScale(2. * obstacle.radius, 2. * obstacle.radius, 0.01);
-            cylinder.setColorInt(obstacle.index, CONFIG["max_obstacles"].as<int>(), alpha);
-            cylinder.addPointMarker(obstacle.position, 0.0);
+            ped.setColorInt(obstacle.index, 1., RosTools::Colormap::BRUNO);
+            ped.setOrientation(obstacle.angle); // RosTools::quaternionToAngle(plot_pose.orientation));
+            ped.addPointMarker(obstacle.position, 0.0);
+            // cylinder.setScale(2. * obstacle.radius, 2. * obstacle.radius, 0.01);
+            // cylinder.setColorInt(obstacle.index, CONFIG["max_obstacles"].as<int>(), alpha);
+            // cylinder.addPointMarker(obstacle.position, 0.0);
         }
 
         if (publish)

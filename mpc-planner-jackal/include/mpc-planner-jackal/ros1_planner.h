@@ -19,6 +19,7 @@
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
 #include <derived_object_msgs/ObjectArray.h>
+#include <sensor_msgs/Joy.h>
 
 #include <std_srvs/Empty.h>
 #include <robot_localization/SetPose.h>
@@ -35,6 +36,7 @@ public:
     void initializeSubscribersAndPublishers(ros::NodeHandle &nh);
 
     void startEnvironment();
+    void objectiveReached();
 
     void loop(const ros::TimerEvent &event);
 
@@ -44,6 +46,7 @@ public:
     void pathCallback(const nav_msgs::Path::ConstPtr &msg);
     void obstacleSimCallback(const mpc_planner_msgs::obstacle_array::ConstPtr &msg);
     void obstacleCallback(const derived_object_msgs::ObjectArray::ConstPtr &msg);
+    void bluetoothCallback(const sensor_msgs::Joy::ConstPtr &msg);
 
     void reset();
 
@@ -55,6 +58,11 @@ private:
 
     ros::Timer _timer;
 
+    bool _enable_output{false};
+    bool _simulation{false};
+
+    bool _forward_x_experiment{true};
+
     std::unique_ptr<RosTools::Benchmarker> _benchmarker;
 
     // Subscribers and publishers
@@ -62,9 +70,12 @@ private:
     ros::Subscriber _goal_sub;
     ros::Subscriber _path_sub;
     ros::Subscriber _obstacle_sub, _obstacle_sim_sub;
+    ros::Subscriber _bluetooth_sub;
 
     ros::Publisher _ped_horizon_pub, _ped_integrator_step_pub, _ped_clock_frequency_pub;
     ros::ServiceClient _ped_start_client;
+
+    ros::Publisher _reverse_roadmap_pub;
 
     ros::Publisher _cmd_pub;
 

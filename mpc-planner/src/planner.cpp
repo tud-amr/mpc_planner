@@ -28,6 +28,7 @@ namespace MPCPlanner
     // Given real-time data, solve the MPC problem
     PlannerOutput Planner::solveMPC(State &state, const RealTimeData &data)
     {
+        bool was_feasible = _output.success;
         _output = PlannerOutput(_solver->dt, _solver->N);
 
         // Check if all modules have enough data
@@ -43,11 +44,14 @@ namespace MPCPlanner
             return _output;
         }
 
+        // Set the initial guess
+        if (was_feasible)
+            _solver->setWarmstart(state);
+        else
+            _solver->reset();
+
         // Set the initial state
         _solver->setXinit(state);
-
-        // Set the initial guess
-        _solver->setWarmstart(state);
 
         // Update all modules
         for (auto &module : _modules)
@@ -120,6 +124,14 @@ namespace MPCPlanner
 
         state = State();       // Reset the state
         data = RealTimeData(); // Reset the received data
+    }
+
+    bool Planner::isObjectiveReached(const RealTimeData &data) const
+    {
+        bool objective_reached = true;
+        for (auto &module : _modules)
+            objective_reached = objective_reached && module->isObjectiveReached(data);
+        return objective_reached;
     }
 
 }

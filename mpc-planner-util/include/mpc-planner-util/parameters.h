@@ -5,6 +5,16 @@
 
 #define CONFIG Configuration::getInstance().getYAMLNode()
 
+namespace YAML
+{
+    class SafeNode
+    {
+        template <typename Key>
+        const Node operator[](const Key &key) const;
+    };
+
+}
+
 class Configuration
 {
 public:

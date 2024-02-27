@@ -1,5 +1,7 @@
 #include <mpc-planner-jackal/ros1_planner.h>
 
+#include <mpc-planner/data_preparation.h>
+
 #include <mpc-planner-util/visuals.h>
 #include <mpc-planner-util/parameters.h>
 #include <mpc-planner-util/logging.h>
@@ -20,10 +22,14 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
     // Initialize the planner
     _planner = std::make_unique<Planner>();
 
+    nh.getParam("jackal_planner/simulation", _simulation);
+    LOG_VALUE("Simulation", _simulation);
+
     // Initialize the ROS interface
     initializeSubscribersAndPublishers(nh);
 
-    startEnvironment();
+    if (_simulation)
+        startEnvironment();
 
     _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
 
@@ -64,19 +70,29 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
         "/input/obstacles", 1,
         boost::bind(&JackalPlanner::obstacleCallback, this, _1));
 
+    _bluetooth_sub = nh.subscribe<sensor_msgs::Joy>(
+        "/input/bluetooth", 1,
+        boost::bind(&JackalPlanner::bluetoothCallback, this, _1)); // Deadman switch
+
     _cmd_pub = nh.advertise<geometry_msgs::Twist>(
         "/output/command", 1);
 
     // Environment Reset
-    _reset_simulation_pub = nh.advertise<std_msgs::Empty>("/lmpcc/reset_environment", 1);
-    _reset_simulation_client = nh.serviceClient<std_srvs::Empty>("/gazebo/reset_world");
-    _reset_ekf_client = nh.serviceClient<robot_localization::SetPose>("/set_pose");
+    if (_simulation)
+    {
+        _reset_simulation_pub = nh.advertise<std_msgs::Empty>("/lmpcc/reset_environment", 1);
+        _reset_simulation_client = nh.serviceClient<std_srvs::Empty>("/gazebo/reset_world");
+        _reset_ekf_client = nh.serviceClient<robot_localization::SetPose>("/set_pose");
 
-    // Pedestrian simulator
-    _ped_horizon_pub = nh.advertise<std_msgs::Int32>("/pedestrian_simulator/horizon", 1);
-    _ped_integrator_step_pub = nh.advertise<std_msgs::Float32>("/pedestrian_simulator/integrator_step", 1);
-    _ped_clock_frequency_pub = nh.advertise<std_msgs::Float32>("/pedestrian_simulator/clock_frequency", 1);
-    _ped_start_client = nh.serviceClient<std_srvs::Empty>("/pedestrian_simulator/start");
+        // Pedestrian simulator
+        _ped_horizon_pub = nh.advertise<std_msgs::Int32>("/pedestrian_simulator/horizon", 1);
+        _ped_integrator_step_pub = nh.advertise<std_msgs::Float32>("/pedestrian_simulator/integrator_step", 1);
+        _ped_clock_frequency_pub = nh.advertise<std_msgs::Float32>("/pedestrian_simulator/clock_frequency", 1);
+        _ped_start_client = nh.serviceClient<std_srvs::Empty>("/pedestrian_simulator/start");
+    }
+
+    // Roadmap reverse
+    _reverse_roadmap_pub = nh.advertise<std_msgs::Empty>("/roadmap/reverse", 1);
 }
 
 void JackalPlanner::startEnvironment()
@@ -97,7 +113,6 @@ void JackalPlanner::startEnvironment()
         _ped_clock_frequency_pub.publish(clock_frequency_msg);
 
         std_srvs::Empty empty_msg;
-
         if (_ped_start_client.call(empty_msg))
             break;
         else
@@ -106,7 +121,28 @@ void JackalPlanner::startEnvironment()
             ros::Duration(1.0).sleep();
         }
     }
+    _enable_output = true;
     LOG_INFO("Environment ready.");
+}
+
+void JackalPlanner::objectiveReached()
+{
+    if (_simulation)
+    {
+        if (_state.get("x") > 25.)
+            reset();
+    }
+    else
+    {
+        bool reset_condition_forward_x = (_forward_x_experiment) && (_state.get("x") > 2.7);
+        bool reset_condition_backward_x = (!_forward_x_experiment) && (_state.get("x") < -2.5);
+        bool reset_condition = reset_condition_forward_x || reset_condition_backward_x;
+        if (reset_condition)
+        {
+            reset();
+            _forward_x_experiment = !_forward_x_experiment;
+        }
+    }
 }
 
 void JackalPlanner::loop(const ros::TimerEvent &event)
@@ -116,11 +152,7 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
 
     _benchmarker->start();
 
-    if (_state.get("x") > 32.)
-    {
-        LOG_INFO("Resetting");
-        reset();
-    }
+    objectiveReached();
 
     // Print the state
     _state.print();
@@ -130,7 +162,7 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
     LOG_VALUE_DEBUG("Success", output.success);
 
     geometry_msgs::Twist cmd;
-    if (output.success)
+    if (_enable_output && output.success)
     {
         // Publish the command
         cmd.linear.x = _planner->getSolution(1, "v");  // = x1
@@ -154,7 +186,6 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
 
 void JackalPlanner::stateCallback(const nav_msgs::Odometry::ConstPtr &msg)
 {
-    // LOG_INFO("State callback");
     _state.set("x", msg->pose.pose.position.x);
     _state.set("y", msg->pose.pose.position.y);
     _state.set("psi", RosTools::quaternionToAngle(msg->pose.pose.orientation));
@@ -251,6 +282,7 @@ void JackalPlanner::obstacleSimCallback(const mpc_planner_msgs::obstacle_array::
             ROSTOOLS_ASSERT(false, "Multiple modes not yet supported");
         }
     }
+    ensureObstacleSize(_data.dynamic_obstacles, _state);
     _planner->onDataReceived(_data, "dynamic obstacles");
 }
 
@@ -260,26 +292,52 @@ void JackalPlanner::obstacleCallback(const derived_object_msgs::ObjectArray::Con
 
     for (auto &object : msg->objects)
     {
+        // Eigen::Vector2d position = Eigen::Vector2d(object.pose.position.x, object.pose.position.y);
+        // Eigen::Vector2d velocity = Eigen::Vector2d(-object.twist.linear.y, object.twist.linear.x);
+
+        double object_angle = RosTools::quaternionToAngle(object.pose.orientation) +
+                              std::atan2(object.twist.linear.y, object.twist.linear.x) +
+                              M_PI_2;
+
         // Save the obstacle
         _data.dynamic_obstacles.emplace_back(
             object.id,
             Eigen::Vector2d(object.pose.position.x, object.pose.position.y),
-            RosTools::quaternionToAngle(object.pose),
-            CONFIG["obstacle_radius"].as<double>());
+            object_angle,
+            object.shape.dimensions[1]);
         auto &dynamic_obstacle = _data.dynamic_obstacles.back();
 
-        Eigen::Vector2d velocity = Eigen::Vector2d(object.twist.linear.x, object.twist.linear.y);
+        // Read the orientation of the obstacle from the velocity estimation!
+        dynamic_obstacle.angle = object_angle;
+
+        // std::cout << object.id << ": " << object_angle << std::endl;
+
+        geometry_msgs::Twist global_twist = object.twist;
+        Eigen::Matrix2d rot_matrix = RosTools::rotationMatrixFromHeading(-RosTools::quaternionToAngle(object.pose.orientation));
+        Eigen::Vector2d twist_out = rot_matrix * Eigen::Vector2d(global_twist.linear.x, global_twist.linear.y);
+
+        // Eigen::Vector2d velocity = Eigen::Vector2d(object.twist.linear.x, object.twist.linear.y);
 
         // Make a constant velocity prediction
         dynamic_obstacle.prediction = getConstantVelocityPrediction(
             dynamic_obstacle.position,
-            velocity,
-            CONFIG["intergrator_step"].as<double>(),
+            twist_out,
+            CONFIG["integrator_step"].as<double>(),
             CONFIG["N"].as<int>());
-
-        dynamic_obstacle.prediction.type = PredictionType::DETERMINISTIC;
     }
+    ensureObstacleSize(_data.dynamic_obstacles, _state);
+
     _planner->onDataReceived(_data, "dynamic obstacles");
+}
+
+void JackalPlanner::bluetoothCallback(const sensor_msgs::Joy::ConstPtr &msg)
+{
+    if (msg->axes[2] < -0.9 && !_enable_output)
+        LOG_INFO("Planning enabled (deadman switch pressed)");
+    else if (msg->axes[2] > -0.9 && _enable_output)
+        LOG_INFO("Deadmanswitch enabled (deadman switch released)");
+
+    _enable_output = msg->axes[2] < -0.9;
 }
 
 void JackalPlanner::visualize()
@@ -294,17 +352,26 @@ void JackalPlanner::visualize()
 
 void JackalPlanner::reset()
 {
+    LOG_INFO("Resetting");
 
-    // Reset the environment
-    for (int j = 0; j < 1; j++)
+    if (_simulation)
     {
-        // ActuateBrake(5.0);
-        ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()).sleep();
-    }
+        // Reset the environment
+        for (int j = 0; j < 1; j++)
+        {
+            // ActuateBrake(5.0);
+            ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()).sleep();
+        }
 
-    _reset_simulation_client.call(_reset_msg);
-    _reset_ekf_client.call(_reset_pose_msg);
-    _reset_simulation_pub.publish(std_msgs::Empty());
+        _reset_simulation_client.call(_reset_msg);
+        _reset_ekf_client.call(_reset_pose_msg);
+        _reset_simulation_pub.publish(std_msgs::Empty());
+    }
+    else
+    {
+        std_msgs::Empty empty_msg;
+        _reverse_roadmap_pub.publish(empty_msg);
+    }
 
     _planner->reset(_state, _data);
 }

@@ -34,7 +34,7 @@ poetry run python mpc-planner-jackal/scripts/generate_jackal_solver.py
 Install basic dependencies:
 
 ```bash
-sudo apt-get install libeigen3-dev pkg-config libomp-dev
+sudo apt-get install libeigen3-dev pkg-config libomp-dev yaml-cpp clang
 ```
 
 In your `catkin_ws/src` directory:

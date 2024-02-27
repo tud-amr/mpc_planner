@@ -20,6 +20,8 @@
   <depend>nav_msgs</depend>
 
   <exec_depend>dingo_simulator</exec_depend>
+  <exec_depend>dingo_desktop</exec_depend>
+  <exec_depend>dingo</exec_depend>
   <exec_depend>roadmap</exec_depend>
   <exec_depend>pedestrian_simulator</exec_depend>
 

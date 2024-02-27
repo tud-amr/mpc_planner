@@ -18,11 +18,11 @@ namespace MPCPlanner
     (void)data;
 
     LOG_DEBUG("contouring::update()");
-    if (_spline.get() == nullptr)
-    {
-      LOG_WARN("Not updating yet");
-      return;
-    }
+    // if (_spline.get() == nullptr)
+    // {
+    //   LOG_WARN("Not updating yet");
+    //   return;
+    // }
     // Get the closest point
     double closest_s;
 
@@ -102,6 +102,12 @@ namespace MPCPlanner
       LOG_INFO("Received Reference Path");
 
       _spline = std::make_unique<Spline2D>(data.reference_path.x, data.reference_path.y); // Construct a spline from the given points
+                                                                                          // Get the closest point
+
+      _closest_segment = -1;
+      // Update the closest point
+      // double closest_s;
+      // _spline->findClosestPoint(Eigen::Vector2d(state.get("x"), state.get("y")), _closest_segment, closest_s);
     }
   }
 
@@ -116,7 +122,12 @@ namespace MPCPlanner
   bool Contouring::isObjectiveReached(const RealTimeData &data)
   {
     (void)data;
-    return false;
+
+    if (!_spline)
+      return false;
+
+    int index = _closest_segment + CONFIG["contouring"]["num_segments"].as<int>() - 1;
+    return index >= _spline->numSegments();
   }
 
   void Contouring::visualize(const RealTimeData &data)
@@ -163,8 +174,6 @@ namespace MPCPlanner
   void Contouring::reset()
   {
     _spline.reset(nullptr);
-
-    // goal_reached_ = false;
   }
 
 } // namespace MPCPlanner

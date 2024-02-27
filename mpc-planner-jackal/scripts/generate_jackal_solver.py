@@ -39,7 +39,7 @@ def define_modules(settings) -> ModuleManager:
     base_module.weigh_variable(
         var_name="v",
         weight_names=["velocity", "reference_velocity"],
-        cost_function=lambda x, w, r: w[0] * (x - w[1]) ** 2 / r**2,
+        cost_function=lambda x, w: w[0] * (x - w[1]) ** 2,
     )
 
     # modules.add_module(GoalModule(settings))  # Track a goal
