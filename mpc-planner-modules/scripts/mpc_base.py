@@ -63,6 +63,9 @@ class WeightsObjective(Objective):
 
         return cost
 
+    def get_weights(self) -> list:
+        return self._weights
+
 
 class MPCBaseModule(ObjectiveModule):
     """
@@ -82,3 +85,14 @@ class MPCBaseModule(ObjectiveModule):
     # Add a variable that is weighted in the cost
     def weigh_variable(self, var_name, weight_names, **kwargs):
         self.objectives[0].add(var_name, weight_names, **kwargs)
+
+    def add_definitions(self, header_file):
+        weights = self.objectives[0].get_weights()
+
+        header_file.write("#define WEIGHT_PARAMS {")
+
+        for idx, weight in enumerate(weights):
+            header_file.write('"' + weight + '"')
+            if idx != len(weights) - 1:
+                header_file.write(", ")
+        header_file.write("}\n")

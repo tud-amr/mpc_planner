@@ -7,12 +7,11 @@
   <arg name="pedestrian_scenario" default="random_social/12_corridor.xml" />
 
   <rosparam command="load" file="$(find mpc-planner-jackal)/config/guidance_planner.yaml"/>
-  <node pkg="mpc-planner-jackal" type="jackal_planner" name="jackal_planner" respawn="false" output="screen">
-        <param name="simulation" value="true"/>
+  <node pkg="mpc-planner-jackal" type="jackalsimulator_planner" name="jackalsimulator_planner" respawn="false" output="screen">
         <remap from="/input/state_pose" to="robot_state"/>
         <remap from="/input/goal" to="/goal_pose"/>
         <remap from="/input/reference_path" to="roadmap/reference"/>
-        <remap from="/input/obstacles_sim" to="/pedestrian_simulator/trajectory_predictions"/>
+        <remap from="/input/obstacles" to="/pedestrian_simulator/trajectory_predictions"/>
         <remap from="/output/command" to="/cmd_vel"/>
   </node>
 

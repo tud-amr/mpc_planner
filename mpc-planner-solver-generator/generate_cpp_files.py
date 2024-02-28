@@ -230,7 +230,7 @@ def generate_module_header(modules):
             + ">(solver);\n"
         )
     module_header.write("\n\t}\n")
-    module_header.write("};")
+    module_header.write("}")
 
     module_header.write("\n#endif")
 
@@ -306,8 +306,8 @@ def generate_cpp_code(settings, model):
         header_file.write(f"\t\tif(k == {k})\n")
         if k == 0:
             header_file.write(
-                f'\t\t\t{{\n'
-                f'\t\t\t\tif(var_index >= {model.nu})'
+                f"\t\t\t{{\n"
+                f"\t\t\t\tif(var_index >= {model.nu})"
                 f'\t\t\t\t\tLOG_WARN("getForcesOutput for k = 0 returns the initial state.");\n'
             )
         header_file.write(
@@ -320,6 +320,21 @@ def generate_cpp_code(settings, model):
         'throw std::runtime_error("Invalid k value for getForcesOutput");\n'
     )
     header_file.write("}\n\n")
+
+    header_file.write(
+        f"double loadForcesWarmstart({forces_solver_name}_params& params, const {forces_solver_name}_output& output){{\n"
+    )
+    header_file.write(f"\t\tfor (int i = 0; i < {model.nu}; i++){{\n")
+    header_file.write(
+        f"\t\t\tparams.z_init_{add_zero_below_10(0, N)}[i] = output.x{add_zero_below_10(1, N)}[i];\n\t\t}}\n"
+    )
+
+    header_file.write(f"\t\tfor (int i = 0; i < {model.get_nvar()}; i++){{\n")
+    for k in range(1, N):
+        header_file.write(
+            f"\t\t\tparams.z_init_{add_zero_below_10(k, N)}[i] = output.x{add_zero_below_10(k+1, N)}[i];\n"
+        )
+    header_file.write("\t\t}\n\t}")
 
     header_file.write("}\n#endif")
 

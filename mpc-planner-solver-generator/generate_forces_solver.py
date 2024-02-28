@@ -111,7 +111,7 @@ def generate_forces_solver(modules, settings, model):
     """
     options.maxit = 500  # Maximum number of iterations
     options.mu0 = 20
-    options.init = 0  # 2  # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
+    options.init = 2  # 2  # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
 
     # Creates code for symbolic model formulation given above, then contacts server to generate new solver
     print_header("Generating solver")

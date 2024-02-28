@@ -18,7 +18,7 @@ namespace MPCPlanner
     struct PlannerOutput
     {
         Trajectory trajectory;
-        bool success{true};
+        bool success{false};
 
         PlannerOutput(double dt, int N) : trajectory(dt, N) {}
 

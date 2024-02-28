@@ -28,6 +28,7 @@ namespace MPCPlanner
     virtual void setParameters(const RealTimeData &data, int k) override;
 
   private:
+    std::vector<std::string> _weight_names;
   };
 }
 

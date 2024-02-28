@@ -44,22 +44,14 @@ namespace MPCPlanner
     {
         LOG_DEBUG("Guidance Constraints: Update");
 
-        // First run the base class update to update our progress along the path
-        // Contouring::Update(solver_interface, data);
-        /** @todo Find where we are on the spline */
-
         // global_guidance_->LoadHalfspaces(); // Load static obstacles represented by halfspaces
-
-        // Is this necessary?
-        // planners_[0].guidance_constraints->Update(solver_interface, data);
-        // planners_[0].safety_constraints->Update(solver_interface, data);
 
         if (CONFIG["t-mpc"]["use_t-mpc++"].as<bool>() && global_guidance_->GetConfig()->n_paths_ == 0) // No global guidance
             return;
 
         // Set the goals of the global guidance planner
         global_guidance_->SetStart(state.getPos(), state.get("psi"), state.get("v"));
-        global_guidance_->SetReferenceVelocity(CONFIG["reference_velocity"].as<double>()); // solver_interface->weights_.velocity_reference_);
+        global_guidance_->SetReferenceVelocity(CONFIG["weights"]["reference_velocity"].as<double>()); // solver_interface->weights_.velocity_reference_);
 
         /** @note Reference path */
         // Temporary
@@ -67,6 +59,7 @@ namespace MPCPlanner
         double road_width_left_ = 3.5;
         double road_width_right_ = 3.5;
 
+        /** @todo Find where we are on the spline */
         int current_segment;
         double current_s;
         _spline->findClosestPoint(state.getPos(), current_segment, current_s);

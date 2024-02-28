@@ -58,6 +58,11 @@ namespace MPCPlanner
 		_params.all_parameters[k * npar + _parameter_map[parameter].as<int>()] = value;
 	}
 
+	void Solver::setParameter(int k, std::string &parameter, double value)
+	{
+		_params.all_parameters[k * npar + _parameter_map[parameter].as<int>()] = value;
+	}
+
 	double Solver::getParameter(int k, std::string &&parameter)
 	{
 		return _params.all_parameters[k * npar + _parameter_map[parameter].as<int>()];
@@ -84,6 +89,7 @@ namespace MPCPlanner
 
 	void Solver::setWarmstart(const State &initial_state)
 	{
+
 		for (int k = 0; k < N; k++) // For all timesteps
 		{
 			for (YAML::const_iterator it = _model_map.begin(); it != _model_map.end(); ++it) // For all inputs and states
@@ -93,9 +99,10 @@ namespace MPCPlanner
 				else if (k == N - 1)
 					setEgoPrediction(k, it->first.as<std::string>(), getOutput(k, it->first.as<std::string>())); // extrapolate with the terminal state at k = N-1
 				else
-					setEgoPrediction(k, it->first.as<std::string>(), getOutput(k, it->first.as<std::string>())); // use x_{k+1} to initialize x_{k} (note that both have the initial state)
+					setEgoPrediction(k, it->first.as<std::string>(), getOutput(k + 1, it->first.as<std::string>())); // use x_{k+1} to initialize x_{k} (note that both have the initial state)
 			}
 		}
+		loadForcesWarmstart(_params, _output);
 	}
 
 	void Solver::setEgoPrediction(unsigned int k, std::string &&var_name, double value)

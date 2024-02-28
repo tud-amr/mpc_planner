@@ -1,6 +1,8 @@
 
 #include <mpc-planner-modules/mpc_base.h>
 
+#include <mpc-planner-modules/definitions.h>
+
 #include <mpc-planner-util/parameters.h>
 
 namespace MPCPlanner
@@ -9,6 +11,7 @@ namespace MPCPlanner
   MPCBaseModule::MPCBaseModule(std::shared_ptr<Solver> solver)
       : ControllerModule(ModuleType::OBJECTIVE, solver, "mpc_base")
   {
+    _weight_names = WEIGHT_PARAMS;
   }
 
   void MPCBaseModule::update(State &state, const RealTimeData &data)
@@ -23,10 +26,9 @@ namespace MPCPlanner
     if (k == 0)
       LOG_DEBUG("setParameters()");
 
-    // Set the parameters for the solver
-    _solver->setParameter(k, "acceleration", CONFIG["weights"]["acceleration"].as<double>());
-    _solver->setParameter(k, "angular_velocity", CONFIG["weights"]["angular_velocity"].as<double>());
-    _solver->setParameter(k, "velocity", CONFIG["weights"]["velocity"].as<double>());
-    _solver->setParameter(k, "reference_velocity", CONFIG["reference_velocity"].as<double>());
+    for (auto &weight : _weight_names)
+    {
+      _solver->setParameter(k, weight, CONFIG["weights"][weight].as<double>());
+    }
   }
 } // namespace MPCPlanner

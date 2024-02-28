@@ -66,6 +66,7 @@ namespace MPCPlanner
 
 		/** @brief Set and get a solver parameter at index index of stage k */
 		void setParameter(int k, std::string &&parameter, double value);
+		void setParameter(int k, std::string &parameter, double value);
 		double getParameter(int k, std::string &&parameter);
 		void setXinit(std::string &&state_name, double value);
 		void setXinit(const State &state);
