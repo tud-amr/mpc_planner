@@ -37,8 +37,8 @@ namespace MPCPlanner
     (void)data;
     LOG_DEBUG("contouring::setparameters");
 
-    _solver->setParameter(k, "contour", CONFIG["contouring"]["contour"].as<double>());
-    _solver->setParameter(k, "lag", CONFIG["contouring"]["lag"].as<double>());
+    _solver->setParameter(k, "contour", CONFIG["weights"]["contour"].as<double>());
+    _solver->setParameter(k, "lag", CONFIG["weights"]["lag"].as<double>());
 
     /** @todo: Handling of parameters when the spline parameters go beyond the splines defined */
     for (int i = 0; i < CONFIG["contouring"]["num_segments"].as<int>(); i++)

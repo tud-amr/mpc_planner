@@ -1,13 +1,8 @@
+import os
 import datetime
 
 from util.code_generation import tabs, open_function, close_function, add_zero_below_10
-from util.files import (
-    generated_src_file,
-    generated_include_file,
-    solver_name,
-    get_package_path,
-    planner_path,
-)
+from util.files import generated_src_file, generated_include_file, solver_name, get_package_path, planner_path, get_current_package
 
 from util.logging import print_success, print_path
 
@@ -127,3 +122,79 @@ def generate_cpp_code(settings, model):
 
     print_success(" -> generated")
     return
+
+
+def generate_rqtreconfigure(settings):
+    current_package = get_current_package()
+    path = f"{get_package_path(current_package)}/cfg/"
+    os.makedirs(path, exist_ok=True)
+    path += "settings.cfg"
+    print_path("RQT Reconfigure", path, end="", tab=True)
+    rqt_file = open(path, "w")
+
+    rqt_file.write("#!/usr/bin/env python\n")
+    rqt_file.write(f'PACKAGE = "{current_package}"\n')
+    rqt_file.write("from dynamic_reconfigure.parameter_generator_catkin import *\n")
+    rqt_file.write("gen = ParameterGenerator()\n\n")
+
+    rqt_file.write('weight_params = gen.add_group("Weights", "Weights")\n')
+    rqt_params = settings["params"].rqt_params
+    for param in rqt_params:
+        rqt_file.write(f'weight_params.add("{param}", double_t, 1, "{param}", 1.0, 0.0, 100.0)\n')
+    rqt_file.write(f'exit(gen.generate(PACKAGE, "{current_package}", ""))\n')
+    rqt_file.close()
+    print_success(" -> generated")
+
+    current_package = get_current_package()
+    path = f"{get_package_path(current_package)}/include/{current_package}/"
+    os.makedirs(path, exist_ok=True)
+    system_name = "".join(current_package.split("_")[2:])
+    path += f"{system_name}_reconfigure.h"
+    print_path("RQT Reconfigure Header", path, end="", tab=True)
+    rqt_header = open(path, "w")
+
+    class_name = "Reconfigure"
+    rqt_header.write("#ifndef __GENERATED_RECONFIGURE_H\n")
+    rqt_header.write("#define __GENERATED_RECONFIGURE_H\n\n")
+    rqt_header.write("#include <ros/ros.h>\n\n")
+    rqt_header.write("#include <mpc-planner-util/logging.h>\n")
+    rqt_header.write("#include <mpc-planner-util/parameters.h>\n\n")
+    rqt_header.write("// Dynamic Reconfigure server\n")
+    rqt_header.write("#include <dynamic_reconfigure/server.h>\n")
+    rqt_header.write(f"#include <{current_package}/Config.h>\n\n")
+    rqt_header.write(f"class {class_name}\n")
+    rqt_header.write("{\n")
+    rqt_header.write("public:\n")
+    rqt_header.write(f"\t{class_name}()\n")
+    rqt_header.write("\t{\n")
+    rqt_header.write("\t\t// Initialize the dynamic reconfiguration\n")
+    rqt_header.write('\t\tLOG_INFO("Setting up dynamic_reconfigure server for the parameters");\n')
+    rqt_header.write("\t\t// first_reconfigure_callback_ = true;\n")
+    rqt_header.write(f'\t\tros::NodeHandle nh_reconfigure("{current_package}");\n')
+    rqt_header.write(
+        f"\t\t_reconfigure_server.reset(new dynamic_reconfigure::Server<{current_package}::Config>(_reconfig_mutex, nh_reconfigure));\n"
+    )
+    rqt_header.write(f"\t\t_reconfigure_server->setCallback(boost::bind(&{class_name}::reconfigureCallback, this, _1, _2));\n")
+    rqt_header.write("\t}\n")
+    rqt_header.write(f"\tvoid reconfigureCallback({current_package}::Config &config, uint32_t level)\n")
+    rqt_header.write("\t{\n")
+    rqt_header.write("\t\t(void)level;\n")
+    rqt_header.write("\t\tif (_first_reconfigure_callback){\n")
+    for idx, param in enumerate(rqt_params):
+        rqt_header.write(f'\t\t\tconfig.{param} = CONFIG{settings["params"].rqt_param_config_names[idx](param)}.as<double>();\n')
+    rqt_header.write("\t\t\t_first_reconfigure_callback = false;\n")
+    rqt_header.write("\t\t}else{\n")
+    for idx, param in enumerate(rqt_params):
+        rqt_header.write(f'\t\t\tCONFIG{settings["params"].rqt_param_config_names[idx](param)} = config.{param};\n')
+    rqt_header.write("\t\t}\n")
+
+    rqt_header.write("\t}\n\n")
+    rqt_header.write("private:\n")
+    rqt_header.write("\tbool _first_reconfigure_callback{true};\n")
+    rqt_header.write("\t// RQT Reconfigure ROS1\n")
+    rqt_header.write(f"\tboost::shared_ptr<dynamic_reconfigure::Server<{current_package}::Config>> _reconfigure_server;\n")
+    rqt_header.write("\tboost::recursive_mutex _reconfig_mutex;\n")
+    rqt_header.write("};\n\n")
+    rqt_header.write("#endif // __GENERATED_RECONFIGURE_H\n")
+    rqt_header.close()
+    print_success(" -> generated")

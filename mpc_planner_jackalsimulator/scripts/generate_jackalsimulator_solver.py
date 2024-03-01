@@ -9,7 +9,7 @@ sys.path.append(os.path.join(sys.path[0], "..", "..", "mpc-planner-modules", "sc
 forces_path = os.path.join(os.path.expanduser("~"), "forces_pro_client")
 sys.path.append(forces_path)
 
-from util.files import load_settings
+from util.files import load_settings, get_current_package
 from control_modules import ModuleManager
 from generate_solver import generate_solver
 
@@ -47,8 +47,8 @@ def define_modules(settings) -> ModuleManager:
     modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
     modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
 
-    # modules.add_module(EllipsoidConstraintModule(settings))
-    modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
+    modules.add_module(EllipsoidConstraintModule(settings))
+    # modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
     # modules.add_module(LinearizedConstraintModule(settings))
 
     return modules

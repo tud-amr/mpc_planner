@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(mpc-planner-jackalsimulator)
+project(mpc_planner_jackalsimulator)
 
 add_compile_options(-std=c++17)
 
@@ -16,12 +16,15 @@ set(DEPENDENCIES
   mpc_planner_msgs
   ros_tools
   nav_msgs
+  dynamic_reconfigure
 )
 
 # find dependencies
 find_package(catkin REQUIRED COMPONENTS
   ${DEPENDENCIES}
 )
+
+generate_dynamic_reconfigure_options(cfg/settings.cfg)
 
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}

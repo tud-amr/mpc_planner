@@ -3,28 +3,18 @@ from util.files import solver_path, solver_settings_path
 
 from util.logging import print_success, print_header, print_path
 
-from generate_cpp_files import generate_cpp_code, generate_module_header
-from generate_cpp_files import generate_module_cmake
-from generate_cpp_files import generate_module_definitions
+from generate_cpp_files import generate_cpp_code, generate_module_header, generate_module_cmake
+from generate_cpp_files import generate_module_definitions, generate_rqtreconfigure
 
 
 def generate_solver(modules, model, settings=None):
     if settings is None:
         settings = load_settings()
 
-    if (
-        settings["solver_settings"]["solver"] != "acados"
-        and settings["solver_settings"]["solver"] != "forces"
-    ):
-        raise IOError(
-            "Unknown solver specified in settings.yaml"
-            "(should be 'acados' or 'forces')"
-        )
+    if settings["solver_settings"]["solver"] != "acados" and settings["solver_settings"]["solver"] != "forces":
+        raise IOError("Unknown solver specified in settings.yaml" "(should be 'acados' or 'forces')")
 
-    print_header(
-        f"Creating {settings['solver_settings']['solver'].capitalize()}"
-        f"Solver: {settings['name']}_solver"
-    )
+    print_header(f"Creating {settings['solver_settings']['solver'].capitalize()}" f"Solver: {settings['name']}_solver")
 
     if settings["solver_settings"]["solver"] == "forces":
         from generate_forces_solver import generate_forces_solver
@@ -54,6 +44,7 @@ def generate_solver(modules, model, settings=None):
     generate_module_header(modules)
     generate_module_definitions(modules)
     generate_module_cmake(modules)
+    generate_rqtreconfigure(settings)
 
     print_path("Solver path", solver_path(settings), tab=True, end="")
     print_success(" -> generated")

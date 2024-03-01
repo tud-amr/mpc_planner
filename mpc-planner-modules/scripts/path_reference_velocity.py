@@ -18,8 +18,8 @@ class PathReferenceVelocityObjective:
         self.num_segments = num_segments
 
     def define_parameters(self, params):
-        params.add("velocity")
-        params.add("reference_velocity")
+        params.add("velocity", add_to_rqt_reconfigure=True)
+        params.add("reference_velocity", add_to_rqt_reconfigure=True)
         return params
 
     def get_value(self, model, params, settings, stage_idx):

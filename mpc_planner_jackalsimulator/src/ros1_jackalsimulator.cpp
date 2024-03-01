@@ -1,4 +1,4 @@
-#include <mpc-planner-jackalsimulator/ros1_jackalsimulator.h>
+#include <mpc_planner_jackalsimulator/ros1_jackalsimulator.h>
 
 #include <mpc-planner/data_preparation.h>
 
@@ -25,6 +25,8 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
     initializeSubscribersAndPublishers(nh);
 
     startEnvironment();
+
+    _reconfigure = std::make_unique<Reconfigure>();
 
     _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
 
@@ -287,6 +289,11 @@ void JackalPlanner::reset()
 
     _planner->reset(_state, _data);
 }
+
+// void JackalPlanner::reconfigureCallback(mpc_planner_jackalsimulator::Config &config, uint32_t level)
+// {
+//     LOG_INFO("Reconfigure Callback");
+// }
 
 int main(int argc, char **argv)
 {

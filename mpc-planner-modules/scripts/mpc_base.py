@@ -22,7 +22,7 @@ class WeightsObjective(Objective):
 
     def define_parameters(self, params):
         for param in self._weights:
-            params.add(param)
+            params.add(param, add_to_rqt_reconfigure=True)
 
         return params
 

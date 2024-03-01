@@ -3,8 +3,8 @@
 
 #include <mpc-planner/planner.h>
 
+#include <mpc_planner_jackalsimulator/jackalsimulator_reconfigure.h>
 #include <mpc-planner-solver/solver_interface.h>
-
 #include <mpc-planner-types/realtime_data.h>
 
 #include <mpc_planner_msgs/obstacle_array.h> /** @Todo: Replace! */
@@ -50,6 +50,8 @@ public:
 
 private:
     std::unique_ptr<Planner> _planner;
+
+    std::unique_ptr<Reconfigure> _reconfigure;
 
     RealTimeData _data;
     State _state;

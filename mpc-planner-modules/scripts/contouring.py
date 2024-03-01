@@ -85,10 +85,8 @@ class ContouringObjective:
         self.num_segments = num_segments
 
     def define_parameters(self, params):
-        # Contour and lag are rqt parameters
-
-        params.add("contour")
-        params.add("lag")
+        params.add("contour", add_to_rqt_reconfigure=True)
+        params.add("lag", add_to_rqt_reconfigure=True)
 
         for i in range(self.num_segments):
             params.add(f"spline{i}_ax")

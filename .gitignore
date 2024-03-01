@@ -11,6 +11,9 @@ mpc-planner-solver/config/
 mpc-planner-modules/modules.cmake
 mpc-planner-modules/include/mpc-planner-modules/modules.h
 
+*_reconfigure.h
+*/cfg/settings.cfg
+
 # Testing
 *.coverage
 *.pytest_cache/
