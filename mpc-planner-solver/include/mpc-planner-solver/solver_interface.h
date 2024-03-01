@@ -70,7 +70,8 @@ namespace MPCPlanner
 		double getParameter(int k, std::string &&parameter);
 		void setXinit(std::string &&state_name, double value);
 		void setXinit(const State &state);
-		void setWarmstart(const State &state);
+		void initializeWarmstart(const State &state, bool shift_previous_solution_forward);
+		void loadWarmstart();
 
 		/** @brief Solve the optimization */
 		int solve();

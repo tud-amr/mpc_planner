@@ -99,20 +99,10 @@ class GaussianConstraint:
             # Manual inverse erf, because somehow lacking from casadi...
             # From here: http://casadi.sourceforge.net/v1.9.0/api/internal/d4/d99/casadi_calculus_8hpp_source.html
             z = cd.sqrt(-cd.log((1.0 - x_erfinv) / 2.0))
-            y_erfinv = (
-                ((1.641345311 * z + 3.429567803) * z - 1.624906493) * z - 1.970840454
-            ) / ((1.637067800 * z + 3.543889200) * z + 1.0)
+            y_erfinv = (((1.641345311 * z + 3.429567803) * z - 1.624906493) * z - 1.970840454) / ((1.637067800 * z + 3.543889200) * z + 1.0)
 
-            y_erfinv = y_erfinv - (cd.erf(y_erfinv) - x_erfinv) / (
-                2.0 / cd.sqrt(cd.pi) * cd.exp(-y_erfinv * y_erfinv)
-            )
-            y_erfinv = y_erfinv - (cd.erf(y_erfinv) - x_erfinv) / (
-                2.0 / cd.sqrt(cd.pi) * cd.exp(-y_erfinv * y_erfinv)
-            )
+            y_erfinv = y_erfinv - (cd.erf(y_erfinv) - x_erfinv) / (2.0 / cd.sqrt(cd.pi) * cd.exp(-y_erfinv * y_erfinv))
+            y_erfinv = y_erfinv - (cd.erf(y_erfinv) - x_erfinv) / (2.0 / cd.sqrt(cd.pi) * cd.exp(-y_erfinv * y_erfinv))
 
-            constraints.append(
-                a_ij.T @ cd.SX(diff_pos)
-                - b_ij
-                - y_erfinv * cd.sqrt(2.0 * a_ij.T @ Sigma @ a_ij)
-            )
+            constraints.append(a_ij.T @ cd.SX(diff_pos) - b_ij - y_erfinv * cd.sqrt(2.0 * a_ij.T @ Sigma @ a_ij))
         return constraints

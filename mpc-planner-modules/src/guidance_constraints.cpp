@@ -165,6 +165,7 @@ namespace MPCPlanner
             // planner.local_solver->_params.
             // SOLVE OPTIMIZATION
             // planner.local_solver->printParameters(1);
+            planner.local_solver->loadWarmstart();
             LOG_DEBUG("Planner [" << planner.id << "]: Solving ...");
             planner.result.exit_code = solver->solve();
             // solver_results_[i].exit_code =ellipsoidal_constraints_[solver->solver_id_].Optimize(solver.get()); // IF THIS OPTIMIZATION EXISTS!
@@ -238,7 +239,7 @@ namespace MPCPlanner
         for (int k = 1; k < solver->N; k++) // note that the 0th velocity is the current velocity
         {
             // int index = k + 1;
-            int index = k + 1;
+            int index = k;
             Eigen::Vector2d cur_position = trajectory_spline.GetPoint((double)(index)*solver->dt); // The plan is one ahead
             // global_guidance_->ProjectToFreeSpace(cur_position, k + 1);
             solver->setEgoPrediction(k, "x", cur_position(0));

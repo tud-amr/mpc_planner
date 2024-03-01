@@ -60,9 +60,7 @@ class DynamicsModel:
     def get_acados_dynamics(self):
         self._x_dot = cd.SX.sym("x_dot", self.nx)
 
-        f_expl = numpy_to_casadi(
-            self.continuous_model(self._z[self.nu :], self._z[: self.nu])
-        )
+        f_expl = numpy_to_casadi(self.continuous_model(self._z[self.nu :], self._z[: self.nu]))
         f_impl = self._x_dot - f_expl
         return f_expl, f_impl
 
@@ -98,9 +96,7 @@ class DynamicsModel:
             i = self.inputs.index(state_or_input)
             return self._z[i]
         else:
-            raise IOError(
-                f"Requested a state or input `{state_or_input}' that was neither a state nor an input for the selected model"
-            )
+            raise IOError(f"Requested a state or input `{state_or_input}' that was neither a state nor an input for the selected model")
 
     def set_bounds(self, lower_bound, upper_bound):
         assert len(lower_bound) == len(upper_bound) == len(self.lower_bound)
@@ -123,9 +119,7 @@ class DynamicsModel:
                 self.upper_bound[i] - self.lower_bound[i],
             )
         else:
-            raise IOError(
-                f"Requested a state or input `{state_or_input}' that was neither a state nor an input for the selected model"
-            )
+            raise IOError(f"Requested a state or input `{state_or_input}' that was neither a state nor an input for the selected model")
 
 
 class SecondOrderUnicycleModel(DynamicsModel):
@@ -161,8 +155,8 @@ class ContouringSecondOrderUnicycleModel(DynamicsModel):
         self.states = ["x", "y", "psi", "v", "spline"]
         self.inputs = ["a", "w"]
 
-        self.lower_bound = [-2.0, -2.0, -200.0, -200.0, -np.pi, -2.0, 0.0]
-        self.upper_bound = [2.0, 2.0, 200.0, 200.0, np.pi, 3.0, 2000.0]
+        self.lower_bound = [-2.0, -0.8, -2000.0, -2000.0, -np.pi, -2.0, -1.0]
+        self.upper_bound = [2.0, 0.8, 2000.0, 2000.0, np.pi, 3.0, 10000.0]
 
     def continuous_model(self, x, u):
 

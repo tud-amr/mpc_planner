@@ -1,5 +1,4 @@
 import os
-import sys
 import shutil
 
 
@@ -29,12 +28,12 @@ def generate_forces_solver(modules, settings, model):
     params = Parameters()
     define_parameters(modules, params, settings)
     settings["params"] = params
+    solver_settings = settings["solver_settings"]
 
     modules.print()
     params.print()
 
     npar = params.length()
-    # nh = len(constraint_lower_bounds(settings))
 
     # Load model parameters from the settings
     solver = forcespro.nlp.SymbolicModel(settings["N"])
@@ -42,7 +41,6 @@ def generate_forces_solver(modules, settings, model):
 
     solver.nvar = model.get_nvar()  # number of online variables
     solver.neq = model.nx  # number of equality constraints
-
     solver.npar = npar
 
     # Bounds
@@ -70,12 +68,8 @@ def generate_forces_solver(modules, settings, model):
             solver.nh[i] = 0  # No constraints here
 
     # Equalities are specified on all stages
-    solver.eq = lambda z, p: solver_model.discrete_dynamics(
-        z, model, settings["integrator_step"]
-    )
-    solver.E = np.concatenate(
-        [np.zeros((model.nx, model.nu)), np.eye(model.nx)], axis=1
-    )
+    solver.eq = lambda z, p: solver_model.discrete_dynamics(z, model, settings["integrator_step"])
+    solver.E = np.concatenate([np.zeros((model.nx, model.nu)), np.eye(model.nx)], axis=1)
 
     # Initial stage (k = 0) specifies the states
     solver.xinitidx = range(model.nu, model.get_nvar())
@@ -92,8 +86,7 @@ def generate_forces_solver(modules, settings, model):
     options.overwrite = 1
     options.cleanup = 1
 
-    floating = False
-    if floating:
+    if solver_settings["floating_license"]:
         options.embedded_timing = 1
         options.license.use_floating_license = 1
 
@@ -102,8 +95,7 @@ def generate_forces_solver(modules, settings, model):
         options.threadSafeStorage = 1
         options.nlp.max_num_threads = 5
 
-    timeout = True
-    if timeout:
+    if solver_settings["enable_timeout"]:
         options.solver_timeout = 1
 
     """
@@ -111,19 +103,15 @@ def generate_forces_solver(modules, settings, model):
     """
     options.maxit = 500  # Maximum number of iterations
     options.mu0 = 20
-    options.init = 2  # 2  # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
+    options.init = solver_settings["init"]  # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
 
     # Creates code for symbolic model formulation given above, then contacts server to generate new solver
     print_header("Generating solver")
     generated_solver = solver.generate_solver(options)
     print_header("Output")
 
-    if os.path.exists(solver_path(settings)) and os.path.isdir(
-        solver_path(settings)
-    ):  # Remove solver if it exists at the destination
+    if os.path.exists(solver_path(settings)) and os.path.isdir(solver_path(settings)):  # Remove solver if it exists at the destination
         shutil.rmtree(solver_path(settings))
-    shutil.move(
-        default_solver_path(settings), solver_path(settings)
-    )  # Move the solver to this directory
+    shutil.move(default_solver_path(settings), solver_path(settings))  # Move the solver to this directory
 
     return generated_solver, generated_solver.dynamics

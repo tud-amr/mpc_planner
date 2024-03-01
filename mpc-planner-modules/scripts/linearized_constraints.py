@@ -22,11 +22,7 @@ class LinearizedConstraintModule(ConstraintModule):
         self.module_name = "LinearizedConstraints"  # c++ name of the module
         self.import_name = "linearized_constraints.h"
 
-        self.constraints.append(
-            LinearConstraints(
-                n_discs=settings["n_discs"], max_obstacles=settings["max_obstacles"]
-            )
-        )
+        self.constraints.append(LinearConstraints(n_discs=settings["n_discs"], max_obstacles=settings["max_obstacles"]))
         self.description = "Linearized dynamic collision avoidance constraints"
 
 

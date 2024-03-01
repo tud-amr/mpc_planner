@@ -87,21 +87,45 @@ namespace MPCPlanner
 		}
 	}
 
-	void Solver::setWarmstart(const State &initial_state)
+	void Solver::initializeWarmstart(const State &initial_state, bool shift_previous_solution_forward)
 	{
-
-		for (int k = 0; k < N; k++) // For all timesteps
+		if (shift_previous_solution_forward)
 		{
-			for (YAML::const_iterator it = _model_map.begin(); it != _model_map.end(); ++it) // For all inputs and states
+			/** @note warmstart shifting the previous output by one time step */
+			// [initial_state, x_2, x_3, ..., x_N-1, x_N-1]
+			for (int k = 0; k < N; k++) // For all timesteps
 			{
-				if (k == 0)
-					setEgoPrediction(0, it->first.as<std::string>(), initial_state.get(it->first.as<std::string>())); // Load the current state at k = 0
-				else if (k == N - 1)
-					setEgoPrediction(k, it->first.as<std::string>(), getOutput(k, it->first.as<std::string>())); // extrapolate with the terminal state at k = N-1
-				else
-					setEgoPrediction(k, it->first.as<std::string>(), getOutput(k + 1, it->first.as<std::string>())); // use x_{k+1} to initialize x_{k} (note that both have the initial state)
+				for (YAML::const_iterator it = _model_map.begin(); it != _model_map.end(); ++it) // For all inputs and states
+				{
+					if (k == 0) // Load the current state at k = 0
+						setEgoPrediction(0, it->first.as<std::string>(), initial_state.get(it->first.as<std::string>()));
+					else if (k == N - 1) // extrapolate with the terminal state at k = N-1
+						setEgoPrediction(k, it->first.as<std::string>(), getOutput(k, it->first.as<std::string>()));
+					else // use x_{k+1} to initialize x_{k} (note that both have the initial state)
+						setEgoPrediction(k, it->first.as<std::string>(), getOutput(k + 1, it->first.as<std::string>()));
+				}
 			}
 		}
+		else
+		{
+
+			/** @note warmstart maintaining the previous output */
+			// [initial_state, x_1, x_2, ..., x_N-1, x_N]
+			for (int k = 0; k < N; k++) // For all timesteps
+			{
+				for (YAML::const_iterator it = _model_map.begin(); it != _model_map.end(); ++it) // For all inputs and states
+				{
+					if (k == 0) // Load the current state at k = 0
+						setEgoPrediction(0, it->first.as<std::string>(), initial_state.get(it->first.as<std::string>()));
+					else // use x_{k+1} to initialize x_{k} (note that both have the initial state)
+						setEgoPrediction(k, it->first.as<std::string>(), getOutput(k, it->first.as<std::string>()));
+				}
+			}
+		}
+	}
+
+	void Solver::loadWarmstart()
+	{
 		loadForcesWarmstart(_params, _output);
 	}
 

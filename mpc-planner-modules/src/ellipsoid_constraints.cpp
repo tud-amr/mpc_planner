@@ -22,9 +22,6 @@ namespace MPCPlanner
   void EllipsoidConstraints::setParameters(const RealTimeData &data, int k)
   {
 
-    // if (k == 0) // No parameters for the initial state
-    //   return;
-
     _solver->setParameter(k, "ego_disc_radius", CONFIG["robot_radius"].as<double>());
     for (int d = 0; d < CONFIG["n_discs"].as<int>(); d++)
       _solver->setParameter(k, "ego_disc_" + std::to_string(d) + "_offset", 0.); /** @todo Fix offsets! */
@@ -32,9 +29,10 @@ namespace MPCPlanner
     for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
     {
       const auto &obstacle = data.dynamic_obstacles[i];
-      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_x", obstacle.prediction.steps[k].position(0));
-      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_y", obstacle.prediction.steps[k].position(1));
-      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_psi", obstacle.prediction.steps[k].angle);
+      /** @note The first prediction step is index 1 of the optimization problem, i.e., k-1 maps to the predictions for this stage */
+      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_x", obstacle.prediction.steps[k - 1].position(0));
+      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_y", obstacle.prediction.steps[k - 1].position(1));
+      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_psi", obstacle.prediction.steps[k - 1].angle);
 
       _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_r", obstacle.radius);
 
@@ -48,8 +46,8 @@ namespace MPCPlanner
       {
         double chi = RosTools::ExponentialQuantile(0.5, 1.0 - CONFIG["probabilistic"]["risk"].as<double>());
 
-        _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_major", obstacle.prediction.steps[k].major_radius);
-        _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_minor", obstacle.prediction.steps[k].minor_radius);
+        _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_major", obstacle.prediction.steps[k - 1].major_radius);
+        _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_minor", obstacle.prediction.steps[k - 1].minor_radius);
         _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_chi", chi);
       }
     }

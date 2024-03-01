@@ -36,11 +36,11 @@ namespace MPCPlanner
 
       if (obstacle.prediction.type == PredictionType::GAUSSIAN)
       {
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_x", obstacle.prediction.steps[k].position(0));
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_y", obstacle.prediction.steps[k].position(1));
+        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_x", obstacle.prediction.steps[k - 1].position(0));
+        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_y", obstacle.prediction.steps[k - 1].position(1));
 
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_minor", obstacle.prediction.steps[k].minor_radius);
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_major", obstacle.prediction.steps[k].major_radius);
+        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_minor", obstacle.prediction.steps[k - 1].minor_radius);
+        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_major", obstacle.prediction.steps[k - 1].major_radius);
 
         _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_risk", CONFIG["probabilistic"]["risk"].as<double>());
         _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_r", CONFIG["obstacle_radius"].as<double>());
@@ -84,15 +84,15 @@ namespace MPCPlanner
     for (auto &obstacle : data.dynamic_obstacles)
     {
 
-      for (int k = 0; k < _solver->N; k += CONFIG["visualization"]["draw_every"].as<int>())
+      for (int k = 1; k < _solver->N; k += CONFIG["visualization"]["draw_every"].as<int>())
       {
         ellipsoid.setColorInt(k, _solver->N, 0.5);
 
         double chi = RosTools::ExponentialQuantile(0.5, 1.0 - CONFIG["probabilistic"]["risk"].as<double>());
-        ellipsoid.setScale(2 * (obstacle.prediction.steps[k].major_radius * std::sqrt(chi) + obstacle.radius),
-                           2 * (obstacle.prediction.steps[k].major_radius * std::sqrt(chi) + obstacle.radius), 0.005);
+        ellipsoid.setScale(2 * (obstacle.prediction.steps[k - 1].major_radius * std::sqrt(chi) + obstacle.radius),
+                           2 * (obstacle.prediction.steps[k - 1].major_radius * std::sqrt(chi) + obstacle.radius), 0.005);
 
-        ellipsoid.addPointMarker(obstacle.prediction.steps[k].position);
+        ellipsoid.addPointMarker(obstacle.prediction.steps[k - 1].position);
       }
     }
     publisher.publish();

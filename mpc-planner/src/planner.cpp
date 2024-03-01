@@ -46,7 +46,7 @@ namespace MPCPlanner
 
         // Set the initial guess
         if (was_feasible)
-            _solver->setWarmstart(state);
+            _solver->initializeWarmstart(state, CONFIG["shift_previous_solution_forward"].as<bool>());
         else
             _solver->reset();
 
@@ -60,8 +60,15 @@ namespace MPCPlanner
         for (int k = 0; k < _solver->N; k++)
         {
             for (auto &module : _modules)
+            {
+                if (k == 0 && module->type == ModuleType::CONSTRAINT)
+                    continue;
+
                 module->setParameters(data, k);
+            }
         }
+
+        _solver->loadWarmstart();
 
         // Solve MPC
         _benchmarker->start();

@@ -18,9 +18,7 @@ class EllipsoidConstraintModule(ConstraintModule):
         self.n_discs = settings["n_discs"]
         self.max_obstacles = settings["max_obstacles"]
 
-        self.module_name = (
-            "EllipsoidConstraints"  # Needs to correspond to the c++ name of the module
-        )
+        self.module_name = "EllipsoidConstraints"  # Needs to correspond to the c++ name of the module
         self.import_name = "ellipsoid_constraints.h"
         self.description = "Avoid obstacles, modeled as ellipsoids (possibly including Gaussian noise)."
 
@@ -104,9 +102,7 @@ class EllipsoidConstraint:
             )
 
             obstacle_rotation = rotation_matrix(obst_psi)
-            obstacle_ellipse_matrix = (
-                obstacle_rotation.transpose().dot(ab).dot(obstacle_rotation)
-            )
+            obstacle_ellipse_matrix = obstacle_rotation.transpose().dot(ab).dot(obstacle_rotation)
 
             for disc_it in range(0, self.n_discs):
                 # Get and compute the disc position
@@ -117,11 +113,7 @@ class EllipsoidConstraint:
 
                 # construct the constraint and append it
                 disc_to_obstacle = disc_pos - obstacle_cog
-                c_disc_obstacle = (
-                    disc_to_obstacle.transpose()
-                    .dot(obstacle_ellipse_matrix)
-                    .dot(disc_to_obstacle)
-                )
+                c_disc_obstacle = disc_to_obstacle.transpose().dot(obstacle_ellipse_matrix).dot(disc_to_obstacle)
                 constraints.append(c_disc_obstacle)  # + slack)
 
         return constraints

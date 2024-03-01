@@ -42,7 +42,7 @@ namespace MPCPlanner
     _num_obstacles = copied_obstacles.size();
 
     // For all stages
-    for (int k = 0; k < _solver->N; k++)
+    for (int k = 1; k < _solver->N; k++)
     {
       Eigen::Vector2d pos(_solver->getEgoPrediction(k, "x"), _solver->getEgoPrediction(k, "y")); // k = 0 is initial state
 
@@ -54,7 +54,7 @@ namespace MPCPlanner
       for (size_t obs_id = 0; obs_id < copied_obstacles.size(); obs_id++)
       {
         const auto &copied_obstacle = copied_obstacles[obs_id];
-        const Eigen::Vector2d &obstacle_pos = copied_obstacle.prediction.steps[k].position;
+        const Eigen::Vector2d &obstacle_pos = copied_obstacle.prediction.steps[k - 1].position;
 
         double diff_x = obstacle_pos(0) - pos(0);
         double diff_y = obstacle_pos(1) - pos(1);
@@ -91,8 +91,8 @@ namespace MPCPlanner
         if (CONFIG["linearized_constraints"]["relax"].as<bool>())
           radius = 1e-3;
 
-        dr_projection_.douglasRachfordProjection(pos, obstacle.prediction.steps[k].position,
-                                                 copied_obstacles[0].prediction.steps[k].position,
+        dr_projection_.douglasRachfordProjection(pos, obstacle.prediction.steps[k - 1].position,
+                                                 copied_obstacles[0].prediction.steps[k - 1].position,
                                                  radius + CONFIG["robot_radius"].as<double>(),
                                                  pos);
       }
@@ -140,7 +140,7 @@ namespace MPCPlanner
 
   void LinearizedConstraints::visualize(const RealTimeData &data)
   {
-    for (int k = 0; k < _solver->N; k++)
+    for (int k = 1; k < _solver->N; k++)
     {
       for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
         visualizeLinearConstraint(_a1[0][k](i), _a2[0][k](i), _b[0][k](i), k, _solver->N, _name,

@@ -2,9 +2,9 @@
 # import numpy as np
 # import helpers
 
-# """ 
-# Defines inequality constraints of different types. 
-# See control_modules.py for their integration into the controller 
+# """
+# Defines inequality constraints of different types.
+# See control_modules.py for their integration into the controller
 # """
 
 # """

@@ -34,11 +34,7 @@ class GuidanceConstraintModule(ConstraintModule):
 
         self.dependencies.append("guidance_planner")
 
-        self.constraints.append(
-            LinearConstraints(
-                n_discs=settings["n_discs"], max_obstacles=settings["max_obstacles"]
-            )
-        )
+        self.constraints.append(LinearConstraints(n_discs=settings["n_discs"], max_obstacles=settings["max_obstacles"]))
         self.sources.append("linearized_constraints.h")
 
         # Initialize the underlying constraints
@@ -51,17 +47,10 @@ class GuidanceConstraintModule(ConstraintModule):
 
         self.description = "Optimize several trajectories in parallel using "
         "constraints linearized w.r.t. guidance trajectories\n"
-        (
-            "\t\tConstraint for the underlying solver: "
-            + self.constraint_submodule.description
-        )
+        ("\t\tConstraint for the underlying solver: " + self.constraint_submodule.description)
 
     def add_definitions(self, header_file):
-        header_file.write(
-            "#include <mpc-planner-modules/"
-            + self.constraint_submodule.import_name
-            + ">\n"
-        )
+        header_file.write("#include <mpc-planner-modules/" + self.constraint_submodule.import_name + ">\n")
         add_definition(
             header_file,
             "GUIDANCE_CONSTRAINTS_TYPE",

@@ -1,0 +1,45 @@
+prm:
+  debug_output: false
+  seed: 1                               # Seed of the visibility-PRM. Set to -1 for random!
+  T: 4.0 #6.0
+  N: 20 #30
+  topology_comparison: Homology         # Homology (default) or UVD
+  sampling_function: Uniform # Uniform (default)
+  use_learning: false
+  predictions_are_constant_velocity: true
+  track_selected_homology_only: false
+  sample_margin: 0. #0. # Was 0.
+  view_angle_times_pi: 0.606  # View angle when sampling in a conus (disabled by default)
+  n_samples: 30 # Number of samples for PRM
+  timeout: 10 # Timeout for PRM sampling [ms]
+  n_paths: 4       # Number of guidance trajectories
+  max_velocity:     3.0       # Maximum velocity of connections between nodes
+  max_acceleration: 3.0       # Maximum velocity of connections between nodes
+  connection_filters:
+    forward:      true
+    acceleration: true
+  goals:  # Only used when `LoadReferencePath` is used to set the goals
+    longitudinal: 5   # Number of goals in direction of the path
+    vertical: 5       # Number of goals in direction orthogonal to the path
+  selection_weights:  # Selection weights to determine what spline is best
+    consistency: 1.33 # 0.24904675216524505  # How much better should a new trajectory be to be selected [%]
+    length: 5. #0. #1.
+    velocity: 0. #2.
+    acceleration: 1. #1.
+  spline_optimization:  # Settings when the splines are optimized and used as reference trajectory
+    enable: true #false
+    num_points: 10      # -1 = N
+    geometric: 25.
+    smoothness: 10.
+    collision: 0.5
+    velocity_tracking: 0.01
+  visuals:
+    transparency: 0.9 #0.5 #0.9               # The least transparent the obstacle visualization is (0-1)
+    visualize_all_samples: false    # Visualizes all PRM samples
+    visualize_homology: false
+    show_indices: false
+  enable:
+    dynamically_propagate_nodes: true  # Propagate the nodes in time (dropping them)
+    project_from_obstacles: false       # Project the guidance trajectory from obstacles if enabled (not necessary by default)
+  test_node:
+    continuous_replanning: false #true         # When using the test nodes: keep planning continuously?

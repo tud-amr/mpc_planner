@@ -1,11 +1,13 @@
 import sys, os
-sys.path.append(os.path.join(sys.path[0],'..','..', 'mpc-planner-solver-generator'))
+
+sys.path.append(os.path.join(sys.path[0], "..", "..", "mpc-planner-solver-generator"))
 
 from control_modules import ObjectiveModule, Objective
 
 """
 Track a goal in 2D
 """
+
 
 class GoalObjective(Objective):
 
@@ -19,21 +21,22 @@ class GoalObjective(Objective):
 
     def get_value(self, model, params, settings, stage_idx):
         cost = 0
-        
+
         if stage_idx == settings["N"] - 1:
             print(stage_idx)
-            pos_x = model.get('x')
-            pos_y = model.get('y')
+            pos_x = model.get("x")
+            pos_y = model.get("y")
 
             goal_weight = params.get("goal_weight")
 
-            goal_x = params.get('goal_x')
-            goal_y = params.get('goal_y')
+            goal_x = params.get("goal_x")
+            goal_y = params.get("goal_y")
 
-            cost += goal_weight * ((pos_x - goal_x) ** 2 + (pos_y - goal_y)**2) / (goal_x ** 2 + goal_y ** 2 + 0.01)
+            cost += goal_weight * ((pos_x - goal_x) ** 2 + (pos_y - goal_y) ** 2) / (goal_x**2 + goal_y**2 + 0.01)
 
         return cost
-    
+
+
 class GoalModule(ObjectiveModule):
 
     def __init__(self, settings):

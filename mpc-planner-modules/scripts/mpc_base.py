@@ -28,9 +28,7 @@ class WeightsObjective(Objective):
 
     # Weights w are a parameter vector
     # Only add weights if they are not also parameters!
-    def add(
-        self, variable_to_weight, weight_names, cost_function=lambda x, w: w[0] * x**2
-    ):
+    def add(self, variable_to_weight, weight_names, cost_function=lambda x, w: w[0] * x**2):
 
         # # Make sure it's a list if it isn't yet
         if type(weight_names) != list:
@@ -48,14 +46,10 @@ class WeightsObjective(Objective):
         cost = 0.0
         for idx, cost_function in enumerate(self._cost_functions):
             weights = []
-            for cost_weight in self._weights_per_function[
-                idx
-            ]:  # Retrieve the weight parameters for this cost function!
+            for cost_weight in self._weights_per_function[idx]:  # Retrieve the weight parameters for this cost function!
                 weights.append(params.get(cost_weight))
 
-            variable = model.get(
-                self._variables_per_function[idx]
-            )  # Retrieve the state / input to be weighted
+            variable = model.get(self._variables_per_function[idx])  # Retrieve the state / input to be weighted
             # _, _, var_range = model.get_bounds(self._variables_per_function[idx])
 
             # Add to the cost
@@ -74,9 +68,7 @@ class MPCBaseModule(ObjectiveModule):
 
     def __init__(self, settings):
         super().__init__()
-        self.module_name = (
-            "MPCBaseModule"  # Needs to correspond to the c++ name of the module
-        )
+        self.module_name = "MPCBaseModule"  # Needs to correspond to the c++ name of the module
         self.import_name = "mpc_base.h"
         self.description = "Contains input and state penalties with weights that can be tuned in rqt_reconfigure"
 

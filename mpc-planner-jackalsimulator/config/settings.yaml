@@ -1,0 +1,47 @@
+name: "jackal"
+N: 20
+integrator_step: 0.2
+n_discs: 1
+
+solver_settings:
+  # solver: "acados" # acados or forces
+  solver: "forces" # acados or forces
+  floating_license: true
+  enable_timeout: true
+  init: 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
+
+enable_output: true
+control_frequency: 20
+deceleration_at_infeasible: 3.0
+max_obstacles: 12
+robot_radius: 0.325
+obstacle_radius: 0.4
+
+shift_previous_solution_forward: true
+
+contouring:
+  num_segments: 3
+  contour: 0.5 #0.01
+  lag: 0.1
+
+linearized_constraints:
+  relax: true
+
+t-mpc:
+  use_t-mpc++: true
+  enable_constraints: true
+
+probabilistic:
+  enable: false
+  risk: 0.05
+  propagate_uncertainty: true
+
+weights:
+  goal: 10.
+  velocity: 0.5 #0.5
+  acceleration: 0.15
+  angular_velocity: 0.25 #0.05
+  reference_velocity: 2.0 #1.5
+
+visualization:
+  draw_every: 5 # stages
