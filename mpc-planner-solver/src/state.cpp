@@ -1,6 +1,6 @@
 #include "mpc-planner-solver/state.h"
 
-#include <mpc-planner-util/logging.h>
+#include <ros_planner_utils/logging.h>
 
 using namespace MPCPlanner;
 

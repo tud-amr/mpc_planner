@@ -1,9 +1,9 @@
 #include "mpc-planner-modules/gaussian_constraints.h"
 
 #include <mpc-planner-util/parameters.h>
-#include <mpc-planner-util/visuals.h>
 
-#include <ros_tools/helpers.h>
+#include <ros_planner_utils/visuals.h>
+#include <ros_planner_utils/math.hpp>
 
 #include <algorithm>
 

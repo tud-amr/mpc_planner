@@ -10,7 +10,7 @@ set(MPC_PLANNER_ROS "1")
 # General requirements
 set(DEPENDENCIES
   mpc-planner-types
-  ros_tools
+  ros_planner_utils
   roscpp
 )
 
@@ -30,14 +30,12 @@ catkin_package(
 
 include_directories(
   include
-  ${EIGEN_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
 )
 
 add_library(${PROJECT_NAME}
-  src/spline.cpp
-  src/visuals.cpp
-  src/third_party/tkspline.cpp
+  src/data_visualization.cpp
 )
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
@@ -45,13 +43,12 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} yaml-cpp)
 # add_definitions(-DROS${MPC_PLANNER_ROS})
 
 # ## Test Case ####
-catkin_add_gtest(${PROJECT_NAME}-test test/test_spline.cpp)
-target_link_libraries(${PROJECT_NAME}-test
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  yaml-cpp
-)
-
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_spline.cpp)
+# target_link_libraries(${PROJECT_NAME}-test
+# ${PROJECT_NAME}
+# ${catkin_LIBRARIES}
+# yaml-cpp
+# )
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

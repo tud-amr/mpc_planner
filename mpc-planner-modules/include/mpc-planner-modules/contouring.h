@@ -3,15 +3,7 @@
 
 #include <mpc-planner-modules/controller_module.h>
 
-#include <mpc-planner-util/spline.h>
-
-// #include <ros_tools/helpers.h>
-
-// #include <Eigen/Dense>
-
-// Whens earching for the closest point on the path, this variable indicates the distance that the algorithm searches
-// behind the current spline point.
-// #define MAX_STEP_BACK_TOLERANCE 0.1f
+#include <ros_planner_utils/spline.h>
 
 namespace MPCPlanner
 {
@@ -21,14 +13,7 @@ namespace MPCPlanner
     Contouring(std::shared_ptr<Solver> solver);
 
   public:
-    // Outputs
-    // unsigned int spline_index_{0}; // Where we are on the spline
-    // bool ready_{false};
-
-    // bool goal_reached_{false};
-    // bool first_run_{true};
-
-    void update(State &state, const RealTimeData &data) override;
+      void update(State &state, const RealTimeData &data) override;
     void setParameters(const RealTimeData &data, int k) override;
 
     void onDataReceived(RealTimeData &data, std::string &&data_name) override;
@@ -41,7 +26,7 @@ namespace MPCPlanner
     void reset() override;
 
   private:
-    std::unique_ptr<Spline2D> _spline{nullptr};
+    std::unique_ptr<RosTools::Spline2D> _spline{nullptr};
 
     int _closest_segment{0};
   };

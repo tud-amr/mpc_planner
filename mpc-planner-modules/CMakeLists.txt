@@ -21,6 +21,7 @@ set(DEPENDENCIES
   mpc-planner-types
   mpc-planner-util
   mpc-planner-solver
+  ros_planner_utils
   guidance_planner # TEMP
 )
 

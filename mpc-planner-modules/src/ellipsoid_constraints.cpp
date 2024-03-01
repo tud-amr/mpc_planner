@@ -1,9 +1,9 @@
 #include "mpc-planner-modules/ellipsoid_constraints.h"
 
 #include <mpc-planner-util/parameters.h>
-#include <mpc-planner-util/visuals.h>
 
-#include <ros_tools/helpers.h>
+#include <ros_planner_utils/visuals.h>
+#include <ros_planner_utils/math.h>
 
 #include <algorithm>
 
@@ -17,6 +17,8 @@ namespace MPCPlanner
 
   void EllipsoidConstraints::update(State &state, const RealTimeData &data)
   {
+    (void)state;
+    (void)data;
   }
 
   void EllipsoidConstraints::setParameters(const RealTimeData &data, int k)
@@ -81,6 +83,7 @@ namespace MPCPlanner
 
   void EllipsoidConstraints::visualize(const RealTimeData &data)
   {
+    (void)data;
     //   if (_spline.get() == nullptr)
     //     return;
 

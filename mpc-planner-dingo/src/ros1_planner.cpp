@@ -2,9 +2,9 @@
 
 #include <mpc-planner/data_preparation.h>
 
-#include <mpc-planner-util/visuals.h>
+#include <ros_planner_utils/visuals.h>
 #include <mpc-planner-util/parameters.h>
-#include <mpc-planner-util/logging.h>
+#include <ros_planner_utils/logging.h>
 #include <mpc-planner-util/load_yaml.hpp>
 
 #include <std_msgs/Int32.h>

@@ -34,24 +34,6 @@ public:
         return _config;
     }
 
-    // template <typename T>
-    // T operator[](const std::string &param_name) const
-    // {
-    //     return _config[param_name].as<T>();
-    // }
-
-    // template <typename T>
-    // T operator[](const std::string &&param_name) const
-    // {
-    //     return _config[param_name].as<T>();
-    // }
-
-    // template <>
-    // YAML::Node::const_iterator operator[](const std::string &param_name) // explicit specialization
-    // {
-    //     return _config[param_name].begin();
-    //     }
-
 private:
     YAML::Node _config;
 

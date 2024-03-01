@@ -12,6 +12,7 @@
   <depend>mpc-planner-util</depend>
   <depend>mpc-planner-types</depend>
   <depend>mpc-planner-solver</depend>
+  <depend>ros_planner_utils</depend>
   <depend>guidance_planner</depend>
 
   <export>

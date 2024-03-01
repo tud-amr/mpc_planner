@@ -11,7 +11,7 @@
 
   <depend>roscpp</depend>
   <depend>mpc-planner-types</depend>
-  <depend>ros_tools</depend>
+  <depend>ros_planner_utils</depend>
 
   <export>
     <build_type>catkin</build_type>

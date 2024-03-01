@@ -1,7 +1,7 @@
 
 #include <mpc-planner-modules/goal_module.h>
 
-#include <mpc-planner-util/visuals.h>
+#include <ros_planner_utils/visuals.h>
 #include <mpc-planner-util/parameters.h>
 
 namespace MPCPlanner

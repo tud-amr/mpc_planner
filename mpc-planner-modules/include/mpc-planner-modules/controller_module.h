@@ -4,7 +4,7 @@
 #include <mpc-planner-types/realtime_data.h>
 #include <mpc-planner-solver/solver_interface.h>
 
-#include <mpc-planner-util/logging.h>
+#include <ros_planner_utils/logging.h>
 
 #include <memory>
 

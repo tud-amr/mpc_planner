@@ -9,7 +9,7 @@
 
 #include <mpc_planner_msgs/obstacle_array.h> /** @Todo: Replace! */
 
-#include <ros_tools/helpers.h>
+#include <ros_planner_utils/profiling.h>
 
 #include <ros/ros.h>
 

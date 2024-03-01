@@ -1,9 +1,7 @@
 #include "mpc-planner-modules/linearized_constraints.h"
 
 #include <mpc-planner-util/parameters.h>
-#include <mpc-planner-util/visuals.h>
-
-#include <ros_tools/helpers.h>
+#include <ros_planner_utils/visuals.h>
 
 #include <algorithm>
 

@@ -3,7 +3,7 @@
 
 #include <mpc-planner-types/data_types.h>
 
-#include <mpc-planner-util/profiling.h>
+#include <ros_planner_utils/profiling.h>
 
 #include <memory>
 #include <vector>
@@ -48,7 +48,7 @@ namespace MPCPlanner
 
         std::vector<std::shared_ptr<ControllerModule>> _modules;
 
-        std::unique_ptr<Benchmarker> _benchmarker;
+        std::unique_ptr<RosTools::Benchmarker> _benchmarker;
     };
 
 }

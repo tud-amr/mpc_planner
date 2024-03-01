@@ -30,7 +30,7 @@
 
   <!-- <node pkg="tf2_ros" exec="static_transform_publisher" name="static_map" output="log" args="0 0 0 0 0 0 odom map"/> -->
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc-planner-jackal)/rviz/ros1.rviz" output="screen"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_planner_jackalsimulator)/rviz/ros1.rviz" output="screen"/>
 
   <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" output="log"/>
 

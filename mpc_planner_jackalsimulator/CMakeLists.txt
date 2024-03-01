@@ -14,7 +14,6 @@ set(DEPENDENCIES
   mpc-planner-util
   mpc-planner-types
   mpc_planner_msgs
-  ros_tools
   nav_msgs
   dynamic_reconfigure
 )

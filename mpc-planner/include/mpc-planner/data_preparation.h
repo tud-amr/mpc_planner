@@ -6,7 +6,11 @@
 #include <mpc-planner-types/data_types.h>
 
 #include <mpc-planner-util/parameters.h>
-#include <mpc-planner-util/logging.h>
+
+#include <ros_planner_utils/logging.h>
+#include <ros_planner_utils/math.h>
+
+#include <numeric>
 
 inline DynamicObstacle getDummyObstacle(const State &state)
 {
@@ -42,7 +46,7 @@ inline void ensureObstacleSize(std::vector<DynamicObstacle> &obstacles, const St
       //   if (reject_function != nullptr && reject_function(vehicle_pos, obstacle.position)) // If we should reject this                                                                                    // obstacle, push a high distance
       // distances.push_back(1e8);
       //   else
-      distances.push_back(RosTools::dist(vehicle_pos, obstacle.position));
+      distances.push_back(RosTools::distance(vehicle_pos, obstacle.position));
     }
 
     // Sort obstacles on distance

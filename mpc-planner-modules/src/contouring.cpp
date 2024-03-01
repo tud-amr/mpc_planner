@@ -1,7 +1,7 @@
 #include "mpc-planner-modules/contouring.h"
 
 #include <mpc-planner-util/parameters.h>
-#include <mpc-planner-util/visuals.h>
+#include <ros_planner_utils/visuals.h>
 
 #include <algorithm>
 
@@ -18,11 +18,7 @@ namespace MPCPlanner
     (void)data;
 
     LOG_DEBUG("contouring::update()");
-    // if (_spline.get() == nullptr)
-    // {
-    //   LOG_WARN("Not updating yet");
-    //   return;
-    // }
+
     // Get the closest point
     double closest_s;
 
@@ -101,8 +97,8 @@ namespace MPCPlanner
     {
       LOG_INFO("Received Reference Path");
 
-      _spline = std::make_unique<Spline2D>(data.reference_path.x, data.reference_path.y); // Construct a spline from the given points
-                                                                                          // Get the closest point
+      _spline = std::make_unique<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y); // Construct a spline from the given points
+                                                                                                    // Get the closest point
 
       _closest_segment = -1;
       // Update the closest point

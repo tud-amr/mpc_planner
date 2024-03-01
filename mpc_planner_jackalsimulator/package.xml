@@ -15,7 +15,6 @@
   <depend>mpc-planner-util</depend>
   <depend>mpc-planner-types</depend>
   <depend>mpc_planner_msgs</depend>
-  <depend>ros_tools</depend>
   
   <depend>dynamic_reconfigure</depend>
 

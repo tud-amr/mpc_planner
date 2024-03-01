@@ -7,9 +7,11 @@
 #include <mpc-planner-solver/solver_interface.h>
 
 #include <mpc-planner-util/load_yaml.hpp>
-#include <mpc-planner-util/logging.h>
-#include <mpc-planner-util/visuals.h>
 #include <mpc-planner-util/parameters.h>
+#include <mpc-planner-util/data_visualization.h>
+
+#include <ros_planner_utils/logging.h>
+#include <ros_planner_utils/visuals.h>
 
 namespace MPCPlanner
 {
@@ -22,7 +24,7 @@ namespace MPCPlanner
 
         initializeModules(_modules, _solver);
 
-        _benchmarker = std::make_unique<Benchmarker>("optimization");
+        _benchmarker = std::make_unique<RosTools::Benchmarker>("optimization");
     }
 
     // Given real-time data, solve the MPC problem
