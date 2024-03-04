@@ -5,11 +5,11 @@
 
 #include <mpc_planner_jackalsimulator/jackalsimulator_reconfigure.h>
 #include <mpc-planner-solver/solver_interface.h>
-#include <mpc-planner-types/realtime_data.h>
+#include <mpc_planner_types/realtime_data.h>
 
 #include <mpc_planner_msgs/obstacle_array.h> /** @Todo: Replace! */
 
-#include <ros_planner_utils/profiling.h>
+#include <ros_tools/profiling.h>
 
 #include <ros/ros.h>
 

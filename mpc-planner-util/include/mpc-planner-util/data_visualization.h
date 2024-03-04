@@ -2,7 +2,7 @@
 #ifndef DATA_VISUALIZATION_H
 #define DATA_VISUALIZATION_H
 
-#include <ros_planner_utils/visuals.h>
+#include <ros_tools/visuals.h>
 
 // Tools for visualizing custom data types
 namespace MPCPlanner

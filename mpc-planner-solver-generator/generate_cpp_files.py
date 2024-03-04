@@ -157,7 +157,7 @@ def generate_rqtreconfigure(settings):
     rqt_header.write("#ifndef __GENERATED_RECONFIGURE_H\n")
     rqt_header.write("#define __GENERATED_RECONFIGURE_H\n\n")
     rqt_header.write("#include <ros/ros.h>\n\n")
-    rqt_header.write("#include <ros_planner_utils/logging.h>\n")
+    rqt_header.write("#include <ros_tools/logging.h>\n")
     rqt_header.write("#include <mpc-planner-util/parameters.h>\n\n")
     rqt_header.write("// Dynamic Reconfigure server\n")
     rqt_header.write("#include <dynamic_reconfigure/server.h>\n")

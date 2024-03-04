@@ -1,10 +1,10 @@
 #ifndef __CONTROLLER_MODULE_H__
 #define __CONTROLLER_MODULE_H__
 
-#include <mpc-planner-types/realtime_data.h>
+#include <mpc_planner_types/realtime_data.h>
 #include <mpc-planner-solver/solver_interface.h>
 
-#include <ros_planner_utils/logging.h>
+#include <ros_tools/logging.h>
 
 #include <memory>
 

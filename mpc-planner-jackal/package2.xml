@@ -12,7 +12,7 @@
   <build_depend>mpc-planner</build_depend>
   <build_depend>mpc-planner-solver</build_depend>
   <build_depend>mpc-planner-util</build_depend>
-  <build_depend>mpc-planner-types</build_depend>
+  <build_depend>mpc_planner_types</build_depend>
   <build_depend>ros_tools</build_depend>
 
   <exec_depend>nav_msgs</exec_depend>

@@ -3,12 +3,12 @@
 
 #include <mpc-planner-solver/state.h>
 
-#include <mpc-planner-types/data_types.h>
+#include <mpc_planner_types/data_types.h>
 
 #include <mpc-planner-util/parameters.h>
 
-#include <ros_planner_utils/logging.h>
-#include <ros_planner_utils/math.h>
+#include <ros_tools/logging.h>
+#include <ros_tools/math.h>
 
 #include <numeric>
 
@@ -19,6 +19,16 @@ inline DynamicObstacle getDummyObstacle(const State &state)
       Eigen::Vector2d(state.get("x") + 100., state.get("y") + 100.),
       0.,
       0.);
+}
+
+inline Prediction getConstantVelocityPrediction(const Eigen::Vector2d &position, const Eigen::Vector2d &velocity, double dt, int steps)
+{
+  Prediction prediction(PredictionType::DETERMINISTIC);
+
+  for (int i = 0; i < steps; i++)
+    prediction.steps.push_back(PredictionStep(position + velocity * dt * i, 0., 0., 0.));
+
+  return prediction;
 }
 
 inline void ensureObstacleSize(std::vector<DynamicObstacle> &obstacles, const State &state)

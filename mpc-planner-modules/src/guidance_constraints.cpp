@@ -1,7 +1,9 @@
 #include "mpc-planner-modules/guidance_constraints.h"
 
 #include <mpc-planner-util/parameters.h>
-#include <ros_planner_utils/visuals.h>
+#include <mpc-planner-util/data_visualization.h>
+
+#include <ros_tools/visuals.h>
 
 #include <omp.h>
 
@@ -42,6 +44,7 @@ namespace MPCPlanner
 
     void GuidanceConstraints::update(State &state, const RealTimeData &data)
     {
+        (void)data;
         LOG_DEBUG("Guidance Constraints: Update");
 
         // global_guidance_->LoadHalfspaces(); // Load static obstacles represented by halfspaces
@@ -65,11 +68,10 @@ namespace MPCPlanner
         _spline->findClosestPoint(state.getPos(), current_segment, current_s);
 
         double road_width_left = enable_two_way_road_ ? road_width_left_ * 3. : road_width_left_;
-        _guidance_spline = std::make_unique<RosTools::CubicSpline2D<tk::spline>>(
-            _spline->getXSpline(),
-            _spline->getYSpline()); // Construct a spline from the given points
+        // _guidance_spline = std::make_unique<RosTools::Spline2D>(_spline->getXSpline(),
+        // _spline->getYSpline()); // Construct a spline from the given points
 
-        global_guidance_->LoadReferencePath(std::max(0., current_s), _guidance_spline,
+        global_guidance_->LoadReferencePath(std::max(0., current_s), _spline,
                                             road_width_left - CONFIG["robot_radius"].as<double>() - 0.1,
                                             road_width_right_ - CONFIG["robot_radius"].as<double>() - 0.1);
 
@@ -87,6 +89,7 @@ namespace MPCPlanner
 
     void GuidanceConstraints::setParameters(const RealTimeData &data, int k)
     {
+        (void)data;
         if (k == 0)
         {
             // _solver->setTimeout(config_->solver_timeout_ / 1000.); // Limit the solver to 40 ms
@@ -231,7 +234,7 @@ namespace MPCPlanner
 
         // // Initialize the solver with the guidance trajectory
         // RosTools::CubicSpline2D<tk::spline> &trajectory_spline = global_guidance_->GetGuidanceTrajectory(solver->_solver_id).spline.GetTrajectory();
-        RosTools::CubicSpline2D<tk::spline> &trajectory_spline = global_guidance_->GetGuidanceTrajectory(planner.id).spline.GetTrajectory();
+        RosTools::Spline2D &trajectory_spline = global_guidance_->GetGuidanceTrajectory(planner.id).spline.GetTrajectory();
 
         // Initialize the solver in the selected local optimum
         // I.e., set for each k, x(k), y(k) ...
@@ -240,12 +243,12 @@ namespace MPCPlanner
         {
             // int index = k + 1;
             int index = k;
-            Eigen::Vector2d cur_position = trajectory_spline.GetPoint((double)(index)*solver->dt); // The plan is one ahead
+            Eigen::Vector2d cur_position = trajectory_spline.getPoint((double)(index)*solver->dt); // The plan is one ahead
             // global_guidance_->ProjectToFreeSpace(cur_position, k + 1);
             solver->setEgoPrediction(k, "x", cur_position(0));
             solver->setEgoPrediction(k, "y", cur_position(1));
 
-            Eigen::Vector2d cur_velocity = trajectory_spline.GetVelocity((double)(index)*solver->dt); // The plan is one ahead
+            Eigen::Vector2d cur_velocity = trajectory_spline.getVelocity((double)(index)*solver->dt); // The plan is one ahead
             solver->setEgoPrediction(k, "psi", std::atan2(cur_velocity(1), cur_velocity(0)));
             solver->setEgoPrediction(k, "v", cur_velocity.norm());
         }
@@ -479,7 +482,7 @@ namespace MPCPlanner
         {
             LOG_DEBUG("Received Reference Path");
 
-            _spline = std::make_unique<Spline2D>(data.reference_path.x, data.reference_path.y); // Construct a spline from the given points
+            _spline = std::make_unique<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y); // Construct a spline from the given points
         }
 
         //         // See if there is any data for the reference path

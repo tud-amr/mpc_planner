@@ -12,7 +12,7 @@ set(DEPENDENCIES
   mpc-planner
   mpc-planner-solver
   mpc-planner-util
-  mpc-planner-types
+  mpc_planner_types
   mpc_planner_msgs
   nav_msgs
   dynamic_reconfigure

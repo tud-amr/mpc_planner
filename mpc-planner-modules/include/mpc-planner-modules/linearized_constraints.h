@@ -3,7 +3,7 @@
 
 #include <mpc-planner-modules/controller_module.h>
 
-#include <mpc-planner-util/projection.h>
+#include <ros_tools/projection.h>
 
 namespace MPCPlanner
 {

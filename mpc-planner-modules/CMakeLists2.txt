@@ -8,7 +8,7 @@ endif()
 
 # General requirements
 set(DEPENDENCIES
-  mpc-planner-types
+  mpc_planner_types
   mpc-planner-util
   mpc-planner-solver
 )
@@ -16,7 +16,7 @@ set(DEPENDENCIES
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(mpc-planner-util REQUIRED)
-find_package(mpc-planner-types REQUIRED)
+find_package(mpc_planner_types REQUIRED)
 find_package(mpc-planner-solver REQUIRED)
 
 include(modules.cmake)

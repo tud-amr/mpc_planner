@@ -5,7 +5,7 @@
 
 #include <mpc-planner-solver/solver_interface.h>
 
-#include <mpc-planner-types/realtime_data.h>
+#include <mpc_planner_types/realtime_data.h>
 
 #include <rclcpp/rclcpp.hpp>
 

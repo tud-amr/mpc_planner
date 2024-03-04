@@ -2,7 +2,7 @@
 
 #include <mpc-planner-util/parameters.h>
 
-#include <ros_planner_utils/logging.h>
+#include <ros_tools/logging.h>
 
 #include "mpc_planner_generated.h"
 

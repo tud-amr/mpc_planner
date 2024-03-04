@@ -13,7 +13,7 @@
   <test_depend>ament_lint_common</test_depend>
 
   <build_depend>mpc-planner-util</build_depend>
-  <build_depend>mpc-planner-types</build_depend>
+  <build_depend>mpc_planner_types</build_depend>
   <build_depend>mpc-planner-solver</build_depend>
   <build_depend>mpc-planner-modules</build_depend>
 

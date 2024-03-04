@@ -10,13 +10,13 @@ set(MPC_PLANNER_ROS "2")
 # General requirements
 set(DEPENDENCIES
   yaml-cpp
-  mpc-planner-types
+  mpc_planner_types
 )
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(yaml-cpp REQUIRED)
-find_package(mpc-planner-types REQUIRED)
+find_package(mpc_planner_types REQUIRED)
 
 if(MPC_PLANNER_ROS STREQUAL "2")
   # message("MPC_PLANNER_ROS 2")

@@ -1,8 +1,8 @@
 #include <mpc-planner-dingo/ros2_planner.h>
 
-#include <ros_planner_utils/visuals.h>
+#include <ros_tools/visuals.h>
 #include <mpc-planner-util/parameters.h>
-#include <ros_planner_utils/logging.h>
+#include <ros_tools/logging.h>
 #include <mpc-planner-util/load_yaml.hpp>
 
 #include <ros_tools/helpers.h>

@@ -1,7 +1,7 @@
 #include "mpc-planner-modules/contouring.h"
 
 #include <mpc-planner-util/parameters.h>
-#include <ros_planner_utils/visuals.h>
+#include <ros_tools/visuals.h>
 
 #include <algorithm>
 
@@ -50,7 +50,7 @@ namespace MPCPlanner
                                ax, bx, cx, dx,
                                ay, by, cy, dy);
 
-        start = _spline->getStartOfSegment(index);
+        start = _spline->getSegmentStart(index);
       }
       else
       {
@@ -60,7 +60,7 @@ namespace MPCPlanner
                                ax, bx, cx, dx,
                                ay, by, cy, dy);
 
-        start = _spline->getStartOfSegment(_spline->numSegments() - 1);
+        start = _spline->getSegmentStart(_spline->numSegments() - 1);
 
         // We should use very small splines at the end location
         // x = dx
@@ -136,7 +136,7 @@ namespace MPCPlanner
     auto &cur_point = publisher_current.getNewPointMarker("CUBE");
     cur_point.setColorInt(10);
     cur_point.setScale(0.3, 0.3, 0.3);
-    cur_point.addPointMarker(_spline->getPoint(_spline->getStartOfSegment(_closest_segment)), 0.0);
+    cur_point.addPointMarker(_spline->getPoint(_spline->getSegmentStart(_closest_segment)), 0.0);
     publisher_current.publish();
 
     // Visualize the points

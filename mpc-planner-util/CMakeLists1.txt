@@ -9,8 +9,8 @@ set(MPC_PLANNER_ROS "1")
 
 # General requirements
 set(DEPENDENCIES
-  mpc-planner-types
-  ros_planner_utils
+  mpc_planner_types
+  ros_tools
   roscpp
 )
 

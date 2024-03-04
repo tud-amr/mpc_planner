@@ -19,7 +19,7 @@
 #include <mpc-planner-modules/controller_module.h>
 #include <mpc-planner-solver/solver_interface.h>
 
-#include <mpc-planner-util/spline.h>
+#include <ros_tools/spline.h>
 
 #include <guidance_planner/global_guidance.h>
 
@@ -117,8 +117,8 @@ namespace MPCPlanner
         std::unique_ptr<GuidancePlanner::GlobalGuidance> global_guidance_;
 
         // To set the goals
-        std::unique_ptr<Spline2D> _spline{nullptr};
-        std::unique_ptr<RosTools::CubicSpline2D<tk::spline>> _guidance_spline{nullptr}; /**@todo Use Spline2D instead of CubicSpline2D*/
+        std::unique_ptr<RosTools::Spline2D> _spline{nullptr};
+        // std::unique_ptr<RosTools::Spline2D> _guidance_spline{nullptr};
 
         // Configuration parameters
         // bool add_original_planner_, enable_guidance_constraints_, enable_guidance_warmstart_;

@@ -3,7 +3,7 @@
 
 #include <mpc-planner-modules/controller_module.h>
 
-#include <ros_planner_utils/spline.h>
+#include <ros_tools/spline.h>
 
 namespace MPCPlanner
 {
@@ -13,7 +13,7 @@ namespace MPCPlanner
     Contouring(std::shared_ptr<Solver> solver);
 
   public:
-      void update(State &state, const RealTimeData &data) override;
+    void update(State &state, const RealTimeData &data) override;
     void setParameters(const RealTimeData &data, int k) override;
 
     void onDataReceived(RealTimeData &data, std::string &&data_name) override;

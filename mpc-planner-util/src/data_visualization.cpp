@@ -1,6 +1,6 @@
 #include <mpc-planner-util/data_visualization.h>
 
-#include <mpc-planner-types/data_types.h>
+#include <mpc_planner_types/data_types.h>
 #include <mpc-planner-util/parameters.h>
 
 namespace MPCPlanner

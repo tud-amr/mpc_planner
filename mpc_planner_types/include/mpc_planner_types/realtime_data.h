@@ -1,7 +1,7 @@
 #ifndef MPC_REALTIME_DATA_TYPES_H
 #define MPC_REALTIME_DATA_TYPES_H
 
-#include <mpc-planner-types/data_types.h>
+#include <mpc_planner_types/data_types.h>
 
 namespace MPCPlanner
 {
@@ -14,6 +14,8 @@ namespace MPCPlanner
 
         Eigen::Vector2d goal;
         bool goal_received{false};
+
+        RealTimeData() = default;
     };
 }
 #endif

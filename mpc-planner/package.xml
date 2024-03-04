@@ -10,10 +10,10 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>mpc-planner-util</depend>
-  <depend>mpc-planner-types</depend>
+  <depend>mpc_planner_types</depend>
   <depend>mpc-planner-solver</depend>
   <depend>mpc-planner-modules</depend>
-  <depend>ros_planner_utils</depend>
+  <depend>ros_tools</depend>
 
   <export>
     <build_type>catkin</build_type>

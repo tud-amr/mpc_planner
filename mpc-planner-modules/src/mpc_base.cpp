@@ -1,4 +1,3 @@
-
 #include <mpc-planner-modules/mpc_base.h>
 
 #include <mpc-planner-modules/definitions.h>

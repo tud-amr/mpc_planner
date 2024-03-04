@@ -9,7 +9,7 @@ endif()
 # General requirements
 set(DEPENDENCIES
   mpc-planner-util
-  mpc-planner-types
+  mpc_planner_types
   mpc-planner-solver
   mpc-planner-modules
 )

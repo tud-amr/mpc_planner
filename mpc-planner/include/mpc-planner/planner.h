@@ -1,9 +1,9 @@
 #ifndef MPC_PLANNER_H
 #define MPC_PLANNER_H
 
-#include <mpc-planner-types/data_types.h>
+#include <mpc_planner_types/data_types.h>
 
-#include <ros_planner_utils/profiling.h>
+#include <ros_tools/profiling.h>
 
 #include <memory>
 #include <vector>

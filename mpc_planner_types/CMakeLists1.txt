@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(mpc-planner-types)
+project(mpc_planner_types)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -46,7 +46,7 @@ install(
 # # find dependencies
 # find_package(ament_cmake REQUIRED)
 # find_package(yaml-cpp REQUIRED)
-# find_package(mpc-planner-types REQUIRED)
+# find_package(mpc_planner_types REQUIRED)
 
 # if(MPC_PLANNER_ROS STREQUAL "2")
 #   # message("MPC_PLANNER_ROS 2")

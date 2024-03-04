@@ -18,10 +18,10 @@ endif()
 
 # General requirements
 set(DEPENDENCIES
-  mpc-planner-types
+  mpc_planner_types
   mpc-planner-util
   mpc-planner-solver
-  ros_planner_utils
+  ros_tools
   guidance_planner # TEMP
 )
 
