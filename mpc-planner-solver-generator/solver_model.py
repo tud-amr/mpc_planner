@@ -168,6 +168,29 @@ class ContouringSecondOrderUnicycleModel(DynamicsModel):
         return np.array([v * cd.cos(psi), v * cd.sin(psi), w, a, v])
 
 
+class ContouringSecondOrderUnicycleModelWithSlack(DynamicsModel):
+
+    def __init__(self):
+        super().__init__()
+        self.nu = 2  # number of control variables
+        self.nx = 6  # number of states
+
+        self.states = ["x", "y", "psi", "v", "spline", "slack"]
+        self.inputs = ["a", "w"]
+
+        self.lower_bound = [-2.0, -0.8, -2000.0, -2000.0, -np.pi, -2.0, -1.0, 0.0]
+        self.upper_bound = [2.0, 0.8, 2000.0, 2000.0, np.pi, 3.0, 10000.0, 5000.0]
+
+    def continuous_model(self, x, u):
+
+        a = u[0]
+        w = u[1]
+        psi = x[2]
+        v = x[3]
+
+        return np.array([v * cd.cos(psi), v * cd.sin(psi), w, a, v, 0.0])
+
+
 class ContouringPointMassModel(DynamicsModel):
 
     def __init__(self):

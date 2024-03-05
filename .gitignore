@@ -17,3 +17,6 @@ mpc-planner-modules/include/mpc-planner-modules/modules.h
 # Testing
 *.coverage
 *.pytest_cache/
+
+# Profiling
+*/profiler.json

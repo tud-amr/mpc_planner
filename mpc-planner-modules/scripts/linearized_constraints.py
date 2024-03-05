@@ -22,16 +22,17 @@ class LinearizedConstraintModule(ConstraintModule):
         self.module_name = "LinearizedConstraints"  # c++ name of the module
         self.import_name = "linearized_constraints.h"
 
-        self.constraints.append(LinearConstraints(n_discs=settings["n_discs"], max_obstacles=settings["max_obstacles"]))
+        self.constraints.append(LinearConstraints(n_discs=settings["n_discs"], n_constraints=settings["max_obstacles"]))
         self.description = "Linearized dynamic collision avoidance constraints"
 
 
 # Constraints of the form Ax <= b (+ slack)
 class LinearConstraints:
 
-    def __init__(self, n_discs, max_obstacles):
-        self.n_constraints = max_obstacles
+    def __init__(self, n_discs, n_constraints, use_slack=False):
+        self.n_constraints = n_constraints
         self.n_discs = n_discs
+        self.use_slack = use_slack
 
         assert self.n_discs == 1, "Only one disc is supported for now"
 
@@ -71,6 +72,9 @@ class LinearConstraints:
         pos = np.array([pos_x, pos_y])
         psi = model.get("psi")
 
+        if self.use_slack:
+            slack = model.get("slack")
+
         rotation_car = rotation_matrix(psi)
         for disc_it in range(0, self.n_discs):
             disc_x = params.get(f"ego_disc_{disc_it}_offset")
@@ -82,6 +86,6 @@ class LinearConstraints:
                 a2 = params.get(self.constraint_name((index)) + "_a2")
                 b = params.get(self.constraint_name((index)) + "_b")
 
-                constraints.append(a1 * disc_pos[0] + a2 * disc_pos[1] - b)
+                constraints.append(a1 * disc_pos[0] + a2 * disc_pos[1] - (b + slack))
 
         return constraints

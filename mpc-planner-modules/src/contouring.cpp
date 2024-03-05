@@ -1,7 +1,9 @@
 #include "mpc-planner-modules/contouring.h"
 
 #include <mpc-planner-util/parameters.h>
+
 #include <ros_tools/visuals.h>
+#include <ros_tools/profiling.h>
 
 #include <algorithm>
 
@@ -16,6 +18,7 @@ namespace MPCPlanner
   void Contouring::update(State &state, const RealTimeData &data)
   {
     (void)data;
+    PROFILE_SCOPE("Contouring Update");
 
     LOG_DEBUG("contouring::update()");
 
@@ -32,6 +35,7 @@ namespace MPCPlanner
   {
     (void)data;
     LOG_DEBUG("contouring::setparameters");
+    PROFILE_SCOPE("Contouring Set Parameters");
 
     _solver->setParameter(k, "contour", CONFIG["weights"]["contour"].as<double>());
     _solver->setParameter(k, "lag", CONFIG["weights"]["lag"].as<double>());
@@ -63,8 +67,8 @@ namespace MPCPlanner
         start = _spline->getSegmentStart(_spline->numSegments() - 1);
 
         // We should use very small splines at the end location
-        // x = dx
-        // y = dy
+        // x = d_x
+        // y = d_y
         ax = 0.;
         bx = 0.;
         cx = 0.;

@@ -21,9 +21,10 @@ from path_reference_velocity import PathReferenceVelocityModule
 from ellipsoid_constraints import EllipsoidConstraintModule
 from guidance_constraints import GuidanceConstraintModule
 from linearized_constraints import LinearizedConstraintModule
+from scenario_constraints import ScenarioConstraintModule
 
 # Import solver models that you want to use
-from solver_model import ContouringSecondOrderUnicycleModel
+from solver_model import ContouringSecondOrderUnicycleModel, ContouringSecondOrderUnicycleModelWithSlack
 
 
 def define_modules(settings) -> ModuleManager:
@@ -35,6 +36,7 @@ def define_modules(settings) -> ModuleManager:
     # Penalize ||a||_2^2 and ||w||_2^2
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
+    base_module.weigh_variable(var_name="slack", weight_names="slack")
 
     # Penalize ||v - v_ref||_2^2
     # base_module.weigh_variable(
@@ -47,7 +49,8 @@ def define_modules(settings) -> ModuleManager:
     modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
     modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
 
-    modules.add_module(EllipsoidConstraintModule(settings))
+    # modules.add_module(EllipsoidConstraintModule(settings))
+    modules.add_module(ScenarioConstraintModule(settings))
     # modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
     # modules.add_module(LinearizedConstraintModule(settings))
 
@@ -56,6 +59,7 @@ def define_modules(settings) -> ModuleManager:
 
 settings = load_settings()
 modules = define_modules(settings)
-model = ContouringSecondOrderUnicycleModel()
+# model = ContouringSecondOrderUnicycleModel()
+model = ContouringSecondOrderUnicycleModelWithSlack()
 
 generate_solver(modules, model, settings)

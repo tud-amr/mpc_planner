@@ -26,7 +26,7 @@ inline Prediction getConstantVelocityPrediction(const Eigen::Vector2d &position,
   Prediction prediction(PredictionType::DETERMINISTIC);
 
   for (int i = 0; i < steps; i++)
-    prediction.steps.push_back(PredictionStep(position + velocity * dt * i, 0., 0., 0.));
+    prediction.modes[0].push_back(PredictionStep(position + velocity * dt * i, 0., 0., 0.));
 
   return prediction;
 }
@@ -105,10 +105,10 @@ inline void propagatePredictionUncertainty(Prediction &prediction)
 
   for (int k = 0; k < CONFIG["N"].as<int>(); k++)
   {
-    major = std::sqrt(std::pow(major, 2.0) + std::pow(prediction.steps[k].major_radius * dt, 2.));
-    minor = std::sqrt(std::pow(minor, 2.0) + std::pow(prediction.steps[k].minor_radius * dt, 2.));
-    prediction.steps[k].major_radius = major;
-    prediction.steps[k].minor_radius = minor;
+    major = std::sqrt(std::pow(major, 2.0) + std::pow(prediction.modes[0][k].major_radius * dt, 2.));
+    minor = std::sqrt(std::pow(minor, 2.0) + std::pow(prediction.modes[0][k].minor_radius * dt, 2.));
+    prediction.modes[0][k].major_radius = major;
+    prediction.modes[0][k].minor_radius = minor;
   }
 }
 

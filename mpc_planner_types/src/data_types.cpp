@@ -5,6 +5,11 @@
 namespace MPCPlanner
 {
 
+    Disc::Disc(const Eigen::Vector2d &position, double offset)
+        : position(position), offset(offset)
+    {
+    }
+
     PredictionStep::PredictionStep(const Eigen::Vector2d &position, double angle, double major_radius, double minor_radius)
         : position(position), angle(angle), major_radius(major_radius), minor_radius(minor_radius)
     {
@@ -18,6 +23,16 @@ namespace MPCPlanner
     Prediction::Prediction(PredictionType type)
         : type(type)
     {
+        if (type == PredictionType::DETERMINISTIC || type == PredictionType::GAUSSIAN)
+        {
+            modes.emplace_back();
+            probabilities.emplace_back(1.);
+        }
+    }
+
+    bool Prediction::empty() const
+    {
+        return modes.empty() || (modes.size() > 0 && modes[0].empty());
     }
 
     DynamicObstacle::DynamicObstacle(int _index, const Eigen::Vector2d &_position, double _angle, double _radius)

@@ -138,8 +138,20 @@ namespace MPCPlanner
 
 	double Solver::getEgoPrediction(unsigned int k, std::string &&var_name)
 	{
+
 		int index = _model_map[var_name][1].as<int>();
 		return _params.x0[k * nvar + index];
+	}
+
+	void Solver::setEgoPredictionPosition(unsigned int k, const Eigen::Vector2d &value)
+	{
+		setEgoPrediction(k, "x", value(0));
+		setEgoPrediction(k, "y", value(1));
+	}
+
+	Eigen::Vector2d Solver::getEgoPredictionPosition(unsigned int k)
+	{
+		return Eigen::Vector2d(getEgoPrediction(k, "x"), getEgoPrediction(k, "y"));
 	}
 
 	int Solver::solve()

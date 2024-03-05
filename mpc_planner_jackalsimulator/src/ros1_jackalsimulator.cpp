@@ -10,6 +10,7 @@
 #include <ros_tools/convertions.h>
 
 #include <std_msgs/Empty.h>
+#include <ros_tools/profiling.h>
 
 using namespace MPCPlanner;
 
@@ -32,6 +33,8 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
 
     _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
 
+    RosTools::Instrumentor::Get().BeginSession("mpc_planner_jackalsimulator");
+
     // Start the control loop
     _timer = nh.createTimer(
         ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()),
@@ -39,6 +42,12 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
         this);
 
     LOG_DIVIDER();
+}
+
+JackalPlanner::~JackalPlanner()
+{
+    LOG_INFO("Stopped Jackal Planner");
+    RosTools::Instrumentor::Get().EndSession();
 }
 
 void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
@@ -156,9 +165,11 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
     _cmd_pub.publish(cmd);
     _benchmarker->stop();
 
-    _planner->visualize(_state, _data);
-    visualize();
-
+    if (output.success)
+    {
+        _planner->visualize(_state, _data);
+        visualize();
+    }
     LOG_DEBUG("============= End Loop =============");
 }
 
@@ -240,10 +251,12 @@ void JackalPlanner::obstacleCallback(const mpc_planner_msgs::obstacle_array::Con
         // Save the prediction
         if (obstacle.probabilities.size() == 1) // One mode
         {
+            dynamic_obstacle.prediction = Prediction(PredictionType::GAUSSIAN);
+
             const auto &mode = obstacle.gaussians[0];
             for (size_t k = 0; k < mode.mean.poses.size(); k++)
             {
-                dynamic_obstacle.prediction.steps.emplace_back(
+                dynamic_obstacle.prediction.modes[0].emplace_back(
                     Eigen::Vector2d(mode.mean.poses[k].pose.position.x, mode.mean.poses[k].pose.position.y),
                     RosTools::quaternionToAngle(mode.mean.poses[k].pose.orientation),
                     mode.major_semiaxis[k],

@@ -3,7 +3,7 @@
 #include <mpc-planner-util/parameters.h>
 
 #include <ros_tools/visuals.h>
-#include <ros_tools/math.hpp>
+#include <ros_tools/math.h>
 
 #include <algorithm>
 

@@ -11,6 +11,8 @@
 #include <Solver.h>
 #include <Solver_memory.h>
 
+#include <Eigen/Dense>
+
 extern "C"
 {
 	extern solver_int32_default Solver_adtool2forces(Solver_float *x,				 /* primal vars                                         */
@@ -63,6 +65,8 @@ namespace MPCPlanner
 
 		void setEgoPrediction(unsigned int k, std::string &&var_name, double value);
 		double getEgoPrediction(unsigned int k, std::string &&var_name);
+		void setEgoPredictionPosition(unsigned int k, const Eigen::Vector2d &value);
+		Eigen::Vector2d getEgoPredictionPosition(unsigned int k);
 
 		/** @brief Set and get a solver parameter at index index of stage k */
 		void setParameter(int k, std::string &&parameter, double value);

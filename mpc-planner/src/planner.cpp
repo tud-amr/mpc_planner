@@ -49,41 +49,52 @@ namespace MPCPlanner
         // Set the initial guess
         if (was_feasible)
             _solver->initializeWarmstart(state, CONFIG["shift_previous_solution_forward"].as<bool>());
-        else
-            _solver->reset();
+        // else
+        // _solver->reset();
 
         // Set the initial state
         _solver->setXinit(state);
 
         // Update all modules
-        for (auto &module : _modules)
-            module->update(state, data);
-
-        for (int k = 0; k < _solver->N; k++)
         {
-            for (auto &module : _modules)
-            {
-                if (k == 0 && module->type == ModuleType::CONSTRAINT)
-                    continue;
+            PROFILE_SCOPE("Update");
 
-                module->setParameters(data, k);
+            for (auto &module : _modules)
+                module->update(state, data);
+        }
+
+        {
+            PROFILE_SCOPE("SetParameters");
+            for (int k = 0; k < _solver->N; k++)
+            {
+                for (auto &module : _modules)
+                {
+                    if (k == 0 && module->type == ModuleType::CONSTRAINT)
+                        continue;
+
+                    module->setParameters(data, k);
+                }
             }
         }
 
         _solver->loadWarmstart();
 
         // Solve MPC
-        _benchmarker->start();
-        int exit_flag = EXIT_CODE_NOT_OPTIMIZED_YET;
-        for (auto &module : _modules)
+        int exit_flag;
         {
-            exit_flag = module->optimize(state, data);
-            if (exit_flag != EXIT_CODE_NOT_OPTIMIZED_YET)
-                break;
+            PROFILE_SCOPE("Optimization");
+            _benchmarker->start();
+            exit_flag = EXIT_CODE_NOT_OPTIMIZED_YET;
+            for (auto &module : _modules)
+            {
+                exit_flag = module->optimize(state, data);
+                if (exit_flag != EXIT_CODE_NOT_OPTIMIZED_YET)
+                    break;
+            }
+            if (exit_flag == EXIT_CODE_NOT_OPTIMIZED_YET)
+                exit_flag = _solver->solve();
+            _benchmarker->stop();
         }
-        if (exit_flag == EXIT_CODE_NOT_OPTIMIZED_YET)
-            exit_flag = _solver->solve();
-        _benchmarker->stop();
 
         if (exit_flag != 1)
         {
@@ -142,5 +153,4 @@ namespace MPCPlanner
             objective_reached = objective_reached && module->isObjectiveReached(data);
         return objective_reached;
     }
-
 }

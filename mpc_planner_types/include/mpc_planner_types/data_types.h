@@ -10,6 +10,14 @@
 namespace MPCPlanner
 {
 
+    struct Disc
+    {
+        Eigen::Vector2d position;
+        double offset;
+
+        Disc(const Eigen::Vector2d &position, double offset);
+    };
+
     struct StaticObstacle
     {
     };
@@ -36,15 +44,20 @@ namespace MPCPlanner
         PredictionStep(const Eigen::Vector2d &position, double angle, double major_radius, double minor_radius);
     };
 
+    typedef std::vector<PredictionStep> Mode;
+
     struct Prediction
     {
 
         PredictionType type;
 
-        std::vector<PredictionStep> steps;
+        std::vector<Mode> modes;
+        std::vector<double> probabilities;
 
         Prediction();
         Prediction(PredictionType type);
+
+        bool empty() const;
     };
 
     struct DynamicObstacle

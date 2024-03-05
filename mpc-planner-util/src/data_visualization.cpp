@@ -66,8 +66,8 @@ namespace MPCPlanner
         {
             cylinder.setScale(2. * obstacle.radius, 2. * obstacle.radius, 0.01);
             cylinder.setColorInt(obstacle.index, CONFIG["max_obstacles"].as<int>(), alpha);
-            for (size_t k = 0; k < obstacle.prediction.steps.size(); k++)
-                cylinder.addPointMarker(obstacle.prediction.steps[k].position, 0.0);
+            for (size_t k = 0; k < obstacle.prediction.modes[0].size(); k++)
+                cylinder.addPointMarker(obstacle.prediction.modes[0][k].position, 0.0);
         }
 
         if (publish)

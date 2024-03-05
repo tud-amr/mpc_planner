@@ -32,6 +32,7 @@ class JackalPlanner
 {
 public:
     JackalPlanner(ros::NodeHandle &nh);
+    ~JackalPlanner();
 
     void initializeSubscribersAndPublishers(ros::NodeHandle &nh);
 

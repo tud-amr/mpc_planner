@@ -9,6 +9,9 @@ namespace MPCPlanner
     struct RealTimeData
     {
 
+        std::vector<Disc> robot_area;
+
+        std::vector<StaticObstacle> static_obstacles;
         std::vector<DynamicObstacle> dynamic_obstacles;
         ReferencePath reference_path;
 
