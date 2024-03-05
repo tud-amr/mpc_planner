@@ -41,7 +41,8 @@ add_executable(jackalsimulator_planner src/ros1_jackalsimulator.cpp)
 add_dependencies(jackalsimulator_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(jackalsimulator_planner
   ${catkin_LIBRARIES}
-  yaml-cpp
+
+  # yaml-cpp
 )
 install(
   TARGETS jackalsimulator_planner

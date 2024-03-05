@@ -63,7 +63,15 @@ def generate_module_cmake(modules):
     path = f"{get_package_path('mpc-planner-modules')}/modules.cmake"
     print_path("Module CMake", path, end="", tab=True)
     module_cmake = open(path, "w")
-    # module_cmake.write("set(MODULE_DEPENDENCIES\n")
+
+    module_cmake.write("set(MODULE_DEPENDENCIES\n")
+    dependencies = []
+    for module in modules.modules:
+        for dependency in module.dependencies:
+            if dependency not in dependencies:
+                dependencies.append(dependency)
+                module_cmake.write(f"\t{dependency}\n")
+    module_cmake.write(")\n\n")
 
     module_cmake.write("set(MODULE_SOURCES\n")
     for module in modules.modules:
@@ -74,6 +82,46 @@ def generate_module_cmake(modules):
     module_cmake.write(")\n")
     module_cmake.close()
     print_success(" -> generated")
+
+
+def generate_module_packagexml(modules):
+    path = f"{get_package_path('mpc-planner-modules')}/package.xml"
+    print_path("Package.xml", path, end="", tab=True)
+
+    line_start = "<!-- START SOLVER DEPENDENT -->"
+    line_end = "<!-- END SOLVER DEPENDENT -->"
+
+    # Create a list to store lines to append
+    new_lines = []
+    found_start = False
+    found_end = False
+
+    # Step 1: Open the file in read mode
+    with open(path, "r") as file:
+        for line in file:
+            # Step 3: Check if the current line matches the target line
+            if line_start in line:
+                new_lines.append(line)
+                found_start = True  # Set the flag to True
+                for module in modules.modules:
+                    for dep in module.dependencies:
+                        new_lines.append("\t<depend>" + dep + "</depend>\n")
+
+            if line_end in line:
+                found_end = True
+
+            if found_start and not found_end:
+                continue
+
+            # If the target line hasn't been found, add it to the list
+            new_lines.append(line)
+
+    # If nothing was out of place with the tags
+    if found_start and found_end:
+        with open(path, "w") as file:
+            file.writelines(new_lines)
+
+    print_success(" -> modified")
 
 
 def generate_cpp_code(settings, model):

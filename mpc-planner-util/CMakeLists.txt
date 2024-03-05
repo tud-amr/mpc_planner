@@ -22,7 +22,7 @@ find_package(yaml-cpp REQUIRED)
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}
   INCLUDE_DIRS include include/${PROJECT_NAME}
-  LIBRARIES ${PROJECT_NAME}
+  LIBRARIES ${PROJECT_NAME} yaml-cpp
 )
 
 include_directories(

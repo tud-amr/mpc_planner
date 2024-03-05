@@ -17,7 +17,7 @@ max_obstacles: 12
 robot_radius: 0.325
 obstacle_radius: 0.4
 
-shift_previous_solution_forward: true
+shift_previous_solution_forward: false
 
 contouring:
   num_segments: 3

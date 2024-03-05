@@ -22,8 +22,10 @@ set(DEPENDENCIES
   mpc-planner-util
   mpc-planner-solver
   ros_tools
-  guidance_planner # TEMP
 )
+
+include(modules.cmake)
+list(APPEND DEPENDENCIES ${MODULE_DEPENDENCIES})
 
 find_package(catkin REQUIRED COMPONENTS
   ${DEPENDENCIES}
@@ -34,8 +36,6 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
 )
-
-include(modules.cmake)
 
 # # BUILD ###
 include_directories(
@@ -49,7 +49,8 @@ add_library(${PROJECT_NAME}
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
-  yaml-cpp
+
+  # yaml-cpp
 )
 
 install(TARGETS ${PROJECT_NAME}

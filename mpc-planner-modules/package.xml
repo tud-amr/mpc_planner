@@ -13,8 +13,10 @@
   <depend>mpc_planner_types</depend>
   <depend>mpc-planner-solver</depend>
   <depend>ros_tools</depend>
-  <depend>guidance_planner</depend>
 
+  <!-- START SOLVER DEPENDENT -->
+  <!-- END SOLVER DEPENDENT -->
+  
   <export>
     <build_type>catkin</build_type>
   </export>
