@@ -5,6 +5,6 @@ int32 id
 geometry_msgs/Pose pose
 
 # List of Gaussians and their probabilities
-mpc_planner_msgs/gaussian[] gaussians
+mpc_planner_msgs/Gaussian[] gaussians
 float64[] probabilities
 
