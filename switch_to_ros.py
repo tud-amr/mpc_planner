@@ -1,10 +1,14 @@
 import sys, os
-sys.path.append(os.path.join(sys.path[0], 'mpc-planner-solver-generator'))
+
+sys.path.append(os.path.join(sys.path[0], "mpc-planner-solver-generator"))
 
 from pathlib import Path
 import shutil
 
 from util.logging import print_value
+
+skip_packages = ["mpc-planner-solver-generator", "docs"]
+
 
 def get_files(folder, ros_version: str):
     cmake_file = Path(os.path.join(folder, f"CMakeLists{ros_version}.txt"))
@@ -12,26 +16,28 @@ def get_files(folder, ros_version: str):
 
     exists = True
     if not cmake_file.is_file():
-        print(f"CMakeLists{ros_version}.txt does not exist")
+        print(f"CMakeLists{ros_version}.txt does not exist in {folder}")
         exists = False
 
     if not package_file.is_file():
-        print(f"package{ros_version}.xml does not exist")
+        print(f"package{ros_version}.xml does not exist in {folder}")
         exists = False
-    
+
     return exists, [cmake_file, package_file]
 
-def get_ros_mode(file_name)->int:
+
+def get_ros_mode(file_name) -> int:
     # Check if it is in ROS1 or ROS2 mode currently
     print(file_name)
-    with open(file_name, 'r') as file:
+    with open(file_name, "r") as file:
         content = file.read()
-        if 'catkin_package' in content:
+        if "catkin_package" in content:
             return 1
-        elif 'find_package(ament_cmake REQUIRED)' in content:
+        elif "find_package(ament_cmake REQUIRED)" in content:
             return 2
         else:
             raise IOError(f"{file_name} is not in ROS1 or ROS2 mode")
+
 
 def main():
     # Check if the correct number of command line arguments is provided
@@ -45,7 +51,7 @@ def main():
     assert ros_version == 1 or ros_version == 2, "ROS version must be 1 or 2"
 
     print_value("ROS", ros_version)
-    subfolders = [ f.path for f in os.scandir(sys.path[0]) if f.is_dir() and len(f.name.split('.')) == 1 and f.name != "mpc-planner-solver-generator"]
+    subfolders = [f.path for f in os.scandir(sys.path[0]) if f.is_dir() and len(f.name.split(".")) == 1 and f.name not in skip_packages]
 
     exist, check_files = get_files(subfolders[0], "")
     if not exist:
@@ -62,7 +68,6 @@ def main():
         exists, current = get_files(folder, "")
         exists1, ROS1 = get_files(folder, "1")
         exists2, ROS2 = get_files(folder, "2")
-        
 
         if ros_version == 1:
             if not exists1:
@@ -100,14 +105,10 @@ def main():
                 print(current[i])
                 shutil.copyfile(ROS2[i], current[i])
 
-
             # for file in ROS2:
             #     os.remove(file)
             # for file in current:
             #     os.rename(file, file.with_name(file.name.split('.')[0]))
-        
-    
-
 
 
 if __name__ == "__main__":
