@@ -98,12 +98,22 @@ def generate_forces_solver(modules, settings, model):
     if solver_settings["enable_timeout"]:
         options.solver_timeout = 1
 
-    """
-    PRIMAL DUAL INTERIOR POINT (Default Solver!) 
-    """
-    options.maxit = 500  # Maximum number of iterations
-    options.mu0 = 20
-    options.init = solver_settings["init"]  # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
+    if not solver_settings["use_sqp"]:
+        """
+        PRIMAL DUAL INTERIOR POINT (Default Solver!)
+        """
+        options.maxit = 500  # Maximum number of iterations
+        options.mu0 = 20
+        options.init = solver_settings["init"]  # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
+    else:
+        options.solvemethod = "SQP_NLP"
+        options.sqp_nlp.maxqps = 1
+
+        options.maxit = 100  # Maximum number of iterations
+        options.sqp_nlp.qpinit = 0  # 1 # 1 = centered start, 0 = cold start
+
+        options.nlp.linear_solver = "symm_indefinite_fast"
+        options.sqp_nlp.reg_hessian = 5e-9  # = default
 
     # Creates code for symbolic model formulation given above, then contacts server to generate new solver
     print_header("Generating solver")

@@ -154,6 +154,14 @@ namespace MPCPlanner
 		return Eigen::Vector2d(getEgoPrediction(k, "x"), getEgoPrediction(k, "y"));
 	}
 
+	void Solver::setReinitialize(bool reinitialize)
+	{
+		if (!CONFIG["solver_settings"]["use_sqp"])
+			return;
+
+		_params.reinitialize = reinitialize;
+	}
+
 	int Solver::solve()
 	{
 		int exit_code = Solver_solve(&_params, &_output, &_info, _solver_memory_handle, stdout, extfunc_eval_);

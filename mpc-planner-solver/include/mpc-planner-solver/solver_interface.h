@@ -76,6 +76,7 @@ namespace MPCPlanner
 		void setXinit(const State &state);
 		void initializeWarmstart(const State &state, bool shift_previous_solution_forward);
 		void loadWarmstart();
+		void setReinitialize(bool reinitialize);
 
 		/** @brief Solve the optimization */
 		int solve();

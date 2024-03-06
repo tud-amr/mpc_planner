@@ -38,8 +38,8 @@ namespace MPCPlanner
     // return SimpleSequentialScenarioIterations(solver_interface); // S-MPCC (SQP)
 
     _solver->_params.solver_timeout = 1. / CONFIG["control_frequency"].as<double>();
-    int exit_code = _solver->solve();
-    // int exit_code = _scenario_module->optimize(data); // Safe Horizon MPC
+    // int exit_code = _solver->solve();
+    int exit_code = _scenario_module->optimize(data); // Safe Horizon MPC
     return exit_code;
   }
 
