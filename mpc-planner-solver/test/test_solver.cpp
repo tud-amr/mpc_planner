@@ -122,7 +122,7 @@ TEST_F(SolverTest, TestName)
 
     // In the next control iteration, the initial state turns out to be 0.8
     state.set("x", 0.8);
-    solver.setWarmstart(state);                          // Set the warmstart based on the output
+    solver.loadWarmstart();                              // Set the warmstart based on the output
     ASSERT_TRUE(solver.getEgoPrediction(0, "x") == 0.8); // Check if the initial state was added as initial prediction
     ASSERT_TRUE(solver.getEgoPrediction(1, "x") == 2.0); // Check if the first prediction was correctly copied from the output
 

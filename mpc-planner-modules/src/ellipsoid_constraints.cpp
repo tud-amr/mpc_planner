@@ -31,10 +31,11 @@ namespace MPCPlanner
     for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
     {
       const auto &obstacle = data.dynamic_obstacles[i];
+      const auto &mode = obstacle.prediction.modes[0];
       /** @note The first prediction step is index 1 of the optimization problem, i.e., k-1 maps to the predictions for this stage */
-      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_x", obstacle.prediction.steps[k - 1].position(0));
-      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_y", obstacle.prediction.steps[k - 1].position(1));
-      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_psi", obstacle.prediction.steps[k - 1].angle);
+      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_x", mode[k - 1].position(0));
+      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_y", mode[k - 1].position(1));
+      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_psi", mode[k - 1].angle);
 
       _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_r", obstacle.radius);
 
@@ -48,8 +49,8 @@ namespace MPCPlanner
       {
         double chi = RosTools::ExponentialQuantile(0.5, 1.0 - CONFIG["probabilistic"]["risk"].as<double>());
 
-        _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_major", obstacle.prediction.steps[k - 1].major_radius);
-        _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_minor", obstacle.prediction.steps[k - 1].minor_radius);
+        _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_major", mode[k - 1].major_radius);
+        _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_minor", mode[k - 1].minor_radius);
         _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_chi", chi);
       }
     }
@@ -65,7 +66,7 @@ namespace MPCPlanner
 
     for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
     {
-      if (data.dynamic_obstacles[i].prediction.steps.empty())
+      if (data.dynamic_obstacles[i].prediction.empty())
       {
         missing_data += "Obstacle Prediction ";
         return false;

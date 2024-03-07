@@ -64,7 +64,16 @@ def generate_module_cmake(modules):
     print_path("Module CMake", path, end="", tab=True)
     module_cmake = open(path, "w")
 
-    module_cmake.write("set(MODULE_DEPENDENCIES\n")
+    module_cmake.write("if(USE_ROS2)\n") # ROS2 find package
+    dependencies = []
+    for module in modules.modules:
+        for dependency in module.dependencies:
+            if dependency not in dependencies:
+                dependencies.append(dependency)
+                module_cmake.write(f"\tfind_package({dependency} REQUIRED)\n")
+    module_cmake.write("endif()\n")
+
+    module_cmake.write("set(MODULE_DEPENDENCIES\n") # Dependencies
     dependencies = []
     for module in modules.modules:
         for dependency in module.dependencies:
@@ -73,7 +82,7 @@ def generate_module_cmake(modules):
                 module_cmake.write(f"\t{dependency}\n")
     module_cmake.write(")\n\n")
 
-    module_cmake.write("set(MODULE_SOURCES\n")
+    module_cmake.write("set(MODULE_SOURCES\n") # Sources
     for module in modules.modules:
         module_cmake.write(f"\tsrc/{module.import_name.split('.')[0]}.cpp\n")
         for source in module.sources:
@@ -158,14 +167,16 @@ def generate_cpp_code(settings, model):
     header_file.write("}\n\n")
 
     header_file.write(f"void loadForcesWarmstart({forces_solver_name}_params& params, const {forces_solver_name}_output& output){{\n")
-    header_file.write(f"\t\tfor (int i = 0; i < {model.nu}; i++){{\n")
-    header_file.write(f"\t\t\tparams.z_init_{add_zero_below_10(0, N)}[i] = params.x0[i];\n\t\t}}\n")
+    if not settings["solver_settings"]["use_sqp"]:
+        header_file.write(f"\t\tfor (int i = 0; i < {model.nu}; i++){{\n")
+        header_file.write(f"\t\t\tparams.z_init_{add_zero_below_10(0, N)}[i] = params.x0[i];\n\t\t}}\n")
 
-    header_file.write(f"\t\tfor (int i = 0; i < {model.get_nvar()}; i++){{\n")
-    for k in range(1, N):
-        header_file.write(f"\t\t\tparams.z_init_{add_zero_below_10(k, N)}[i] = params.x0[{model.get_nvar()}*{k} + i];\n")
-    header_file.write("\t\t}\n\t}")
-
+        header_file.write(f"\t\tfor (int i = 0; i < {model.get_nvar()}; i++){{\n")
+        for k in range(1, N):
+            header_file.write(f"\t\t\tparams.z_init_{add_zero_below_10(k, N)}[i] = params.x0[{model.get_nvar()}*{k} + i];\n")
+        header_file.write("\t\t}\n")
+    header_file.write("\t}\n")
+    
     header_file.write("}\n#endif")
 
     print_success(" -> generated")
@@ -246,3 +257,6 @@ def generate_rqtreconfigure(settings):
     rqt_header.write("#endif // __GENERATED_RECONFIGURE_H\n")
     rqt_header.close()
     print_success(" -> generated")
+
+# def generate_ros2_parameters(settings):
+    

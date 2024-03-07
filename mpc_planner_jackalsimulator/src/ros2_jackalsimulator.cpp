@@ -1,11 +1,13 @@
-#include <mpc-planner-jackal/ros2_planner.h>
+#include <mpc_planner_jackalsimulator/ros2_jackalsimulator.h>
 
-#include <ros_tools/visuals.h>
+#include <mpc-planner/data_preparation.h>
+
 #include <mpc-planner-util/parameters.h>
-#include <ros_tools/logging.h>
 #include <mpc-planner-util/load_yaml.hpp>
 
-#include <ros_tools/helpers.h>
+#include <ros_tools/visuals.h>
+#include <ros_tools/logging.h>
+#include <ros_tools/convertions.h>
 
 using namespace MPCPlanner;
 using namespace rclcpp;
@@ -50,6 +52,10 @@ void JackalPlanner::initializeSubscribersAndPublishers()
     _path_sub = this->create_subscription<nav_msgs::msg::Path>(
         "~/input/reference_path", 1,
         std::bind(&JackalPlanner::pathCallback, this, std::placeholders::_1));
+
+    _obstacle_sim_sub = this->create_subscription<mpc_planner_msgs::msg::ObstacleArray>(
+        "~/input/obstacles", 1,
+        std::bind(&JackalPlanner::obstacleCallback, this, std::placeholders::_1));
 
     _cmd_pub = this->create_publisher<geometry_msgs::msg::Twist>(
         "~/output/command", 1);
@@ -122,6 +128,52 @@ bool JackalPlanner::isPathTheSame(nav_msgs::msg::Path::SharedPtr msg)
             return false;
     }
     return true;
+}
+
+void JackalPlanner::obstacleCallback(mpc_planner_msgs::msg::ObstacleArray::SharedPtr msg)
+{
+    _data.dynamic_obstacles.clear();
+
+    for (auto &obstacle : msg->obstacles)
+    {
+        // Save the obstacle
+        _data.dynamic_obstacles.emplace_back(
+            obstacle.id,
+            Eigen::Vector2d(obstacle.pose.position.x, obstacle.pose.position.y),
+            RosTools::quaternionToAngle(obstacle.pose),
+            CONFIG["obstacle_radius"].as<double>());
+        auto &dynamic_obstacle = _data.dynamic_obstacles.back();
+
+        if (obstacle.probabilities.size() == 0) // No Predictions!
+            continue;
+
+        // Save the prediction
+        if (obstacle.probabilities.size() == 1) // One mode
+        {
+            dynamic_obstacle.prediction = Prediction(PredictionType::GAUSSIAN);
+
+            const auto &mode = obstacle.gaussians[0];
+            for (size_t k = 0; k < mode.mean.poses.size(); k++)
+            {
+                dynamic_obstacle.prediction.modes[0].emplace_back(
+                    Eigen::Vector2d(mode.mean.poses[k].pose.position.x, mode.mean.poses[k].pose.position.y),
+                    RosTools::quaternionToAngle(mode.mean.poses[k].pose.orientation),
+                    mode.major_semiaxis[k],
+                    mode.minor_semiaxis[k]);
+            }
+
+            if (mode.major_semiaxis.back() == 0. || !CONFIG["probabilistic"]["enable"].as<bool>())
+                dynamic_obstacle.prediction.type = PredictionType::DETERMINISTIC;
+            else
+                dynamic_obstacle.prediction.type = PredictionType::GAUSSIAN;
+        }
+        else
+        {
+            ROSTOOLS_ASSERT(false, "Multiple modes not yet supported");
+        }
+    }
+    ensureObstacleSize(_data.dynamic_obstacles, _state);
+    _planner->onDataReceived(_data, "dynamic obstacles");
 }
 
 void JackalPlanner::pathCallback(nav_msgs::msg::Path::SharedPtr msg)

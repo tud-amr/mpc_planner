@@ -49,17 +49,51 @@ def define_modules(settings) -> ModuleManager:
     modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
     modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
 
-    # modules.add_module(EllipsoidConstraintModule(settings))
-    modules.add_module(ScenarioConstraintModule(settings))
+    modules.add_module(EllipsoidConstraintModule(settings))
+    # modules.add_module(ScenarioConstraintModule(settings))
     # modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
     # modules.add_module(LinearizedConstraintModule(settings))
 
     return modules
 
 
+def configuration_safe_horizon(settings):
+    modules = ModuleManager()
+    model = ContouringSecondOrderUnicycleModelWithSlack()
+
+    # Module that allows for penalization of variables
+    base_module = modules.add_module(MPCBaseModule(settings))
+
+    # Penalize ||a||_2^2 and ||w||_2^2
+    base_module.weigh_variable(var_name="a", weight_names="acceleration")
+    base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
+    base_module.weigh_variable(var_name="slack", weight_names="slack")
+
+    # modules.add_module(GoalModule(settings))  # Track a goal
+    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
+
+    modules.add_module(ScenarioConstraintModule(settings))
+    return model, modules
+
+def configuration_lmpcc(settings):
+    modules = ModuleManager()
+    model = ContouringSecondOrderUnicycleModel()
+
+    # Penalize ||a||_2^2 and ||w||_2^2
+    base_module = modules.add_module(MPCBaseModule(settings))
+    base_module.weigh_variable(var_name="a", weight_names="acceleration")
+    base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
+
+    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
+
+    modules.add_module(EllipsoidConstraintModule(settings))
+
+    return model, modules
+
 settings = load_settings()
-modules = define_modules(settings)
-# model = ContouringSecondOrderUnicycleModel()
-model = ContouringSecondOrderUnicycleModelWithSlack()
+
+model, modules = configuration_lmpcc(settings)
 
 generate_solver(modules, model, settings)

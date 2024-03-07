@@ -14,9 +14,16 @@
   <depend>mpc-planner-solver</depend>
   <depend>mpc-planner-util</depend>
   <depend>mpc_planner_types</depend>
+  <depend>mpc_planner_msgs</depend>
   <depend>ros_tools</depend>
 
   <depend>nav_msgs</depend>
+
+  <exec_depend>dingo_simulator</exec_depend>
+  <exec_depend>dingo_desktop</exec_depend>
+  <exec_depend>dingo</exec_depend>
+  <exec_depend>roadmap</exec_depend>
+  <exec_depend>pedestrian_simulator</exec_depend>
 
   <export>
     <build_type>catkin</build_type>

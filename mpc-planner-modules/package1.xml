@@ -12,7 +12,12 @@
   <depend>mpc-planner-util</depend>
   <depend>mpc_planner_types</depend>
   <depend>mpc-planner-solver</depend>
+  <depend>ros_tools</depend>
 
+  <!-- START SOLVER DEPENDENT -->
+	<depend>lmpcc_scenario_module</depend>
+  <!-- END SOLVER DEPENDENT -->
+  
   <export>
     <build_type>catkin</build_type>
   </export>
