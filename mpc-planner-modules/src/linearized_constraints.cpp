@@ -52,7 +52,7 @@ namespace MPCPlanner
       for (size_t obs_id = 0; obs_id < copied_obstacles.size(); obs_id++)
       {
         const auto &copied_obstacle = copied_obstacles[obs_id];
-        const Eigen::Vector2d &obstacle_pos = copied_obstacle.prediction.steps[k - 1].position;
+        const Eigen::Vector2d &obstacle_pos = copied_obstacle.prediction.modes[0][k - 1].position;
 
         double diff_x = obstacle_pos(0) - pos(0);
         double diff_y = obstacle_pos(1) - pos(1);
@@ -89,8 +89,8 @@ namespace MPCPlanner
         if (CONFIG["linearized_constraints"]["relax"].as<bool>())
           radius = 1e-3;
 
-        dr_projection_.douglasRachfordProjection(pos, obstacle.prediction.steps[k - 1].position,
-                                                 copied_obstacles[0].prediction.steps[k - 1].position,
+        dr_projection_.douglasRachfordProjection(pos, obstacle.prediction.modes[0][k - 1].position,
+                                                 copied_obstacles[0].prediction.modes[0][k - 1].position,
                                                  radius + CONFIG["robot_radius"].as<double>(),
                                                  pos);
       }
@@ -120,7 +120,7 @@ namespace MPCPlanner
 
     for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
     {
-      if (data.dynamic_obstacles[i].prediction.steps.empty())
+      if (data.dynamic_obstacles[i].prediction.empty())
       {
         missing_data += "Obstacle Prediction ";
         return false;

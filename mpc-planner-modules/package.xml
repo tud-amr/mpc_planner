@@ -14,6 +14,7 @@
   <build_depend>mpc-planner-solver</build_depend>
 
   <!-- START SOLVER DEPENDENT -->
+	<depend>guidance_planner</depend>
   <!-- END SOLVER DEPENDENT -->
   
   <export>

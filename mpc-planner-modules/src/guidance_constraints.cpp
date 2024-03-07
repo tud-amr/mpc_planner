@@ -108,7 +108,7 @@ namespace MPCPlanner
         if (!CONFIG["t-mpc"]["use_t-mpc++"].as<bool>() && !global_guidance_->Succeeded())
             return 0;
 
-        // #pragma omp parallel for num_threads(8)
+#pragma omp parallel for num_threads(8)
         for (auto &planner : planners_)
         {
             planner.result.Reset();
@@ -492,6 +492,7 @@ namespace MPCPlanner
         if (data_name == "dynamic obstacles")
         {
             LOG_DEBUG("Guidance Constraints: Received dynamic obstacles");
+
 #pragma omp parallel for num_threads(8)
             for (auto &planner : planners_)
             {
@@ -505,8 +506,8 @@ namespace MPCPlanner
                 size_t k;
                 positions.push_back(obstacle.position); /** @note Strange that we need k = 0 here */
 
-                for (k = 0; k < std::max(obstacle.prediction.steps.size(), (size_t)GuidancePlanner::Config::N); k++)
-                    positions.push_back(obstacle.prediction.steps[k].position);
+                for (k = 0; k < std::max(obstacle.prediction.modes[0].size(), (size_t)GuidancePlanner::Config::N); k++)
+                    positions.push_back(obstacle.prediction.modes[0][k].position);
 
                 obstacles.emplace_back(obstacle.index, positions, obstacle.radius + CONFIG["robot_radius"].as<double>());
             }

@@ -76,6 +76,23 @@ def configuration_safe_horizon(settings):
     modules.add_module(ScenarioConstraintModule(settings))
     return model, modules
 
+
+def configuration_tmpc(settings):
+    modules = ModuleManager()
+    model = ContouringSecondOrderUnicycleModel()
+
+    base_module = modules.add_module(MPCBaseModule(settings))
+    base_module.weigh_variable(var_name="a", weight_names="acceleration")
+    base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
+
+    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
+
+    modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
+
+    return model, modules
+
+
 def configuration_lmpcc(settings):
     modules = ModuleManager()
     model = ContouringSecondOrderUnicycleModel()
@@ -94,6 +111,6 @@ def configuration_lmpcc(settings):
 
 settings = load_settings()
 
-model, modules = configuration_lmpcc(settings)
+model, modules = configuration_tmpc(settings)
 
 generate_solver(modules, model, settings)

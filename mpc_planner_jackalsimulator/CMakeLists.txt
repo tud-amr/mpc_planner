@@ -5,11 +5,19 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# set(SYSTEM_TO_USE "Jackal")
+find_package(OpenMP)
+if(OPENMP_FOUND)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+else()
+  message(WARNING "Compiling without OPENMP (OPENMP not found)")
+endif()
 
 set(DEPENDENCIES
   mpc-planner
   mpc-planner-solver
+  mpc-planner-modules
   mpc-planner-util
   mpc_planner_types
   mpc_planner_msgs
@@ -22,6 +30,7 @@ set(DEPENDENCIES
 find_package(ament_cmake REQUIRED)
 find_package(mpc-planner REQUIRED)
 find_package(mpc-planner-solver REQUIRED)
+find_package(mpc-planner-modules REQUIRED)
 find_package(mpc-planner-util REQUIRED)
 find_package(mpc_planner_types REQUIRED)
 find_package(mpc_planner_msgs REQUIRED)

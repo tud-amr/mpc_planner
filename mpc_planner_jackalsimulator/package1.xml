@@ -11,6 +11,7 @@
 
   <depend>roscpp</depend>
   <depend>mpc-planner</depend>
+  <depend>mpc-planner-modules</depend>
   <depend>mpc-planner-solver</depend>
   <depend>mpc-planner-util</depend>
   <depend>mpc_planner_types</depend>

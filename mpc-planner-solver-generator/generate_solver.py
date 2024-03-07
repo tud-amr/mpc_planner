@@ -5,6 +5,7 @@ from util.logging import print_success, print_header, print_path
 
 from generate_cpp_files import generate_cpp_code, generate_module_header, generate_module_cmake
 from generate_cpp_files import generate_module_definitions, generate_rqtreconfigure, generate_module_packagexml
+from generate_cpp_files import generate_ros2_rqtreconfigure
 
 
 def generate_solver(modules, model, settings=None):
@@ -46,7 +47,8 @@ def generate_solver(modules, model, settings=None):
     generate_module_cmake(modules)
     generate_module_packagexml(modules)
     generate_rqtreconfigure(settings)
-
+    generate_ros2_rqtreconfigure(settings)
+    
     print_path("Solver", solver_path(settings), tab=True, end="")
     print_success(" -> generated")
 

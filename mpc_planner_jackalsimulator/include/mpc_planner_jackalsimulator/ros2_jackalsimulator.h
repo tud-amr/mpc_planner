@@ -8,6 +8,7 @@
 #include <mpc_planner_types/realtime_data.h>
 
 #include <rclcpp/rclcpp.hpp>
+#include <mpc_planner_jackalsimulator/jackalsimulator_ros2_reconfigure.h>
 
 #include <mpc_planner_msgs/msg/obstacle_array.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
@@ -41,6 +42,8 @@ private:
     State _state;
 
     rclcpp::TimerBase::SharedPtr _timer;
+
+    std::unique_ptr<Reconfigure> _reconfigure;
 
     std::unique_ptr<RosTools::Benchmarker> _benchmarker;
 

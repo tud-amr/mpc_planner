@@ -3,7 +3,7 @@
 <launch>
 
   <node pkg="mpc_planner_jackalsimulator" exec="jackal_planner" name="jackal_planner" respawn="false" output="screen">
-        <!-- <remap from="~/input/state" to="/jackal_velocity_controller/odom"/> -->
+        <param from="$(find-pkg-share mpc_planner_jackalsimulator)/config/ros2_guidance_planner.yaml"/>
         <remap from="~/input/state" to="/odometry/filtered"/>
         <remap from="~/input/goal" to="/goal_pose"/>
         <remap from="~/input/reference_path" to="roadmap/reference"/>
@@ -23,6 +23,6 @@
 
   <node pkg="rviz2" exec="rviz2" name="rviz2" args="-d $(find-pkg-share mpc_planner_jackalsimulator)/rviz/ros2.rviz" namespace="/" output="log"/>
   
-  <node pkg="rqt_reconfigure" exec="rqt_reconfigure" name="rqt_reconfigure" namespace="/" output="log"/>
+  <node pkg="rqt_reconfigure" exec="rqt_reconfigure" name="rqt_reconfigure" namespace="/jackal_planner" output="log"/>
 
 </launch>  

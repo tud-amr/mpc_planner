@@ -19,6 +19,8 @@ JackalPlanner::JackalPlanner() : Node("jackal_planner")
     // Initialize the configuration
     Configuration::getInstance().initialize(SYSTEM_CONFIG_PATH(__FILE__, "settings"));
 
+    _reconfigure = std::make_unique<Reconfigure>(this);
+
     // Initialize the planner
     _planner = std::make_unique<Planner>();
 
