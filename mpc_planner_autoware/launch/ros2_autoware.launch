@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <node pkg="mpc_planner_autoware" exec="autoware_planner" name="autoware_planner" respawn="false" output="screen">
+    <param from="$(find-pkg-share mpc_planner_autoware)/config/ros2_guidance_planner.yaml"/>
+    <remap from="~/input/state" to="/localization/kinematic_state"/>
+    <remap from="~/input/steering" to="/vehicle/status/steering_status"/>
+    <remap from="~/input/goal" to="/goal_pose"/>
+    <!-- <remap from="~/input/reference_path" to="roadmap/reference"/> -->
+    <remap from="~/input/reference_path" to="roadmap/path_with_lane_id"/>
+    <remap from="~/input/obstacles" to="/pedestrian_simulator/trajectory_predictions"/>
+    <remap from="~/output/trajectory" to="/planning/scenario_planning/motion_velocity_smoother/trajectory"/>
+  </node>
+
+  <include file="$(find-pkg-share pedestrian_simulator)/launch/ros2_simulation.launch">
+    <arg name="pedestrian_scenario" value="autoware/rss-paper.xml"/>
+  </include>
+
+  <include file="$(find-pkg-share lanelets_to_path)/launch/lanelets_to_path.launch"/>
+
+  <!-- <node pkg="tf2_ros" exec="static_transform_publisher" name="static_map" output="log" args="0 0 0 0 0 0 odom map"/> -->
+
+  <!-- <node pkg="rviz2" exec="rviz2" name="rviz2" args="-d $(find-pkg-share mpc_planner_autoware)/rviz/ros2.rviz" namespace="/" output="log"/> -->
+
+  <node pkg="rqt_reconfigure" exec="rqt_reconfigure" name="rqt_reconfigure" namespace="/autoware_planner" output="log"/>
+
+</launch>  
