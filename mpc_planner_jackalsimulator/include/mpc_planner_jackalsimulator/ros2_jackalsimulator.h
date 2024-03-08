@@ -14,6 +14,9 @@
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/path.hpp>
+#include <std_msgs/msg/int32.hpp>
+#include <std_msgs/msg/float32.hpp>
+#include <std_srvs/srv/empty.hpp>
 
 #include <ros_tools/profiling.h>
 
@@ -27,6 +30,7 @@ public:
     JackalPlanner();
 
     void initializeSubscribersAndPublishers();
+    void startEnvironment();
 
     void Loop();
 
@@ -54,6 +58,12 @@ private:
     rclcpp::Subscription<mpc_planner_msgs::msg::ObstacleArray>::SharedPtr _obstacle_sim_sub;
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr _cmd_pub;
+
+    rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr _ped_horizon_pub;
+    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr _ped_integrator_step_pub;
+    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr _ped_clock_frequency_pub;
+
+    rclcpp::Client<std_srvs::srv::Empty>::SharedPtr _ped_start_client;
 
     bool isPathTheSame(nav_msgs::msg::Path::SharedPtr path);
 

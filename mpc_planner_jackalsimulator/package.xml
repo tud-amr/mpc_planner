@@ -17,6 +17,9 @@
   <build_depend>mpc_planner_msgs</build_depend>
   <build_depend>ros_tools</build_depend>
 
+  <build_depend>std_msgs</build_depend>
+  <build_depend>std_srvs</build_depend>
+
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>jackal_gazebo</exec_depend>
   <exec_depend>pedestrian_simulator</exec_depend>

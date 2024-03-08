@@ -27,7 +27,7 @@ linearized_constraints:
   relax: true
 
 t-mpc:
-  use_t-mpc++: true
+  use_t-mpc++: false
   enable_constraints: true
 
 probabilistic:

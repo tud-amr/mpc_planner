@@ -108,7 +108,7 @@ namespace MPCPlanner
         if (!CONFIG["t-mpc"]["use_t-mpc++"].as<bool>() && !global_guidance_->Succeeded())
             return 0;
 
-#pragma omp parallel for num_threads(8)
+        // #pragma omp parallel for num_threads(8)
         for (auto &planner : planners_)
         {
             planner.result.Reset();
@@ -493,7 +493,7 @@ namespace MPCPlanner
         {
             LOG_DEBUG("Guidance Constraints: Received dynamic obstacles");
 
-#pragma omp parallel for num_threads(8)
+            // #pragma omp parallel for num_threads(8)
             for (auto &planner : planners_)
             {
                 planner.safety_constraints->onDataReceived(data, std::forward<std::string>(data_name));

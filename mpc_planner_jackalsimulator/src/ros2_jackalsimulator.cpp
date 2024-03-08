@@ -27,6 +27,8 @@ JackalPlanner::JackalPlanner() : Node("jackal_planner")
     // Initialize the ROS interface
     initializeSubscribersAndPublishers();
 
+    startEnvironment();
+
     _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
 
     // Start the control loop
@@ -61,6 +63,45 @@ void JackalPlanner::initializeSubscribersAndPublishers()
 
     _cmd_pub = this->create_publisher<geometry_msgs::msg::Twist>(
         "~/output/command", 1);
+
+    // Pedestrian simulator
+    _ped_horizon_pub = this->create_publisher<std_msgs::msg::Int32>("/pedestrian_simulator/horizon", 1);
+    _ped_integrator_step_pub = this->create_publisher<std_msgs::msg::Float32>("/pedestrian_simulator/integrator_step", 1);
+    _ped_clock_frequency_pub = this->create_publisher<std_msgs::msg::Float32>("/pedestrian_simulator/clock_frequency", 1);
+    _ped_start_client = this->create_client<std_srvs::srv::Empty>("/pedestrian_simulator/start");
+}
+
+void JackalPlanner::startEnvironment()
+{
+    LOG_INFO("Starting pedestrian simulator");
+    for (int i = 0; i < 20; i++)
+    {
+        std_msgs::msg::Int32 horizon_msg;
+        horizon_msg.data = CONFIG["N"].as<int>();
+        _ped_horizon_pub->publish(horizon_msg);
+
+        std_msgs::msg::Float32 integrator_step_msg;
+        integrator_step_msg.data = CONFIG["integrator_step"].as<double>();
+        _ped_integrator_step_pub->publish(integrator_step_msg);
+
+        std_msgs::msg::Float32 clock_frequency_msg;
+        clock_frequency_msg.data = CONFIG["control_frequency"].as<double>();
+        _ped_clock_frequency_pub->publish(clock_frequency_msg);
+
+        auto empty_srv = std::make_shared<std_srvs::srv::Empty::Request>();
+        auto result = _ped_start_client->async_send_request(empty_srv);
+        // Wait for the result.
+        if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), result) == rclcpp::FutureReturnCode::SUCCESS)
+        {
+            break;
+        }
+        else
+        {
+            LOG_INFO_THROTTLE(3000, "Waiting for pedestrian simulator to start");
+            rclcpp::sleep_for(std::chrono::nanoseconds(static_cast<int64_t>(1. * 1e9)));
+        }
+    }
+    LOG_INFO("Environment ready.");
 }
 
 void JackalPlanner::Loop()

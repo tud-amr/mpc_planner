@@ -11,13 +11,15 @@
         <remap from="~/output/command" to="/cmd_vel"/>
   </node>
 
-  <include file="$(find-pkg-share pedestrian_simulator)/launch/simulation.launch.py"/>
+  <include file="$(find-pkg-share pedestrian_simulator)/launch/ros2_simulation.launch">
+    <arg name="pedestrian_scenario" value="random_social/8_corridor.xml"/>
+  </include>
   <include file="$(find-pkg-share jackal_gazebo)/launch/jackal_world.launch.py"/>
   <include file="$(find-pkg-share jackal_description)/launch/description.launch.py"/>
 
-  <include file="$(find-pkg-share roadmap)/launch/roadmap.launch"/>
-    <!-- <arg name="map_file_name" value="maps/straight.xml"/> -->
-  <!-- </include> -->
+  <include file="$(find-pkg-share roadmap)/launch/roadmap.launch">
+    <arg name="map_file_name" value="roadmap/maps/straight.xml"/>
+  </include>
 
   <node pkg="tf2_ros" exec="static_transform_publisher" name="static_map" output="log" args="0 0 0 0 0 0 odom map"/>
 

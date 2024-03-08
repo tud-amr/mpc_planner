@@ -24,6 +24,8 @@ set(DEPENDENCIES
   ros_tools
   rclcpp
   nav_msgs
+  std_msgs
+  std_srvs
 )
 
 # find dependencies
@@ -38,6 +40,8 @@ find_package(mpc_planner_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(ros_tools REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 
 include_directories(
   include
