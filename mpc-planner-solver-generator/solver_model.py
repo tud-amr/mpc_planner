@@ -206,3 +206,133 @@ class ContouringPointMassModel(DynamicsModel):
 
     def continuous_model(self, x, u):
         return np.array([x[2], x[3], u[0], u[1]])
+
+
+# Bicycle model with dynamic steering
+class BicycleModel2ndOrder(DynamicsModel):
+
+    def __init__(self):
+        super().__init__()
+        self.nu = 2
+        self.nx = 6
+
+        self.states = ['x', 'y', 'psi', 'v', 'delta', 'spline']
+        self.inputs = ['a', 'w']
+
+        self.lower_bound = [-3.0, -0.5, -1.0e6, -1.0e6, -np.pi, -2.0, -0.45, -1.0]
+        self.upper_bound = [3.0, 0.5, 1.0e6, 1.0e6, np.pi, 6.0, 0.45, 5000.0]
+
+    def continuous_model(self, x, u):
+        a = u[0]
+        w = u[1]
+        psi = x[2]
+        v = x[3]
+        delta = x[4]
+
+        wheel_base= 2.79 # between front wheel center and rear wheel center
+        wheel_tread= 1.64 # between left wheel center and right wheel center
+        front_overhang= 1.0 # between front wheel center and vehicle front
+        rear_overhang= 1.1 # between rear wheel center and vehicle rear
+        left_overhang= 0.128 # between left wheel center and vehicle left
+        right_overhang= 0.128 # between right wheel center and vehicle right
+
+        # self.length = front_overhang + rear_overhang + wheel_base #4.54
+        # self.width = wheel_tread + left_overhang + right_overhang #2.25
+
+        # NOTE: Is at the rear wheel center.
+        # This defines where it is w.r.t. the back
+        # self.com_to_back = self.length/2.
+        
+        # NOTE: Mass is equally distributed according to the parameters
+        lr = wheel_base / 2.
+        lf = wheel_base / 2.
+        ratio = lr/(lr + lf)
+
+        beta = cd.arctan(ratio * cd.tan(delta))
+
+        return np.array([v * cd.cos(psi + beta),
+                         v * cd.sin(psi + beta),
+                         (v/lr) * cd.sin(beta),
+                         a,
+                         w,
+                         v])
+
+# Bicycle model with dynamic steering
+# class BicycleModel2ndOrderWithDelay(DynamicModel):
+
+#     def __init__(self, system):
+#         self.nu = 2
+#         self.nx = 7
+#         super(BicycleModel2ndOrderWithDelay, self).__init__(system)
+
+#         self.states = ['x', 'y', 'psi', 'v', 'delta', 'delta_in', 'spline']  # , 'ax', 'ay'
+#         self.states_from_sensor = [True, True, True, True, False, True, False]  # , True, True
+#         self.states_from_sensor_at_infeasible = [True, True, True, True, False, True, False]
+
+#         self.inputs = ['a', 'w']
+#         self.control_inputs['steering'] = 'delta_in'
+#         self.control_inputs['velocity'] = 'v'
+#         self.control_inputs['acceleration'] = 'a'
+#         self.control_inputs['rot_velocity'] = 'w'
+
+#     def continuous_model(self, x, u):
+#         a = u[0]
+#         w = u[1]
+#         psi = x[2]
+#         v = x[3]
+#         delta = x[4] # affects the model
+#         delta_in = x[5] # = w (i.e., is updated with the input)
+
+#         ratio = self.system.ratio
+#         lr = self.system.lr
+
+#         beta = casadi.arctan(ratio * casadi.tan(delta))
+
+#         return np.array([v * casadi.cos(psi + beta),
+#                          v * casadi.sin(psi + beta),
+#                          (v/lr) * casadi.sin(beta),
+#                          a,
+#                          0., # set in the discrete dynamics
+#                          w,
+#                          v])
+
+# # Bicycle model with dynamic steering
+# class BicycleModel2ndOrderWith2Delay(DynamicModel):
+
+#     def __init__(self, system):
+#         self.nu = 2
+#         self.nx = 8
+#         super(BicycleModel2ndOrderWith2Delay, self).__init__(system)
+
+#         self.states = ['x', 'y', 'psi', 'v', 'delta', 'delta_in2', 'delta_in', 'spline']
+#         self.states_from_sensor = [True, True, True, True, False, False, True, False]
+#         self.states_from_sensor_at_infeasible = [True, True, True, True, False, False, True, False]
+
+#         self.inputs = ['a', 'w']
+#         self.control_inputs['steering'] = 'delta_in'
+#         self.control_inputs['velocity'] = 'v'
+#         self.control_inputs['acceleration'] = 'a'
+#         self.control_inputs['rot_velocity'] = 'w'
+
+#     def continuous_model(self, x, u):
+#         a = u[0]
+#         w = u[1]
+#         psi = x[2]
+#         v = x[3]
+#         delta = x[4] # affects the model ( = delta_in2)
+#         delta_in2 = x[5] # = delta_in
+#         delta_in = x[6] # = w (i.e., is updated with the input)
+
+#         ratio = self.system.ratio
+#         lr = self.system.lr
+
+#         beta = casadi.arctan(ratio * casadi.tan(delta))
+
+#         return np.array([v * casadi.cos(psi + beta),
+#                          v * casadi.sin(psi + beta),
+#                          (v/lr) * casadi.sin(beta),
+#                          a,
+#                          0., # set in the discrete dynamics
+#                          0., # set in the discrete dynamics
+#                          w,
+#                          v])

@@ -49,9 +49,11 @@ namespace MPCPlanner
         // Set the initial guess
         if (was_feasible)
             _solver->initializeWarmstart(state, CONFIG["shift_previous_solution_forward"].as<bool>());
-        // else
-        // _solver->reset();
-
+        else
+        {
+            LOG_HOOK();
+            _solver->initializeWithState(state);
+        }
         // Set the initial state
         _solver->setXinit(state);
 
@@ -129,7 +131,7 @@ namespace MPCPlanner
         for (auto &module : _modules)
             module->visualize(data);
 
-        visualizeTrajectory(_output.trajectory, "planned_trajectory", true);
+        visualizeTrajectory(_output.trajectory, "planned_trajectory", true, 0.2);
 
         visualizeObstacles(data.dynamic_obstacles, "obstacles", true);
         visualizeObstaclePredictions(data.dynamic_obstacles, "obstacle_predictions", true);

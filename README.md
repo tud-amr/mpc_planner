@@ -21,6 +21,7 @@ If you find this repository useful for your research, please consider citing one
 The NMPC solver is generated with Forces Pro. For now it is assumed that your Forces directory is placed at `~/forces_pro_client/`. To setup a virtual environment for the solver generation, install `python 3.8.10` (https://www.python.org/downloads/release/python-3810/). Then run:
 
 ```bash
+pip3 install poetry
 poetry install
 ```
 

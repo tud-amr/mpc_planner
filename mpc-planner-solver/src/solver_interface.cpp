@@ -88,6 +88,18 @@ namespace MPCPlanner
 		}
 	}
 
+	// Load the state in each instance
+	void Solver::initializeWithState(const State &initial_state)
+	{
+		for (int k = 0; k < N; k++) // For all timesteps
+		{
+			for (YAML::const_iterator it = _model_map.begin(); it != _model_map.end(); ++it) // For all inputs and states
+			{
+				setEgoPrediction(k, it->first.as<std::string>(), initial_state.get(it->first.as<std::string>()));
+			}
+		}
+	}
+
 	void Solver::initializeWarmstart(const State &initial_state, bool shift_previous_solution_forward)
 	{
 		if (shift_previous_solution_forward)
@@ -159,7 +171,7 @@ namespace MPCPlanner
 		if (!CONFIG["solver_settings"]["use_sqp"])
 			return;
 
-		_params.reinitialize = reinitialize;
+		// _params.reinitialize = reinitialize;
 	}
 
 	int Solver::solve()
