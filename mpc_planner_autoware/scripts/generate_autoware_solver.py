@@ -77,7 +77,7 @@ def configuration_lmpcc(settings):
         cost_function=lambda x, w: w[0] * (x - w[1]) ** 2,
     )
 
-    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"], preview=2.0))
     # modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
 
     modules.add_module(EllipsoidConstraintModule(settings))

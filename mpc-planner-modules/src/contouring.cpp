@@ -40,6 +40,10 @@ namespace MPCPlanner
     _solver->setParameter(k, "contour", CONFIG["weights"]["contour"].as<double>());
     _solver->setParameter(k, "lag", CONFIG["weights"]["lag"].as<double>());
 
+    // Add condition
+    if (CONFIG["contouring"]["preview"].as<double>() > 1e-5)
+      _solver->setParameter(k, "preview", CONFIG["weights"]["preview"].as<double>());
+
     /** @todo: Handling of parameters when the spline parameters go beyond the splines defined */
     for (int i = 0; i < CONFIG["contouring"]["num_segments"].as<int>(); i++)
     {
@@ -48,7 +52,7 @@ namespace MPCPlanner
       double ay, by, cy, dy;
       double start;
 
-      if (index < _spline->numSegments())
+      if (index < _spline->numSegments() - 1)
       {
         _spline->getParameters(index,
                                ax, bx, cx, dx,
@@ -58,7 +62,7 @@ namespace MPCPlanner
       }
       else
       {
-        LOG_WARN("Beyond the spline");
+        LOG_WARN_THROTTLE(3000, "Beyond the spline");
         // If we are beyond the spline, we should use the last spline
         _spline->getParameters(_spline->numSegments() - 1,
                                ax, bx, cx, dx,

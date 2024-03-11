@@ -22,6 +22,7 @@ shift_previous_solution_forward: false
 
 contouring:
   num_segments: 8
+  preview: 2.0 # [s], use 0.0 to disable preview
 
 linearized_constraints:
   relax: true
@@ -43,7 +44,21 @@ weights:
   reference_velocity: 5.0 #1.5
   contour: 0.1 #0.01
   lag: 0.2
+  preview: 5.0
   slack: 1000.
+
+# Copied from Prius: https://github.com/oscardegroot/lmpcc/blob/prius/lmpcc/cfg/PredictiveController_Prius.cfg
+# Variable weights are not normalized
+#
+# weights:
+#   goal: -1.
+#   velocity: 0.05
+#   acceleration: 0.2
+#   angular_velocity: 0.5
+#   reference_velocity: 5.0
+#   contour: 0.03
+#   lag: 0.2
+#   slack: -1.
 
 visualization:
   draw_every: 5 # stages

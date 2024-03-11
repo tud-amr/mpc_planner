@@ -51,7 +51,6 @@ namespace MPCPlanner
             _solver->initializeWarmstart(state, CONFIG["shift_previous_solution_forward"].as<bool>());
         else
         {
-            LOG_HOOK();
             _solver->initializeWithState(state);
         }
         // Set the initial state

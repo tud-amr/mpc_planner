@@ -64,7 +64,7 @@ class DynamicsModel:
         f_impl = self._x_dot - f_expl
         return f_expl, f_impl
 
-    def get_acados_x(self):
+    def get_x(self):
         return self._z[self.nu :]
 
     def get_acados_x_dot(self):
@@ -87,6 +87,9 @@ class DynamicsModel:
             map[input] = ["u", idx]
 
         write_to_yaml(file_path, map)
+
+    def integrate(self, z, duration):
+        return discrete_dynamics(z, self, duration)
 
     def get(self, state_or_input):
         if state_or_input in self.states:
@@ -218,6 +221,9 @@ class BicycleModel2ndOrder(DynamicsModel):
 
         self.states = ['x', 'y', 'psi', 'v', 'delta', 'spline']
         self.inputs = ['a', 'w']
+
+        # Prius limits: https://github.com/oscardegroot/lmpcc/blob/prius/lmpcc_solver/scripts/systems.py
+        # w [-0.2, 0.2] | a [-1.0 1.0]
 
         self.lower_bound = [-3.0, -0.5, -1.0e6, -1.0e6, -np.pi, -2.0, -0.45, -1.0]
         self.upper_bound = [3.0, 0.5, 1.0e6, 1.0e6, np.pi, 6.0, 0.45, 5000.0]

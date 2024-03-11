@@ -2,6 +2,7 @@ import sys, os
 
 sys.path.append(os.path.join(sys.path[0], "..", "..", "mpc-planner-solver-generator"))
 
+import copy
 import casadi as cd
 import numpy as np
 
@@ -78,15 +79,39 @@ class SplineXY:
         self.path_dy = 3 * self.y_a * (spline_index - self.s_start) ** 2 + 2 * self.y_b * (spline_index - self.s_start) + self.y_c
 
 
+def get_preview_state(model, time_ahead):
+    # Integrate the trajectory to obtain the preview point
+    copied_model = copy.deepcopy(model)
+
+    z_constant_input = cd.vertcat(np.zeros((model.nu)), model.get_x())
+
+    z_preview = model.integrate(z_constant_input, time_ahead) # Integrate the dynamics T seconds ahead
+    z_preview = cd.vertcat(np.zeros((model.nu)), z_preview)
+
+    # Retrieve the resulting position and spline
+    copied_model.load(z_preview)
+    pos_x = copied_model.get('x')
+    pos_y = copied_model.get('y')
+    s = copied_model.get('spline')
+
+    return pos_x, pos_y, s
+
+
 class ContouringObjective:
 
-    def __init__(self, settings, num_segments):
+    def __init__(self, settings, num_segments, preview=0.):
 
         self.num_segments = num_segments
+
+        self.enable_preview = preview != 0.
+        self.preview = preview
 
     def define_parameters(self, params):
         params.add("contour", add_to_rqt_reconfigure=True)
         params.add("lag", add_to_rqt_reconfigure=True)
+
+        if self.enable_preview:
+            params.add("preview", add_to_rqt_reconfigure=True)
 
         for i in range(self.num_segments):
             params.add(f"spline{i}_ax")
@@ -122,12 +147,31 @@ class ContouringObjective:
         cost += contour_weight * contour_error**2
         cost += lag_weight * lag_error**2
 
+        if self.enable_preview and stage_idx == settings["N"] - 1:
+            print(f"Adding preview cost at T = {self.preview} ahead")
+            # In the terminal stage add a preview cost
+            preview_weight = params.get("preview")
+            preview_pos_x, preview_pos_y, preview_s = get_preview_state(model, self.preview)
+
+            preview_splines = MultiSplineXY(params, self.num_segments, preview_s)
+            preview_path_x, preview_path_y, preview_path_dx_normalized, preview_path_dy_normalized =\
+                preview_splines.get_path_and_dpath()
+
+            preview_contour_error = preview_path_dy_normalized * (preview_pos_x - preview_path_x)\
+                - preview_path_dx_normalized * (preview_pos_y - preview_path_y)
+            preview_lag_error = -preview_path_dx_normalized * (preview_pos_x - preview_path_x)\
+                - preview_path_dy_normalized * (preview_pos_y - preview_path_y)
+
+            # We use the existing weights here to sort of scale the contribution w.r.t. the regular contouring cost
+            cost += preview_weight * contour_weight * preview_contour_error**2
+            cost += preview_weight * lag_weight * preview_lag_error**2
+
         return cost
 
 
 class ContouringModule(ObjectiveModule):
 
-    def __init__(self, settings, num_segments):
+    def __init__(self, settings, num_segments, preview=0.):
         super().__init__()
         self.module_name = "Contouring"  # Needs to correspond to the c++ name of the module
         self.import_name = "contouring.h"
@@ -135,4 +179,54 @@ class ContouringModule(ObjectiveModule):
         self.description = "Tracks a 2D reference path with contouring costs"
 
         self.objectives = []
-        self.objectives.append(ContouringObjective(settings, num_segments))
+        self.objectives.append(ContouringObjective(settings, num_segments, preview))
+
+
+# class PreviewObjective:
+
+#     def __init__(self, params, weight_list, n_segments, T):
+#         self.weight_list = weight_list
+
+#         self.T = T
+#         self.n_segments = n_segments
+
+#         self.define_parameters(params)
+
+#     def define_parameters(self, params):
+#         self.weight_list.append('preview')
+
+#     def get_value(self, z, model, settings, stage_idx):
+#         # Terminal state only
+#         if stage_idx < settings.N_bar - 2:
+#             return 0.
+
+#         cost = 0
+
+#         preview_weight = getattr(settings.params, 'preview')
+
+#         # Integrate the trajectory to obtain the preview point
+
+#         z_constant_input = casadi.vertcat(np.zeros((model.nu)), z[model.nu:model.nu+model.nx])
+
+#         z_preview = model.integrate(z_constant_input, self.T) # Integrate the dynamics T seconds ahead
+#         z_preview = casadi.vertcat(np.zeros((model.nu)), z_preview)
+
+#         pos_x = model.get_state(z_preview, 'x', True)
+#         pos_y = model.get_state(z_preview, 'y', True)
+#         s = model.get_state(z_preview, 'spline', True)
+
+#         spline = SplineParameters(settings.params, self.n_segments - 1) # Get the last spline
+#         spline.compute_path(s)
+
+#         path_norm = np.sqrt(spline.path_dx ** 2 + spline.path_dy ** 2)
+#         path_dx_normalized = spline.path_dx / path_norm
+#         path_dy_normalized = spline.path_dy / path_norm
+
+#         contour_error = path_dy_normalized * (pos_x - spline.path_x) - path_dx_normalized * (pos_y - spline.path_y)
+#         lag_error = -path_dx_normalized * (pos_x - spline.path_x) - path_dy_normalized * (pos_y - spline.path_y)
+
+#         cost += preview_weight * contour_error ** 2
+#         cost += preview_weight * lag_error ** 2
+#         # cost += settings.weights.lag * lag_error ** 2
+
+#         return cost
