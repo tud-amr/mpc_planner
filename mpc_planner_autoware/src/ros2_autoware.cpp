@@ -36,6 +36,8 @@ AutowarePlanner::AutowarePlanner()
   // Initialize the ROS interface
   initializeSubscribersAndPublishers();
 
+  initializeParameterCallbacks();
+
   startEnvironment();
 
   _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
@@ -76,6 +78,8 @@ void AutowarePlanner::initializeSubscribersAndPublishers()
       "~/output/trajectory", 1);
 
   // Pedestrian simulator
+  _ped_reset_pub = this->create_publisher<std_msgs::msg::Empty>(
+      "/pedestrian_simulator/reset", 1);
   _ped_horizon_pub =
       this->create_publisher<std_msgs::msg::Int32>("/pedestrian_simulator/horizon", 1);
   _ped_integrator_step_pub = this->create_publisher<std_msgs::msg::Float32>(
@@ -83,6 +87,16 @@ void AutowarePlanner::initializeSubscribersAndPublishers()
   _ped_clock_frequency_pub = this->create_publisher<std_msgs::msg::Float32>(
       "/pedestrian_simulator/clock_frequency", 1);
   _ped_start_client = this->create_client<std_srvs::srv::Empty>("/pedestrian_simulator/start");
+}
+
+void AutowarePlanner::initializeParameterCallbacks()
+{
+  _param_subscriber = std::make_shared<rclcpp::ParameterEventHandler>(this);
+
+  this->declare_parameter<bool>("reset_simulation", false);
+  _param_cb_handles.emplace_back(_param_subscriber->add_parameter_callback(
+      "reset_simulation",
+      std::bind(&AutowarePlanner::resetSimulationCallback, this, std::placeholders::_1)));
 }
 
 void AutowarePlanner::startEnvironment()
@@ -321,6 +335,20 @@ void AutowarePlanner::visualize()
           _state.get("x") + 1.0 * std::cos(_state.get("psi")),
           _state.get("y") + 1.0 * std::sin(_state.get("psi"))));
   publisher.publish();
+}
+
+void AutowarePlanner::resetSimulationCallback(const rclcpp::Parameter &p)
+{
+  if (!p.as_bool())
+    return;
+
+  LOG_INFO("Resetting simulation (due to rqt_reconfigure input)");
+
+  std_msgs::msg::Empty empty;
+  _ped_reset_pub->publish(empty);
+
+  // Set the parameter back to false (we already reset the simulation)
+  this->set_parameters({rclcpp::Parameter("reset_simulation", false)});
 }
 
 int main(int argc, char **argv)

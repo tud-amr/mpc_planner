@@ -12,6 +12,15 @@
 
 #include <numeric>
 
+// inline std::vector<Disc> defineVehicleRegion(double length, double width)
+// {
+//   std::vector<Disc> vehicle_region;
+//   // vehicle_region.push_back(Disc(Eigen::Vector2d(0., 0.), length / 2.));
+//   // vehicle_region.push_back(Disc(Eigen::Vector2d(0., width / 2.), width / 2.));
+//   // vehicle_region.push_back(Disc(Eigen::Vector2d(0., -width / 2.), width / 2.));
+//   return vehicle_region;
+// }
+
 inline DynamicObstacle getDummyObstacle(const State &state)
 {
   return DynamicObstacle(

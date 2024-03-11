@@ -20,3 +20,5 @@ mpc-planner-modules/include/mpc-planner-modules/modules.h
 
 # Profiling
 */profiler.json
+
+*/COLCON_IGNORE

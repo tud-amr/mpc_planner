@@ -212,7 +212,7 @@ def generate_rqtreconfigure(settings):
     print_path("Reconfigure Header", path, end="", tab=True)
     rqt_header = open(path, "w")
 
-    class_name = "Reconfigure"
+    class_name = f"{system_name.capitalize()}Reconfigure"
     rqt_header.write("#ifndef __GENERATED_RECONFIGURE_H\n")
     rqt_header.write("#define __GENERATED_RECONFIGURE_H\n\n")
     rqt_header.write("#include <ros/ros.h>\n\n")
@@ -267,6 +267,7 @@ def generate_ros2_rqtreconfigure(settings):
     print_path("ROS2 Reconfigure Header", path, end="", tab=True)
     rqt_header = open(path, "w")
     rqt_params = settings["params"].rqt_params
+    class_name = f"{system_name.capitalize()}Reconfigure"
 
     rqt_header.write("#ifndef __GENERATED_ROS2_RECONFIGURE_H\n")
     rqt_header.write("#define __GENERATED_ROS2_RECONFIGURE_H\n")
@@ -293,20 +294,20 @@ def generate_ros2_rqtreconfigure(settings):
     rqt_header.write("\treturn true;\n")
     rqt_header.write("}\n")
     rqt_header.write("\n")
-    rqt_header.write("class Reconfigure\n")
+    rqt_header.write(f"class {class_name}\n")
     rqt_header.write("{\n")
     rqt_header.write("public:\n")
-    rqt_header.write("\tReconfigure(rclcpp::Node *node)\n")
+    rqt_header.write(f"\t{class_name}(rclcpp::Node *node)\n")
     rqt_header.write("\t{\n")
     rqt_header.write("\t\tLOG_INFO(\"Setting up dynamic_reconfigure parameters\");\n")
     rqt_header.write("\n")
     rqt_header.write("\t\tdeclareROSParameters(node);\n")
     rqt_header.write("\n")
-    rqt_header.write("\t\tset_param_res_ = node->add_on_set_parameters_callback(\n")
-    rqt_header.write("\t\t\tstd::bind(&Reconfigure::updateROSParameters, this, std::placeholders::_1));\n")
+    rqt_header.write("\t\t_set_param_res = node->add_on_set_parameters_callback(\n")
+    rqt_header.write(f"\t\t\tstd::bind(&{class_name}::updateROSParameters, this, std::placeholders::_1));\n")
     rqt_header.write("\t}\n")
     rqt_header.write("\n")
-    rqt_header.write("\tvoid declareROSParameters(rclcpp::Node *node)\n")
+    rqt_header.write("\tvirtual void declareROSParameters(rclcpp::Node *node)\n")
     rqt_header.write("\t{\n")
     
     for idx, param in enumerate(rqt_params):
@@ -314,7 +315,7 @@ def generate_ros2_rqtreconfigure(settings):
         
     rqt_header.write("\t}\n")
     rqt_header.write("\n")
-    rqt_header.write("\trcl_interfaces::msg::SetParametersResult updateROSParameters(const std::vector<rclcpp::Parameter> &parameters)\n")
+    rqt_header.write("\tvirtual rcl_interfaces::msg::SetParametersResult updateROSParameters(const std::vector<rclcpp::Parameter> &parameters)\n")
     rqt_header.write("\t{\n")
     for idx, param in enumerate(rqt_params):
         rqt_header.write(f"\t\tupdateParam<double>(parameters, \"{param}\", CONFIG{settings['params'].rqt_param_config_names[idx](param)});\n")
@@ -327,8 +328,8 @@ def generate_ros2_rqtreconfigure(settings):
     rqt_header.write("\t\treturn result;\n")
     rqt_header.write("\t}\n")
     rqt_header.write("\n")
-    rqt_header.write("private:\n")
-    rqt_header.write("\trclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr set_param_res_;\n")
+    rqt_header.write("protected:\n")
+    rqt_header.write("\trclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr _set_param_res;\n")
     rqt_header.write("};\n")
     rqt_header.write("#endif // __GENERATED_ROS2_RECONFIGURE_H\n")
     rqt_header.close()

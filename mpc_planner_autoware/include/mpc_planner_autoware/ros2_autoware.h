@@ -8,7 +8,7 @@
 #include <mpc_planner_types/realtime_data.h>
 
 #include <rclcpp/rclcpp.hpp>
-#include <mpc_planner_autoware/autoware_ros2_reconfigure.h>
+#include <mpc_planner_autoware/reconfigure.h>
 
 #include <ros_tools/profiling.h>
 
@@ -16,6 +16,7 @@
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/path.hpp>
+#include <std_msgs/msg/empty.hpp>
 #include <std_msgs/msg/int32.hpp>
 #include <std_msgs/msg/float32.hpp>
 #include <std_srvs/srv/empty.hpp>
@@ -43,14 +44,19 @@ public:
   ~AutowarePlanner();
 
   void initializeSubscribersAndPublishers();
+  void initializeParameterCallbacks();
   void startEnvironment();
 
-  void Loop();
+  void Loop(); // Main loop
 
+  // Message callbacks
   void stateCallback(nav_msgs::msg::Odometry::SharedPtr msg);
   void steeringCallback(SteeringReport::SharedPtr msg);
   void pathCallback(PathWithLaneId::SharedPtr msg);
   void obstacleCallback(mpc_planner_msgs::msg::ObstacleArray::SharedPtr msg);
+
+  // Parameter callbacks
+  void resetSimulationCallback(const rclcpp::Parameter &p);
 
   void actuate();
 
@@ -76,10 +82,15 @@ private:
   rclcpp::Publisher<autoware_auto_planning_msgs::msg::Trajectory>::SharedPtr _trajectory_pub;
 
   // Pedestrian Simulator
+  rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr _ped_reset_pub;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr _ped_horizon_pub;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr _ped_integrator_step_pub;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr _ped_clock_frequency_pub;
   rclcpp::Client<std_srvs::srv::Empty>::SharedPtr _ped_start_client;
+
+  // Parameter updates
+  std::shared_ptr<rclcpp::ParameterEventHandler> _param_subscriber;
+  std::vector<std::shared_ptr<rclcpp::ParameterCallbackHandle>> _param_cb_handles;
 
   bool isPathTheSame(PathWithLaneId::SharedPtr path);
 
