@@ -134,6 +134,7 @@ namespace MPCPlanner
 
         visualizeObstacles(data.dynamic_obstacles, "obstacles", true);
         visualizeObstaclePredictions(data.dynamic_obstacles, "obstacle_predictions", true);
+        visualizeRobotArea(state.getPos(), state.get("psi"), data.robot_area, "robot_area", true);
     }
 
     void Planner::reset(State &state, RealTimeData &data)
@@ -143,8 +144,8 @@ namespace MPCPlanner
         for (auto &module : _modules) // Reset modules
             module->reset();
 
-        state = State();       // Reset the state
-        data = RealTimeData(); // Reset the received data
+        state = State(); // Reset the state
+        // data = RealTimeData(); // Reset the received data
     }
 
     bool Planner::isObjectiveReached(const RealTimeData &data) const

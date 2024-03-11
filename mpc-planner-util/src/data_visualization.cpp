@@ -115,4 +115,23 @@ namespace MPCPlanner
             publisher.publish();
         return publisher;
     }
+
+    RosTools::ROSMarkerPublisher &visualizeRobotArea(const Eigen::Vector2d &position, const double angle,
+                                                     const std::vector<Disc> robot_area, const std::string &topic_name,
+                                                     bool publish, double alpha)
+    {
+        RosTools::ROSMarkerPublisher &publisher = VISUALS.getPublisher(topic_name);
+        auto &cylinder = publisher.getNewPointMarker("CYLINDER");
+        cylinder.setColorInt(0, alpha);
+
+        for (const auto &disc : robot_area)
+        {
+            cylinder.setScale(disc.radius * 2., disc.radius * 2., 0.01);
+            cylinder.addPointMarker(disc.getPosition(position, angle));
+        }
+
+        if (publish)
+            publisher.publish();
+        return publisher;
+    }
 } // namespace MPCPlanner

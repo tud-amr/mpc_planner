@@ -41,6 +41,7 @@ namespace MPCPlanner
     _solver->setParameter(k, "lag", CONFIG["weights"]["lag"].as<double>());
 
     // Add condition
+    LOG_HOOK();
     if (CONFIG["contouring"]["preview"].as<double>() > 1e-5)
       _solver->setParameter(k, "preview", CONFIG["weights"]["preview"].as<double>());
 

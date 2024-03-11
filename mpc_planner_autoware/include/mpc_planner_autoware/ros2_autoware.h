@@ -45,6 +45,7 @@ public:
 
   void initializeSubscribersAndPublishers();
   void initializeParameterCallbacks();
+  void setRobotRegion();
   void startEnvironment();
 
   void Loop(); // Main loop

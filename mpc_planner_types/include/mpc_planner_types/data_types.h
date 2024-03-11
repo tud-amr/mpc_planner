@@ -12,10 +12,12 @@ namespace MPCPlanner
 
     struct Disc
     {
-        Eigen::Vector2d position;
         double offset;
+        double radius;
 
-        Disc(const Eigen::Vector2d &position, double offset);
+        Disc(const double offset_, const double radius_);
+
+        Eigen::Vector2d getPosition(const Eigen::Vector2d &robot_position, const double angle) const;
     };
 
     struct StaticObstacle

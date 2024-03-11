@@ -38,6 +38,8 @@ AutowarePlanner::AutowarePlanner()
 
   initializeParameterCallbacks();
 
+  setRobotRegion();
+
   startEnvironment();
 
   _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
@@ -97,6 +99,13 @@ void AutowarePlanner::initializeParameterCallbacks()
   _param_cb_handles.emplace_back(_param_subscriber->add_parameter_callback(
       "reset_simulation",
       std::bind(&AutowarePlanner::resetSimulationCallback, this, std::placeholders::_1)));
+}
+
+void AutowarePlanner::setRobotRegion()
+{
+  _data.robot_area = defineRobotArea(CONFIG["robot"]["length"].as<double>(),
+                                     CONFIG["robot"]["width"].as<double>(),
+                                     CONFIG["n_discs"].as<int>());
 }
 
 void AutowarePlanner::startEnvironment()
@@ -308,7 +317,7 @@ void AutowarePlanner::actuate()
     trajectory_msg->points.emplace_back();
     trajectory_msg->points.back().time_from_start = rclcpp::Duration::from_seconds((double)(k + 1) * dt);
 
-    // Copy from lmpcc
+    // Copied from lmpcc
     trajectory_msg->points.back().pose.position.x = _planner->getSolution(k + 1, "x");
     trajectory_msg->points.back().pose.position.y = _planner->getSolution(k + 1, "y");
     trajectory_msg->points.back().pose.orientation = RosTools::angleToQuaternion(_planner->getSolution(k + 1, "psi"));

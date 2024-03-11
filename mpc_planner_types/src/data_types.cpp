@@ -5,9 +5,14 @@
 namespace MPCPlanner
 {
 
-    Disc::Disc(const Eigen::Vector2d &position, double offset)
-        : position(position), offset(offset)
+    Disc::Disc(const double offset_, const double radius_)
+        : offset(offset_), radius(radius_)
     {
+    }
+
+    Eigen::Vector2d Disc::getPosition(const Eigen::Vector2d &robot_position, const double angle) const
+    {
+        return robot_position + Eigen::Vector2d(offset * std::cos(angle), offset * std::sin(angle));
     }
 
     PredictionStep::PredictionStep(const Eigen::Vector2d &position, double angle, double major_radius, double minor_radius)

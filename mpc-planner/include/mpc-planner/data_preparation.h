@@ -12,14 +12,39 @@
 
 #include <numeric>
 
-// inline std::vector<Disc> defineVehicleRegion(double length, double width)
-// {
-//   std::vector<Disc> vehicle_region;
-//   // vehicle_region.push_back(Disc(Eigen::Vector2d(0., 0.), length / 2.));
-//   // vehicle_region.push_back(Disc(Eigen::Vector2d(0., width / 2.), width / 2.));
-//   // vehicle_region.push_back(Disc(Eigen::Vector2d(0., -width / 2.), width / 2.));
-//   return vehicle_region;
-// }
+inline std::vector<Disc> defineRobotArea(double length, double width, int n_discs)
+{
+  // Where is the center w.r.t. the back of the vehicle
+  double center_offset = length / 2.; // Could become a parameter
+  double radius = width / 2.;
+
+  std::vector<Disc> robot_area;
+  ROSTOOLS_ASSERT(n_discs > 0, "Trying to create a collision region with less than a disc");
+
+  if (n_discs == 1)
+  {
+    robot_area.emplace_back(0., radius);
+  }
+  else
+  {
+
+    for (int i = 0; i < n_discs; i++)
+    {
+      if (i == 0)
+        robot_area.emplace_back(-center_offset + radius, radius); // First disc at the back of the car
+      else if (i == n_discs - 1)
+        robot_area.emplace_back(-center_offset + length - radius, radius); // Last disc at the front of the car
+      else
+        robot_area.emplace_back(-center_offset + radius +
+                                    (double)i * (length - 2. * radius) / ((double)(n_discs - 1.)),
+                                radius); // Other discs in between
+      LOG_VALUE("offset", robot_area.back().offset);
+      LOG_VALUE("radius", robot_area.back().radius);
+    }
+  }
+
+  return robot_area;
+}
 
 inline DynamicObstacle getDummyObstacle(const State &state)
 {
