@@ -68,7 +68,6 @@ namespace MPCPlanner
         int current_segment;
         double current_s;
         _spline->findClosestPoint(state.getPos(), current_segment, current_s);
-        LOG_HOOK();
 
         double road_width_left = enable_two_way_road_ ? road_width_left_ * 3. : road_width_left_;
         // _guidance_spline = std::make_unique<RosTools::Spline2D>(_spline->getXSpline(),
@@ -305,10 +304,8 @@ namespace MPCPlanner
         if (data_name == "reference_path") // New
         {
             LOG_DEBUG("Received Reference Path");
-            LOG_HOOK();
 
             _spline = std::make_unique<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y); // Construct a spline from the given points
-            LOG_HOOK();
         }
 
         // We wait for both the obstacles and state to arrive before we compute here

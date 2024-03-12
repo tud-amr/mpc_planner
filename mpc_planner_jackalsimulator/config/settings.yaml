@@ -23,9 +23,6 @@ shift_previous_solution_forward: false
 contouring:
   num_segments: 3
 
-linearized_constraints:
-  relax: true
-
 t-mpc:
   use_t-mpc++: false
   enable_constraints: true

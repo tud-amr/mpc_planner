@@ -27,7 +27,7 @@ include_directories(
 
 # set(ENV{MPC_PLANNER_ROS} ${MPC_PLANNER_ROS})
 
-add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME} SHARED
   src/data_visualization.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC

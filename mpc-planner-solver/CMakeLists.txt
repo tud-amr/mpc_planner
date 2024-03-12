@@ -18,7 +18,6 @@ include_directories(
   Solver/include
 )
 
-
 add_library(${PROJECT_NAME}
   src/solver_interface.cpp
   src/state.cpp

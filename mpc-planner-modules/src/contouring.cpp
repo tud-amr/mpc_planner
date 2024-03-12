@@ -37,7 +37,6 @@ namespace MPCPlanner
     (void)data;
     LOG_DEBUG("contouring::setparameters");
     PROFILE_SCOPE("Contouring Set Parameters");
-    LOG_HOOK();
 
     _solver->setParameter(k, "contour", CONFIG["weights"]["contour"].as<double>());
     _solver->setParameter(k, "lag", CONFIG["weights"]["lag"].as<double>());
@@ -81,7 +80,7 @@ namespace MPCPlanner
         ay = 0.;
         by = 0.;
         cy = 0.;
-        start = _spline->length();
+        start = _spline->parameterLength();
       }
 
       std::string spline_name = "spline" + std::to_string(i) + "_";
@@ -111,7 +110,6 @@ namespace MPCPlanner
       _spline = std::make_unique<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y);
 
       _closest_segment = -1;
-      LOG_HOOK();
     }
   }
 
@@ -164,7 +162,7 @@ namespace MPCPlanner
     line.setScale(0.1);
 
     Eigen::Vector2d p;
-    for (double s = 0.; s < _spline->length(); s += 1.)
+    for (double s = 0.; s < _spline->parameterLength(); s += 1.)
     {
       if (s > 0.)
         line.addLine(p, _spline->getPoint(s));

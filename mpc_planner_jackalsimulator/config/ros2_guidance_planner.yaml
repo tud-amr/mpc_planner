@@ -37,9 +37,9 @@
         collision: 0.5
         velocity_tracking: 0.01
       visuals:
-        transparency: 0.9 #0.5 #0.9               # The least transparent the obstacle visualization is (0-1)
+        transparency: 0.0 #0.5 #0.9               # The least transparent the obstacle visualization is (0-1)
         visualize_all_samples: false    # Visualizes all PRM samples
-        visualize_homology: false
+        visualize_homology: true
         show_indices: false
       enable:
         dynamically_propagate_nodes: true  # Propagate the nodes in time (dropping them)

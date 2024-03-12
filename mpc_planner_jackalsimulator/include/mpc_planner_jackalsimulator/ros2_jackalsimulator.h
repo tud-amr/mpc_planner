@@ -3,12 +3,11 @@
 
 #include <mpc-planner/planner.h>
 
-#include <mpc-planner-solver/solver_interface.h>
-
+#include <mpc-planner-solver/state.h>
 #include <mpc_planner_types/realtime_data.h>
 
-#include <rclcpp/rclcpp.hpp>
-#include <mpc_planner_jackalsimulator/jackalsimulator_ros2_reconfigure.h>
+#include <rclcpp/node.hpp>
+#include <rclcpp/timer.hpp>
 
 #include <mpc_planner_msgs/msg/obstacle_array.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
@@ -18,11 +17,11 @@
 #include <std_msgs/msg/float32.hpp>
 #include <std_srvs/srv/empty.hpp>
 
-#include <ros_tools/profiling.h>
-
 #include <memory>
 
 using namespace MPCPlanner;
+
+class JackalsimulatorReconfigure;
 
 class JackalPlanner : public rclcpp::Node
 {
@@ -47,7 +46,7 @@ private:
 
     rclcpp::TimerBase::SharedPtr _timer;
 
-    std::unique_ptr<Reconfigure> _reconfigure;
+    std::unique_ptr<JackalsimulatorReconfigure> _reconfigure;
 
     std::unique_ptr<RosTools::Benchmarker> _benchmarker;
 

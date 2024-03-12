@@ -1,4 +1,5 @@
 #include <mpc_planner_jackalsimulator/ros2_jackalsimulator.h>
+#include <mpc_planner_jackalsimulator/jackalsimulator_ros2_reconfigure.h>
 
 #include <mpc-planner/data_preparation.h>
 
@@ -8,6 +9,8 @@
 #include <ros_tools/visuals.h>
 #include <ros_tools/logging.h>
 #include <ros_tools/convertions.h>
+#include <ros_tools/profiling.h>
+
 
 using namespace MPCPlanner;
 using namespace rclcpp;
@@ -19,7 +22,11 @@ JackalPlanner::JackalPlanner() : Node("jackal_planner")
     // Initialize the configuration
     Configuration::getInstance().initialize(SYSTEM_CONFIG_PATH(__FILE__, "settings"));
 
-    _reconfigure = std::make_unique<Reconfigure>(this);
+    STATIC_NODE_POINTER.init(this);
+
+    _reconfigure = std::make_unique<JackalsimulatorReconfigure>(this);
+
+    _data.robot_area = {Disc(0., CONFIG["robot_radius"].as<double>())};
 
     // Initialize the planner
     _planner = std::make_unique<Planner>();

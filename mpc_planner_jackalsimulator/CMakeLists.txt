@@ -52,7 +52,6 @@ target_include_directories(jackal_planner PUBLIC
 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
 "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
-target_compile_features(jackal_planner PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 ament_target_dependencies(jackal_planner ${DEPENDENCIES})
 # target_link_libraries(jackal_planner)
 
