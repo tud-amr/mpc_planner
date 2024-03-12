@@ -2,7 +2,7 @@
 
 <launch>
 
-  <node pkg="mpc_planner_autoware" exec="autoware_planner" name="autoware_planner" respawn="false" output="screen">
+  <node pkg="mpc_planner_autoware" exec="autoware_planner" name="autoware_planner" respawn="false" output="screen" launch-prefix="gdb -ex=r --args">
     <param from="$(find-pkg-share mpc_planner_autoware)/config/ros2_guidance_planner.yaml"/>
     <remap from="~/input/state" to="/localization/kinematic_state"/>
     <remap from="~/input/steering" to="/vehicle/status/steering_status"/>
@@ -13,13 +13,11 @@
   </node>
 
   <include file="$(find-pkg-share pedestrian_simulator)/launch/ros2_simulation.launch">
-    <arg name="pedestrian_scenario" value="autoware/temp.xml"/>
+    <arg name="pedestrian_scenario" value="autoware/static_crossing.xml"/>
   </include>
 
   <include file="$(find-pkg-share lanelets_to_path)/launch/lanelets_to_path.launch"/>
 
-  <!-- <node pkg="rviz2" exec="rviz2" name="rviz2" args="-d $(find-pkg-share mpc_planner_autoware)/rviz/ros2.rviz" namespace="/" output="log"/> -->
-
-  <node pkg="rqt_reconfigure" exec="rqt_reconfigure" name="rqt_reconfigure" namespace="/autoware_planner" output="log"/>
+  <node pkg="rqt_gui" exec="rqt_gui" name="rqt_gui" namespace="" output="log"/>
 
 </launch>  

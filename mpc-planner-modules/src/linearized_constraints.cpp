@@ -10,7 +10,8 @@ namespace MPCPlanner
   LinearizedConstraints::LinearizedConstraints(std::shared_ptr<Solver> solver)
       : ControllerModule(ModuleType::CONSTRAINT, solver, "linearized_constraints")
   {
-    LOG_INFO("Initializing LinearizedConstraints Module");
+    LOG_INITIALIZE("Linearized Constraints");
+    _n_discs = CONFIG["n_discs"].as<int>(); // Is overwritten to 1 for topology constraints
 
     _a1.resize(CONFIG["n_discs"].as<int>());
     _a2.resize(CONFIG["n_discs"].as<int>());
@@ -29,6 +30,13 @@ namespace MPCPlanner
     }
 
     _num_obstacles = 0;
+    LOG_INITIALIZED();
+  }
+
+  void LinearizedConstraints::setTopologyConstraints()
+  {
+    _n_discs = 1; // Only one disc is used for the topology constraints
+    _use_guidance = true;
   }
 
   void LinearizedConstraints::update(State &state, const RealTimeData &data)
@@ -42,35 +50,48 @@ namespace MPCPlanner
     // For all stages
     for (int k = 1; k < _solver->N; k++)
     {
-      Eigen::Vector2d pos(_solver->getEgoPrediction(k, "x"), _solver->getEgoPrediction(k, "y")); // k = 0 is initial state
-
-      /** @todo Load disc position */
-      projectToSafety(copied_obstacles, k, pos); // Ensure that the vehicle position is collision-free
-      /** @todo Set projected disc position */
-
-      // For all obstacles
-      for (size_t obs_id = 0; obs_id < copied_obstacles.size(); obs_id++)
+      for (int d = 0; d < _n_discs; d++)
       {
-        const auto &copied_obstacle = copied_obstacles[obs_id];
-        const Eigen::Vector2d &obstacle_pos = copied_obstacle.prediction.modes[0][k - 1].position;
+        Eigen::Vector2d pos(_solver->getEgoPrediction(k, "x"), _solver->getEgoPrediction(k, "y")); // k = 0 is initial state
 
-        double diff_x = obstacle_pos(0) - pos(0);
-        double diff_y = obstacle_pos(1) - pos(1);
+        if (!_use_guidance) // Use discs and their positions
+        {
+          auto &disc = data.robot_area[d];
 
-        double d = (obstacle_pos - pos).norm();
+          Eigen::Vector2d disc_pos = disc.getPosition(pos, _solver->getEgoPrediction(k, "psi"));
+          projectToSafety(copied_obstacles, k, disc_pos); // Ensure that the vehicle position is collision-free
+          /** @todo Set projected disc position */
 
-        // Compute the components of A for this obstacle (normalized normal vector)
-        _a1[0][k](obs_id) = diff_x / d;
-        _a2[0][k](obs_id) = diff_y / d;
+          pos = disc_pos;
+        }
+        else // Use the robot position
+        {
+          projectToSafety(copied_obstacles, k, pos); // Ensure that the vehicle position is collision-free
+          /** @todo Set projected disc position */
+        }
 
-        // Compute b (evaluate point on the collision circle)
-        double radius = copied_obstacle.radius;
-        if (CONFIG["linearized_constraints"]["relax"].as<bool>())
-          radius = 1e-3;
+        // For all obstacles
+        for (size_t obs_id = 0; obs_id < copied_obstacles.size(); obs_id++)
+        {
+          const auto &copied_obstacle = copied_obstacles[obs_id];
+          const Eigen::Vector2d &obstacle_pos = copied_obstacle.prediction.modes[0][k - 1].position;
 
-        _b[0][k](obs_id) = _a1[0][k](obs_id) * obstacle_pos(0) +
-                           _a2[0][k](obs_id) * obstacle_pos(1) -
-                           (radius + CONFIG["robot_radius"].as<double>());
+          double diff_x = obstacle_pos(0) - pos(0);
+          double diff_y = obstacle_pos(1) - pos(1);
+
+          double dist = (obstacle_pos - pos).norm();
+
+          // Compute the components of A for this obstacle (normalized normal vector)
+          _a1[d][k](obs_id) = diff_x / dist;
+          _a2[d][k](obs_id) = diff_y / dist;
+
+          // Compute b (evaluate point on the collision circle)
+          double radius = _use_guidance ? 1e-3 : copied_obstacle.radius;
+
+          _b[d][k](obs_id) = _a1[d][k](obs_id) * obstacle_pos(0) +
+                             _a2[d][k](obs_id) * obstacle_pos(1) -
+                             (radius + CONFIG["robot_radius"].as<double>());
+        }
       }
     }
   }
@@ -85,9 +106,7 @@ namespace MPCPlanner
     {
       for (auto &obstacle : copied_obstacles)
       {
-        double radius = obstacle.radius;
-        if (CONFIG["linearized_constraints"]["relax"].as<bool>())
-          radius = 1e-3;
+        double radius = _use_guidance ? 1e-3 : obstacle.radius;
 
         dr_projection_.douglasRachfordProjection(pos, obstacle.prediction.modes[0][k - 1].position,
                                                  copied_obstacles[0].prediction.modes[0][k - 1].position,
@@ -99,14 +118,17 @@ namespace MPCPlanner
 
   void LinearizedConstraints::setParameters(const RealTimeData &data, int k)
   {
-    for (int d = 0; d < CONFIG["n_discs"].as<int>(); d++)
-      _solver->setParameter(k, "ego_disc_" + std::to_string(d) + "_offset", 0.); /** @todo Fix offsets! */
-
-    for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
+    for (int d = 0; d < _n_discs; d++)
     {
-      _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_a1", _a1[0][k](i));
-      _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_a2", _a2[0][k](i));
-      _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_b", _b[0][k](i));
+      if (!_use_guidance)
+        _solver->setParameter(k, "ego_disc_" + std::to_string(d) + "_offset", data.robot_area[d].offset);
+
+      for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
+      {
+        _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_a1", _a1[d][k](i));
+        _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_a2", _a2[d][k](i));
+        _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_b", _b[d][k](i));
+      }
     }
   }
 
@@ -141,8 +163,10 @@ namespace MPCPlanner
     for (int k = 1; k < _solver->N; k++)
     {
       for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
+      {
         visualizeLinearConstraint(_a1[0][k](i), _a2[0][k](i), _b[0][k](i), k, _solver->N, _name,
                                   k == _solver->N - 1 && i == data.dynamic_obstacles.size() - 1); // Publish at the end
+      }
     }
   }
 

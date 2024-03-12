@@ -12,7 +12,8 @@ namespace MPCPlanner
   Contouring::Contouring(std::shared_ptr<Solver> solver)
       : ControllerModule(ModuleType::OBJECTIVE, solver, "contouring")
   {
-    LOG_INFO("Initializing Contouring Module");
+    LOG_INITIALIZE("Contouring");
+    LOG_INITIALIZED();
   }
 
   void Contouring::update(State &state, const RealTimeData &data)
@@ -36,13 +37,13 @@ namespace MPCPlanner
     (void)data;
     LOG_DEBUG("contouring::setparameters");
     PROFILE_SCOPE("Contouring Set Parameters");
+    LOG_HOOK();
 
     _solver->setParameter(k, "contour", CONFIG["weights"]["contour"].as<double>());
     _solver->setParameter(k, "lag", CONFIG["weights"]["lag"].as<double>());
 
     // Add condition
-    LOG_HOOK();
-    if (CONFIG["contouring"]["preview"].as<double>() > 1e-5)
+    if (_solver->hasParameter("preview"))
       _solver->setParameter(k, "preview", CONFIG["weights"]["preview"].as<double>());
 
     /** @todo: Handling of parameters when the spline parameters go beyond the splines defined */
@@ -106,13 +107,11 @@ namespace MPCPlanner
     {
       LOG_INFO("Received Reference Path");
 
-      _spline = std::make_unique<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y); // Construct a spline from the given points
-                                                                                                    // Get the closest point
+      // Construct a spline from the given points
+      _spline = std::make_unique<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y);
 
       _closest_segment = -1;
-      // Update the closest point
-      // double closest_s;
-      // _spline->findClosestPoint(Eigen::Vector2d(state.get("x"), state.get("y")), _closest_segment, closest_s);
+      LOG_HOOK();
     }
   }
 

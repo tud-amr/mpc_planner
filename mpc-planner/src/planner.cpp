@@ -145,7 +145,7 @@ namespace MPCPlanner
             module->reset();
 
         state = State(); // Reset the state
-        // data = RealTimeData(); // Reset the received data
+        data.reset();    // Reset the data
     }
 
     bool Planner::isObjectiveReached(const RealTimeData &data) const

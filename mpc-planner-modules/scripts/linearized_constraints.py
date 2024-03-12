@@ -29,13 +29,10 @@ class LinearizedConstraintModule(ConstraintModule):
 # Constraints of the form Ax <= b (+ slack)
 class LinearConstraints:
 
-    def __init__(self, n_discs, n_constraints, use_slack=False):
-        self.n_constraints = n_constraints
+    def __init__(self, n_discs, max_obstacles):
         self.n_discs = n_discs
-        self.use_slack = use_slack
-
-        assert self.n_discs == 1, "Only one disc is supported for now"
-
+        self.max_obstacles = max_obstacles
+        self.n_constraints = max_obstacles * n_discs
         self.nh = self.n_constraints
 
     def define_parameters(self, params):
@@ -43,13 +40,13 @@ class LinearConstraints:
         for disc_id in range(self.n_discs):
             params.add(f"ego_disc_{disc_id}_offset")
 
-        for index in range(self.n_constraints):
-            params.add(self.constraint_name(index) + "_a1")
-            params.add(self.constraint_name(index) + "_a2")
-            params.add(self.constraint_name(index) + "_b")
+            for index in range(self.max_obstacles):
+                params.add(self.constraint_name(index, disc_id) + "_a1")
+                params.add(self.constraint_name(index, disc_id) + "_a2")
+                params.add(self.constraint_name(index, disc_id) + "_b")
 
-    def constraint_name(self, index):
-        return f"lin_constraint_{index}"
+    def constraint_name(self, index, disc_id):
+        return f"disc_{disc_id}_lin_constraint_{index}"
 
     def get_lower_bound(self):
         lower_bound = []
@@ -72,20 +69,17 @@ class LinearConstraints:
         pos = np.array([pos_x, pos_y])
         psi = model.get("psi")
 
-        if self.use_slack:
-            slack = model.get("slack")
-
         rotation_car = rotation_matrix(psi)
-        for disc_it in range(0, self.n_discs):
+        for disc_it in range(self.n_discs):
             disc_x = params.get(f"ego_disc_{disc_it}_offset")
             disc_relative_pos = np.array([disc_x, 0])
             disc_pos = pos + rotation_car.dot(disc_relative_pos)
 
-            for index in range(self.n_constraints):
-                a1 = params.get(self.constraint_name((index)) + "_a1")
-                a2 = params.get(self.constraint_name((index)) + "_a2")
-                b = params.get(self.constraint_name((index)) + "_b")
+            for index in range(self.max_obstacles):
+                a1 = params.get(self.constraint_name(index, disc_it) + "_a1")
+                a2 = params.get(self.constraint_name(index, disc_it) + "_a2")
+                b = params.get(self.constraint_name(index, disc_it) + "_b")
 
-                constraints.append(a1 * disc_pos[0] + a2 * disc_pos[1] - (b + slack))
+                constraints.append(a1 * disc_pos[0] + a2 * disc_pos[1] - b)
 
         return constraints

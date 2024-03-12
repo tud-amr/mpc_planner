@@ -12,7 +12,8 @@ namespace MPCPlanner
   EllipsoidConstraints::EllipsoidConstraints(std::shared_ptr<Solver> solver)
       : ControllerModule(ModuleType::CONSTRAINT, solver, "ellipsoid_constraints")
   {
-    LOG_INFO("Initializing EllipsoidConstraints Module");
+    LOG_INITIALIZE("Ellipsoid Constraints");
+    LOG_INITIALIZED();
   }
 
   void EllipsoidConstraints::update(State &state, const RealTimeData &data)

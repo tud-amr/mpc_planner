@@ -12,10 +12,12 @@ namespace MPCPlanner
   ScenarioConstraints::ScenarioConstraints(std::shared_ptr<Solver> solver)
       : ControllerModule(ModuleType::CONSTRAINT, solver, "gaussian_constraints")
   {
-    LOG_INFO("Initializing ScenarioConstraints Module");
+    LOG_INITIALIZE("Scenario Constraints");
 
     _SCENARIO_CONFIG.Init();
     _scenario_module = std::make_unique<ScenarioModule::ScenarioModule>(solver);
+
+    LOG_INITIALIZED();
   }
 
   void ScenarioConstraints::update(State &state, const RealTimeData &data)

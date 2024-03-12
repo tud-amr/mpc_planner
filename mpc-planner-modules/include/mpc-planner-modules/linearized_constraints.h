@@ -20,8 +20,13 @@ namespace MPCPlanner
 
     void visualize(const RealTimeData &data) override;
 
+    void setTopologyConstraints();
+
   private:
     std::vector<std::vector<Eigen::ArrayXd>> _a1, _a2, _b; // Constraints [disc x step]
+
+    bool _use_guidance{false};
+    int _n_discs;
 
     DouglasRachford dr_projection_;
 

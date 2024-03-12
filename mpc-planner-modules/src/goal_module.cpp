@@ -10,6 +10,8 @@ namespace MPCPlanner
     GoalModule::GoalModule(std::shared_ptr<Solver> solver)
         : ControllerModule(ModuleType::OBJECTIVE, solver, "goal_module")
     {
+        LOG_INITIALIZE("Goal Tracking");
+        LOG_INITIALIZED();
     }
 
     void GoalModule::update(State &state, const RealTimeData &data)

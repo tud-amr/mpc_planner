@@ -25,6 +25,8 @@ AutowarePlanner::AutowarePlanner()
 
   RosTools::Instrumentor::Get().BeginSession("mpc_planner_autoware");
 
+  STATIC_NODE_POINTER.init(this);
+
   // Initialize the configuration
   Configuration::getInstance().initialize(SYSTEM_CONFIG_PATH(__FILE__, "settings"));
 

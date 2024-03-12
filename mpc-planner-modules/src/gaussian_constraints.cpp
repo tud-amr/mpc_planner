@@ -12,7 +12,8 @@ namespace MPCPlanner
   GaussianConstraints::GaussianConstraints(std::shared_ptr<Solver> solver)
       : ControllerModule(ModuleType::CONSTRAINT, solver, "gaussian_constraints")
   {
-    LOG_INFO("Initializing GaussianConstraints Module");
+    LOG_INITIALIZE("Gaussian Constraints");
+    LOG_INITIALIZED();
   }
 
   void GaussianConstraints::update(State &state, const RealTimeData &data)

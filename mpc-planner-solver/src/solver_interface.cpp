@@ -54,6 +54,11 @@ namespace MPCPlanner
 		return *this;
 	}
 
+	bool Solver::hasParameter(std::string &&parameter)
+	{
+		return _parameter_map[parameter].IsDefined();
+	}
+
 	void Solver::setParameter(int k, std::string &&parameter, double value)
 	{
 		_params.all_parameters[k * npar + _parameter_map[parameter].as<int>()] = value;

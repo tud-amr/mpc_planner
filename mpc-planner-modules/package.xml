@@ -9,13 +9,14 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <build_depend>mpc-planner-util</build_depend>
-  <build_depend>mpc_planner_types</build_depend>
-  <build_depend>mpc-planner-solver</build_depend>
+  <depend>mpc-planner-util</depend>
+  <depend>mpc_planner_types</depend>
+  <depend>mpc-planner-solver</depend>
 
   <!-- START SOLVER DEPENDENT -->
+	<depend>guidance_planner</depend>
   <!-- END SOLVER DEPENDENT -->
-  
+
   <export>
     <build_type>ament_cmake</build_type>
   </export>
