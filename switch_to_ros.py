@@ -5,7 +5,7 @@ sys.path.append(os.path.join(sys.path[0], "mpc-planner-solver-generator"))
 from pathlib import Path
 import shutil
 
-from util.logging import print_value
+from util.logging import print_value, print_warning
 
 skip_packages = ["mpc-planner-solver-generator", "docs"]
 
@@ -71,7 +71,8 @@ def main():
 
         if ros_version == 1:
             if not exists1:
-                IOError(f"ROS files for ROS1 do not exist in {folder}")
+                print_warning(f"ROS files for ROS1 do not exist in {folder}")
+                continue
 
             print(f"Switching to ROS1")
             if cur_ros_mode != 0:
@@ -89,7 +90,8 @@ def main():
 
         elif ros_version == 2:
             if not exists2:
-                IOError(f"ROS files for ROS2 do not exist in {folder}")
+                print_warning(f"ROS files for ROS2 do not exist in {folder}")
+                continue
 
             print(f"Switching to ROS2")
             if cur_ros_mode != 0:

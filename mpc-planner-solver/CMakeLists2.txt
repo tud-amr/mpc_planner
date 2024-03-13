@@ -5,8 +5,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
 endif()
 
-# set(SYSTEM_TO_USE "Jackal")
-
 set(DEPENDENCIES
   mpc-planner-util
 )
@@ -19,7 +17,6 @@ include_directories(
   include
   Solver/include
 )
-
 
 add_library(${PROJECT_NAME}
   src/solver_interface.cpp
@@ -37,7 +34,6 @@ ament_target_dependencies(${PROJECT_NAME}
 )
 target_link_libraries(${PROJECT_NAME}
   ${PROJECT_SOURCE_DIR}/Solver/lib/libSolver.so
-  ${YAML_CPP_LIBRARIES}
 )
 
 if(BUILD_TESTING)

@@ -47,7 +47,7 @@ namespace MPCPlanner
     void GuidanceConstraints::update(State &state, const RealTimeData &data)
     {
         (void)data;
-        LOG_DEBUG("Guidance Constraints: Update");
+        LOG_MARK("Guidance Constraints: Update");
 
         // global_guidance_->LoadHalfspaces(); // Load static obstacles represented by halfspaces
 
@@ -80,7 +80,7 @@ namespace MPCPlanner
         // global_guidance_->SetGoals({GuidancePlanner::Goal(state.getPos() + Eigen::Vector2d(4., 0.), 0.),
         //                             GuidancePlanner::Goal(state.getPos() + Eigen::Vector2d(4., 3.), 1.),
         //                             GuidancePlanner::Goal(state.getPos() + Eigen::Vector2d(4., -3.), 1.)});
-        LOG_DEBUG("Running Guidance Search");
+        LOG_MARK("Running Guidance Search");
         global_guidance_->Update(); // data); /** @note The main update */
         // LOG_VALUE("Number of Guidance Trajectories", global_guidance_->NumberOfGuidanceTrajectories());
     }
@@ -91,7 +91,7 @@ namespace MPCPlanner
         if (k == 0)
         {
             // _solver->setTimeout(config_->solver_timeout_ / 1000.); // Limit the solver to 40 ms
-            LOG_DEBUG("Guidance Constraints does not need to set parameters");
+            LOG_MARK("Guidance Constraints does not need to set parameters");
         }
     }
 
@@ -101,12 +101,12 @@ namespace MPCPlanner
         omp_set_nested(1);
         omp_set_max_active_levels(2);
         omp_set_dynamic(0);
-        LOG_DEBUG("Guidance Constraints: optimize");
+        LOG_MARK("Guidance Constraints: optimize");
 
         if (!CONFIG["t-mpc"]["use_t-mpc++"].as<bool>() && !global_guidance_->Succeeded())
             return 0;
 
-        // #pragma omp parallel for num_threads(8)
+#pragma omp parallel for num_threads(8)
         for (auto &planner : planners_)
         {
             planner.result.Reset();
@@ -123,7 +123,7 @@ namespace MPCPlanner
 
             // Copy the data from the main solver
             auto &solver = planner.local_solver;
-            LOG_DEBUG("Planner [" << planner.id << "]: Copying data from main solver");
+            LOG_MARK("Planner [" << planner.id << "]: Copying data from main solver");
             *solver = *_solver; // Copy the main solver
 
             // CONSTRUCT CONSTRAINTS
@@ -137,7 +137,7 @@ namespace MPCPlanner
             }
             else
             {
-                LOG_DEBUG("Planner [" << planner.id << "]: Loading guidance into the solver and constructing constraints");
+                LOG_MARK("Planner [" << planner.id << "]: Loading guidance into the solver and constructing constraints");
 
                 initializeSolverWithGuidance(planner);
 
@@ -146,7 +146,7 @@ namespace MPCPlanner
             }
 
             // LOAD PARAMETERS
-            LOG_DEBUG("Planner [" << planner.id << "]: Loading updated parameters into the solver");
+            LOG_MARK("Planner [" << planner.id << "]: Loading updated parameters into the solver");
             for (int k = 0; k < _solver->N; k++)
             {
                 planner.guidance_constraints->setParameters(data, k); // Set this solver's parameters
@@ -160,10 +160,10 @@ namespace MPCPlanner
             // SOLVE OPTIMIZATION
             // if (enable_guidance_warmstart_)
             planner.local_solver->loadWarmstart();
-            LOG_DEBUG("Planner [" << planner.id << "]: Solving ...");
+            LOG_MARK("Planner [" << planner.id << "]: Solving ...");
             planner.result.exit_code = solver->solve();
             // solver_results_[i].exit_code =ellipsoidal_constraints_[solver->solver_id_].Optimize(solver.get()); // IF THIS OPTIMIZATION EXISTS!
-            LOG_DEBUG("Planner [" << planner.id << "]: Done! (exitcode = " << planner.result.exit_code << ")");
+            LOG_MARK("Planner [" << planner.id << "]: Done! (exitcode = " << planner.result.exit_code << ")");
 
             // ANALYSIS AND PROCESSING
             planner.result.success = planner.result.exit_code == 1;
@@ -263,7 +263,7 @@ namespace MPCPlanner
     void GuidanceConstraints::visualize(const RealTimeData &data)
     {
         (void)data;
-        LOG_DEBUG("Guidance Constraints: Visualize()");
+        LOG_MARK("Guidance Constraints: Visualize()");
 
         // Contouring::Visualize();
 
@@ -303,7 +303,7 @@ namespace MPCPlanner
     {
         if (data_name == "reference_path") // New
         {
-            LOG_DEBUG("Received Reference Path");
+            LOG_MARK("Received Reference Path");
 
             _spline = std::make_unique<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y); // Construct a spline from the given points
         }
@@ -311,7 +311,7 @@ namespace MPCPlanner
         // We wait for both the obstacles and state to arrive before we compute here
         if (data_name == "dynamic obstacles")
         {
-            LOG_DEBUG("Guidance Constraints: Received dynamic obstacles");
+            LOG_MARK("Guidance Constraints: Received dynamic obstacles");
 
             // #pragma omp parallel for num_threads(8)
             for (auto &planner : planners_)

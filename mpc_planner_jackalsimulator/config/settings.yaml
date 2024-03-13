@@ -6,22 +6,28 @@ n_discs: 1
 solver_settings:
   # solver: "acados" # acados or forces
   solver: "forces" # acados or forces
-  floating_license: true
+  floating_license: false
   enable_timeout: true
   init: 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
-  use_sqp: true
+  use_sqp: false
+
+debug_output: false
 
 enable_output: true
 control_frequency: 20
 deceleration_at_infeasible: 3.0
 max_obstacles: 12
 robot_radius: 0.325
+robot:
+  length: 0.65
+  width: 0.65
 obstacle_radius: 0.4
 
 shift_previous_solution_forward: false
 
 contouring:
   num_segments: 3
+  preview: 0.0
 
 t-mpc:
   use_t-mpc++: false
@@ -39,6 +45,7 @@ weights:
   angular_velocity: 0.25 #0.05
   reference_velocity: 2.0 #1.5
   contour: 0.5 #0.01
+  preview: 0.0
   lag: 0.1
   slack: 1000.
 

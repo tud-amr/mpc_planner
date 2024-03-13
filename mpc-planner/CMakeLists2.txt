@@ -5,7 +5,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-
 # General requirements
 set(DEPENDENCIES
   rclcpp
@@ -13,6 +12,7 @@ set(DEPENDENCIES
   mpc_planner_types
   mpc-planner-solver
   mpc-planner-modules
+  ros_tools
 )
 
 # find dependencies
@@ -22,6 +22,7 @@ find_package(mpc-planner-util REQUIRED)
 find_package(mpc_planner_types REQUIRED)
 find_package(mpc-planner-solver REQUIRED)
 find_package(mpc-planner-modules REQUIRED)
+find_package(ros_tools REQUIRED)
 
 ## BUILD ###
 include_directories(
@@ -41,16 +42,6 @@ ament_target_dependencies(${PROJECT_NAME}
 )
 # target_link_libraries(${PROJECT_NAME})
 
-# TODO: Test node
-# add_executable(test_node src/test_node.cpp)
-# target_include_directories(test_node PUBLIC
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#   $<INSTALL_INTERFACE:include>)
-# target_compile_features(test_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
-# target_link_libraries(test_node ${PROJECT_NAME})
-
-# install(TARGETS test_node
-#   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -2,6 +2,11 @@
 #define PARAMETERS_H
 
 #include <mpc-planner-util/load_yaml.hpp>
+#include <ros_tools/logging.h>
+
+#define LOG_MARK(x)                        \
+    if (CONFIG["debug_output"].as<bool>()) \
+    LOG_HOOK_MSG(x)
 
 #define CONFIG Configuration::getInstance().getYAMLNode()
 

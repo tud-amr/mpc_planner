@@ -7,7 +7,7 @@
 #include <mpc-planner-solver/solver_interface.h>
 #include <mpc_planner_types/realtime_data.h>
 
-#include <mpc_planner_msgs/obstacle_array.h> /** @Todo: Replace! */
+#include <mpc_planner_msgs/ObstacleArray.h> /** @Todo: Replace! */
 
 #include <ros_tools/profiling.h>
 
@@ -45,14 +45,14 @@ public:
     void statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg); /** @note: Connects to the JackalSimulator */
     void goalCallback(const geometry_msgs::PoseStamped::ConstPtr &msg);
     void pathCallback(const nav_msgs::Path::ConstPtr &msg);
-    void obstacleCallback(const mpc_planner_msgs::obstacle_array::ConstPtr &msg);
+    void obstacleCallback(const mpc_planner_msgs::ObstacleArray::ConstPtr &msg);
 
     void reset();
 
 private:
     std::unique_ptr<Planner> _planner;
 
-    std::unique_ptr<Reconfigure> _reconfigure;
+    std::unique_ptr<JackalsimulatorReconfigure> _reconfigure;
 
     RealTimeData _data;
     State _state;

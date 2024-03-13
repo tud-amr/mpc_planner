@@ -42,6 +42,7 @@ namespace MPCPlanner
   void LinearizedConstraints::update(State &state, const RealTimeData &data)
   {
     (void)state;
+    LOG_MARK("LinearizedConstraints::update");
 
     // Thread safe
     std::vector<DynamicObstacle> copied_obstacles = data.dynamic_obstacles;
@@ -94,6 +95,7 @@ namespace MPCPlanner
         }
       }
     }
+    LOG_MARK("LinearizedConstraints::update done");
   }
 
   void LinearizedConstraints::projectToSafety(const std::vector<DynamicObstacle> &copied_obstacles, int k, Eigen::Vector2d &pos)

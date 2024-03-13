@@ -21,6 +21,8 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
     // Initialize the configuration
     Configuration::getInstance().initialize(SYSTEM_CONFIG_PATH(__FILE__, "settings"));
 
+    _data.robot_area = {Disc(0., CONFIG["robot_radius"].as<double>())};
+
     // Initialize the planner
     _planner = std::make_unique<Planner>();
 
@@ -29,7 +31,7 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
 
     startEnvironment();
 
-    _reconfigure = std::make_unique<Reconfigure>();
+    _reconfigure = std::make_unique<JackalsimulatorReconfigure>();
 
     _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
 
@@ -70,7 +72,7 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
         "/input/reference_path", 1,
         boost::bind(&JackalPlanner::pathCallback, this, _1));
 
-    _obstacle_sim_sub = nh.subscribe<mpc_planner_msgs::obstacle_array>(
+    _obstacle_sim_sub = nh.subscribe<mpc_planner_msgs::ObstacleArray>(
         "/input/obstacles", 1,
         boost::bind(&JackalPlanner::obstacleCallback, this, _1));
 
@@ -139,7 +141,7 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
 
     auto output = _planner->solveMPC(_state, _data);
 
-    LOG_VALUE_DEBUG("Success", output.success);
+    LOG_MARK("Success: " << output.success);
 
     geometry_msgs::Twist cmd;
     if (_enable_output && output.success)
@@ -231,7 +233,7 @@ void JackalPlanner::pathCallback(const nav_msgs::Path::ConstPtr &msg)
     _planner->onDataReceived(_data, "reference_path");
 }
 
-void JackalPlanner::obstacleCallback(const mpc_planner_msgs::obstacle_array::ConstPtr &msg)
+void JackalPlanner::obstacleCallback(const mpc_planner_msgs::ObstacleArray::ConstPtr &msg)
 {
     _data.dynamic_obstacles.clear();
 
@@ -304,11 +306,6 @@ void JackalPlanner::reset()
 
     _planner->reset(_state, _data);
 }
-
-// void JackalPlanner::reconfigureCallback(mpc_planner_jackalsimulator::Config &config, uint32_t level)
-// {
-//     LOG_INFO("Reconfigure Callback");
-// }
 
 int main(int argc, char **argv)
 {

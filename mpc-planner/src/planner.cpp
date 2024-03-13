@@ -30,6 +30,7 @@ namespace MPCPlanner
     // Given real-time data, solve the MPC problem
     PlannerOutput Planner::solveMPC(State &state, const RealTimeData &data)
     {
+        LOG_MARK("Planner::solveMPC");
         bool was_feasible = _output.success;
         _output = PlannerOutput(_solver->dt, _solver->N);
 
@@ -45,6 +46,7 @@ namespace MPCPlanner
             _output.success = false;
             return _output;
         }
+        LOG_MARK("Data checked");
 
         // Set the initial guess
         if (was_feasible)
@@ -56,6 +58,8 @@ namespace MPCPlanner
         // Set the initial state
         _solver->setXinit(state);
 
+        LOG_MARK("Updating modules");
+
         // Update all modules
         {
             PROFILE_SCOPE("Update");
@@ -64,6 +68,7 @@ namespace MPCPlanner
                 module->update(state, data);
         }
 
+        LOG_MARK("Setting parameters");
         {
             PROFILE_SCOPE("SetParameters");
             for (int k = 0; k < _solver->N; k++)
@@ -81,6 +86,7 @@ namespace MPCPlanner
         _solver->loadWarmstart();
 
         // Solve MPC
+        LOG_MARK("Solve optimization");
         int exit_flag;
         {
             PROFILE_SCOPE("Optimization");
@@ -109,6 +115,8 @@ namespace MPCPlanner
         for (int k = 1; k < _solver->N; k++)
             _output.trajectory.add(_solver->getOutput(k, "x"), _solver->getOutput(k, "y"));
 
+        LOG_MARK("Planner::solveMPC done");
+
         return _output;
     }
 
@@ -125,6 +133,7 @@ namespace MPCPlanner
 
     void Planner::visualize(const State &state, const RealTimeData &data)
     {
+        LOG_MARK("Planner::visualize");
         (void)state;
 
         for (auto &module : _modules)
@@ -135,6 +144,7 @@ namespace MPCPlanner
         visualizeObstacles(data.dynamic_obstacles, "obstacles", true);
         visualizeObstaclePredictions(data.dynamic_obstacles, "obstacle_predictions", true);
         visualizeRobotArea(state.getPos(), state.get("psi"), data.robot_area, "robot_area", true);
+        LOG_MARK("Planner::visualize Done");
     }
 
     void Planner::reset(State &state, RealTimeData &data)
