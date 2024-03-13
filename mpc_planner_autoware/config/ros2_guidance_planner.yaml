@@ -34,7 +34,7 @@
         num_points: 10 # -1 = N
         geometric: 25.
         smoothness: 10.
-        collision: 0.5
+        collision: 0.0 #0.5
         velocity_tracking: 0.01
       visuals:
         transparency: 0.5 #0.5 #0.9               # The least transparent the obstacle visualization is (0-1)

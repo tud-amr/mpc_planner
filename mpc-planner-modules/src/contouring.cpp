@@ -27,7 +27,7 @@ namespace MPCPlanner
     double closest_s;
 
     // Update the closest point
-    _spline->findClosestPoint(Eigen::Vector2d(state.get("x"), state.get("y")), _closest_segment, closest_s);
+    _spline->findClosestPoint(state.getPos(), _closest_segment, closest_s);
 
     state.set("spline", closest_s); // We need to initialize the spline state here
   }
