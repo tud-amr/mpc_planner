@@ -34,7 +34,7 @@ class GuidanceConstraintModule(ConstraintModule):
 
         self.dependencies.append("guidance_planner")
 
-        self.constraints.append(LinearConstraints(max_obstacles=settings["max_obstacles"]))
+        self.constraints.append(LinearConstraints(max_obstacles=settings["max_obstacles"], other_halfspaces=2))
         self.sources.append("linearized_constraints.h")
 
         # Initialize the underlying constraints
@@ -62,13 +62,13 @@ class GuidanceConstraintModule(ConstraintModule):
 # NOTE: For guidance we only need a single linear constraint for the robot!
 class LinearConstraints:
 
-    def __init__(self, max_obstacles):
+    def __init__(self, max_obstacles, other_halfspaces=0):
         self.max_obstacles = max_obstacles
-        self.nh = self.max_obstacles
+        self.nh = self.max_obstacles + other_halfspaces
 
     def define_parameters(self, params):
 
-        for index in range(self.max_obstacles):
+        for index in range(self.nh):
             params.add(self.constraint_name(index) + "_a1")
             params.add(self.constraint_name(index) + "_a2")
             params.add(self.constraint_name(index) + "_b")
@@ -78,13 +78,13 @@ class LinearConstraints:
 
     def get_lower_bound(self):
         lower_bound = []
-        for index in range(0, self.max_obstacles):
+        for index in range(0, self.nh):
             lower_bound.append(-np.inf)
         return lower_bound
 
     def get_upper_bound(self):
         upper_bound = []
-        for index in range(0, self.max_obstacles):
+        for index in range(0, self.nh):
             upper_bound.append(0.0)
         return upper_bound
 
@@ -96,7 +96,7 @@ class LinearConstraints:
         pos_y = model.get("y")
         pos = np.array([pos_x, pos_y])
 
-        for index in range(self.max_obstacles):
+        for index in range(self.nh):
             a1 = params.get(self.constraint_name(index) + "_a1")
             a2 = params.get(self.constraint_name(index) + "_a2")
             b = params.get(self.constraint_name(index) + "_b")

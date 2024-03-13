@@ -56,12 +56,12 @@ namespace MPCPlanner
         GuidanceConstraints(std::shared_ptr<Solver> solver);
 
     public:
-        void update(State &state, const RealTimeData &data) override;
-        void setParameters(const RealTimeData &data, int k) override;
+        void update(State &state, const RealTimeData &data, ModuleData &module_data) override;
+        void setParameters(const RealTimeData &data, const ModuleData &module_data, int k) override;
 
         // bool isDataReady(const RealTimeData &data, std::string &missing_data) override;
 
-        void visualize(const RealTimeData &data) override;
+        void visualize(const RealTimeData &data, const ModuleData &module_data) override;
 
         /**
          * @brief Override to define a custom optimization loop. Note that there can only be ONE customized optimization.
@@ -69,7 +69,7 @@ namespace MPCPlanner
          * @return int exit_code of the solver, return any exit_code other than "EXIT_CODE_NOT_OPTIMIZED_YET" to define this
          * as a custom optimization
          */
-        int optimize(State &state, const RealTimeData &data) override; // Default: no custom optimization
+        int optimize(State &state, const RealTimeData &data, ModuleData &module_data) override; // Default: no custom optimization
 
         /** @brief Load obstacles into the Homotopy module */
         void onDataReceived(RealTimeData &data, std::string &&data_name) override;

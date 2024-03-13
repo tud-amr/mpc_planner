@@ -28,11 +28,13 @@ namespace MPCPlanner
     }
 
     // Given real-time data, solve the MPC problem
-    PlannerOutput Planner::solveMPC(State &state, const RealTimeData &data)
+    PlannerOutput Planner::solveMPC(State &state, RealTimeData &data)
     {
         LOG_MARK("Planner::solveMPC");
         bool was_feasible = _output.success;
         _output = PlannerOutput(_solver->dt, _solver->N);
+
+        _module_data = ModuleData(); // Reset module data
 
         // Check if all modules have enough data
         bool is_data_ready = true;
@@ -65,7 +67,7 @@ namespace MPCPlanner
             PROFILE_SCOPE("Update");
 
             for (auto &module : _modules)
-                module->update(state, data);
+                module->update(state, data, _module_data);
         }
 
         LOG_MARK("Setting parameters");
@@ -78,7 +80,7 @@ namespace MPCPlanner
                     if (k == 0 && module->type == ModuleType::CONSTRAINT)
                         continue;
 
-                    module->setParameters(data, k);
+                    module->setParameters(data, _module_data, k);
                 }
             }
         }
@@ -94,7 +96,7 @@ namespace MPCPlanner
             exit_flag = EXIT_CODE_NOT_OPTIMIZED_YET;
             for (auto &module : _modules)
             {
-                exit_flag = module->optimize(state, data);
+                exit_flag = module->optimize(state, data, _module_data);
                 if (exit_flag != EXIT_CODE_NOT_OPTIMIZED_YET)
                     break;
             }
@@ -137,7 +139,7 @@ namespace MPCPlanner
         (void)state;
 
         for (auto &module : _modules)
-            module->visualize(data);
+            module->visualize(data, _module_data);
 
         visualizeTrajectory(_output.trajectory, "planned_trajectory", true, 0.2);
 

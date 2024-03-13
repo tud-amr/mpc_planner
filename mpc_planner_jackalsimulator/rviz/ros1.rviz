@@ -284,6 +284,14 @@ Visualization Manager:
               Value: false
           Enabled: true
           Name: T-MPC
+        - Class: rviz/MarkerArray
+          Enabled: false
+          Marker Topic: /jackalsimulator_planner/contouring/road_constraints
+          Name: Road Constraints
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: false
       Enabled: true
       Name: Planner
     - Class: rviz/MarkerArray
@@ -420,9 +428,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.8497968316078186
+      Pitch: 0.7897968888282776
       Target Frame: <Fixed Frame>
-      Yaw: 3.7750048637390137
+      Yaw: 3.720005750656128
     Saved: ~
 Window Geometry:
   Displays:

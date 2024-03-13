@@ -11,14 +11,16 @@ namespace MPCPlanner
   {
   }
 
-  void PathReferenceVelocity::update(State &state, const RealTimeData &data)
+  void PathReferenceVelocity::update(State &state, const RealTimeData &data, ModuleData &module_data)
   {
     (void)state;
     (void)data;
+    (void)module_data;
   }
 
-  void PathReferenceVelocity::setParameters(const RealTimeData &data, int k)
+  void PathReferenceVelocity::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
   {
+    (void)module_data;
     (void)data;
 
     // Set the parameters for velocity tracking

@@ -16,16 +16,21 @@ namespace MPCPlanner
     LOG_INITIALIZED();
   }
 
-  void EllipsoidConstraints::update(State &state, const RealTimeData &data)
+  void EllipsoidConstraints::update(State &state, const RealTimeData &data, ModuleData &module_data)
   {
     (void)state;
     (void)data;
+    (void)module_data;
   }
 
-  void EllipsoidConstraints::setParameters(const RealTimeData &data, int k)
+  void EllipsoidConstraints::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
   {
-    LOG_MARK("EllipsoidConstraints::setParameters");
+    (void)module_data;
 
+    if (k == 1)
+    {
+      LOG_MARK("EllipsoidConstraints::setParameters");
+    }
     _solver->setParameter(k, "ego_disc_radius", CONFIG["robot_radius"].as<double>());
     for (int d = 0; d < CONFIG["n_discs"].as<int>(); d++)
     {
@@ -58,7 +63,10 @@ namespace MPCPlanner
         _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_chi", chi);
       }
     }
-    LOG_MARK("EllipsoidConstraints::setParameters Done");
+    if (k == 1)
+    {
+      LOG_MARK("EllipsoidConstraints::setParameters Done");
+    }
   }
 
   bool EllipsoidConstraints::isDataReady(const RealTimeData &data, std::string &missing_data)
@@ -93,9 +101,10 @@ namespace MPCPlanner
     return true;
   }
 
-  void EllipsoidConstraints::visualize(const RealTimeData &data)
+  void EllipsoidConstraints::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)data;
+    (void)module_data;
     //   if (_spline.get() == nullptr)
     //     return;
 

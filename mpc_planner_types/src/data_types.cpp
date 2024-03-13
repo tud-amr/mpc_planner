@@ -15,6 +15,11 @@ namespace MPCPlanner
         return robot_position + Eigen::Vector2d(offset * std::cos(angle), offset * std::sin(angle));
     }
 
+    Halfspace::Halfspace(const Eigen::Vector2d &A, const double b)
+        : A(A), b(b)
+    {
+    }
+
     PredictionStep::PredictionStep(const Eigen::Vector2d &position, double angle, double major_radius, double minor_radius)
         : position(position), angle(angle), major_radius(major_radius), minor_radius(minor_radius)
     {

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(mpc-planner-modules)
 
+add_compile_options(-std=c++17)
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -16,7 +18,6 @@ else()
   message(WARNING "Compiling without OPENMP")
 endif()
 
-# General requirements
 set(DEPENDENCIES
   mpc_planner_types
   mpc-planner-util
@@ -43,7 +44,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME} SHARED
   ${MODULE_SOURCES}
 )
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

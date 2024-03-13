@@ -13,6 +13,8 @@ namespace MPCPlanner
     LOG_INITIALIZE("Linearized Constraints");
     _n_discs = CONFIG["n_discs"].as<int>(); // Is overwritten to 1 for topology constraints
 
+    _n_other_halfspaces = CONFIG["linearized_constraints"]["add_halfspaces"].as<int>();
+    int n_constraints = CONFIG["max_obstacles"].as<int>() + _n_other_halfspaces;
     _a1.resize(CONFIG["n_discs"].as<int>());
     _a2.resize(CONFIG["n_discs"].as<int>());
     _b.resize(CONFIG["n_discs"].as<int>());
@@ -23,9 +25,9 @@ namespace MPCPlanner
       _b[d].resize(CONFIG["N"].as<int>());
       for (int k = 0; k < CONFIG["N"].as<int>(); k++)
       {
-        _a1[d][k] = Eigen::ArrayXd(CONFIG["max_obstacles"].as<int>());
-        _a2[d][k] = Eigen::ArrayXd(CONFIG["max_obstacles"].as<int>());
-        _b[d][k] = Eigen::ArrayXd(CONFIG["max_obstacles"].as<int>());
+        _a1[d][k] = Eigen::ArrayXd(n_constraints);
+        _a2[d][k] = Eigen::ArrayXd(n_constraints);
+        _b[d][k] = Eigen::ArrayXd(n_constraints);
       }
     }
 
@@ -39,10 +41,12 @@ namespace MPCPlanner
     _use_guidance = true;
   }
 
-  void LinearizedConstraints::update(State &state, const RealTimeData &data)
+  void LinearizedConstraints::update(State &state, const RealTimeData &data, ModuleData &module_data)
   {
     (void)state;
     LOG_MARK("LinearizedConstraints::update");
+
+    _dummy_b = state.get("x") + 100.;
 
     // Thread safe
     std::vector<DynamicObstacle> copied_obstacles = data.dynamic_obstacles;
@@ -93,6 +97,21 @@ namespace MPCPlanner
                              _a2[d][k](obs_id) * obstacle_pos(1) -
                              (radius + CONFIG["robot_radius"].as<double>());
         }
+
+        if ((int)module_data.static_obstacles[k].size() < _n_other_halfspaces)
+        {
+          LOG_ERROR(_n_other_halfspaces << " halfspaces expected, but "
+                                        << (int)module_data.static_obstacles[k].size() << " are present");
+        }
+
+        int num_halfspaces = std::min((int)module_data.static_obstacles[k].size(), _n_other_halfspaces);
+        for (int h = 0; h < num_halfspaces; h++)
+        {
+          int obs_id = copied_obstacles.size() + h;
+          _a1[d][k](obs_id) = module_data.static_obstacles[k][h].A(0);
+          _a2[d][k](obs_id) = module_data.static_obstacles[k][h].A(1);
+          _b[d][k](obs_id) = module_data.static_obstacles[k][h].b;
+        }
       }
     }
     LOG_MARK("LinearizedConstraints::update done");
@@ -118,18 +137,26 @@ namespace MPCPlanner
     }
   }
 
-  void LinearizedConstraints::setParameters(const RealTimeData &data, int k)
+  void LinearizedConstraints::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
   {
+    (void)module_data;
     for (int d = 0; d < _n_discs; d++)
     {
       if (!_use_guidance)
         _solver->setParameter(k, "ego_disc_" + std::to_string(d) + "_offset", data.robot_area[d].offset);
 
-      for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
+      for (size_t i = 0; i < data.dynamic_obstacles.size() + _n_other_halfspaces; i++)
       {
         _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_a1", _a1[d][k](i));
         _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_a2", _a2[d][k](i));
         _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_b", _b[d][k](i));
+      }
+
+      for (int i = data.dynamic_obstacles.size() + _n_other_halfspaces; i < CONFIG["max_obstacles"].as<int>() + _n_other_halfspaces; i++)
+      {
+        _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_a1", _dummy_a1);
+        _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_a2", _dummy_a2);
+        _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_b", _dummy_b);
       }
     }
   }
@@ -160,8 +187,10 @@ namespace MPCPlanner
     return true;
   }
 
-  void LinearizedConstraints::visualize(const RealTimeData &data)
+  void LinearizedConstraints::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
+    (void)module_data;
+
     for (int k = 1; k < _solver->N; k++)
     {
       for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)

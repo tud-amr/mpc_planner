@@ -2,6 +2,7 @@
 #define MPC_PLANNER_H
 
 #include <mpc_planner_types/data_types.h>
+#include <mpc_planner_types/module_data.h>
 
 #include <ros_tools/profiling.h>
 
@@ -31,7 +32,7 @@ namespace MPCPlanner
         Planner();
 
     public:
-        PlannerOutput solveMPC(State &state, const RealTimeData &data);
+        PlannerOutput solveMPC(State &state, RealTimeData &data);
         double getSolution(int k, std::string &&var_name);
 
         void onDataReceived(RealTimeData &data, std::string &&data_name);
@@ -45,6 +46,8 @@ namespace MPCPlanner
     private:
         std::shared_ptr<Solver> _solver;
         PlannerOutput _output;
+
+        ModuleData _module_data;
 
         std::vector<std::shared_ptr<ControllerModule>> _modules;
 

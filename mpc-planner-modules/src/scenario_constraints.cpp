@@ -20,19 +20,19 @@ namespace MPCPlanner
     LOG_INITIALIZED();
   }
 
-  void ScenarioConstraints::update(State &state, const RealTimeData &data)
+  void ScenarioConstraints::update(State &state, const RealTimeData &data, ModuleData &module_data)
   {
     (void)state;
 
     _scenario_module->update(data);
   }
 
-  void ScenarioConstraints::setParameters(const RealTimeData &data, int k)
+  void ScenarioConstraints::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
   {
     _scenario_module->setParameters(data, k);
   }
 
-  int ScenarioConstraints::optimize(State &state, const RealTimeData &data)
+  int ScenarioConstraints::optimize(State &state, const RealTimeData &data, ModuleData &module_data)
   {
     (void)state;
     (void)data;
@@ -87,7 +87,7 @@ namespace MPCPlanner
     return true;
   }
 
-  void ScenarioConstraints::visualize(const RealTimeData &data)
+  void ScenarioConstraints::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
     LOG_DEBUG("ScenarioConstraints::visualize");
     _scenario_module->visualize(data);

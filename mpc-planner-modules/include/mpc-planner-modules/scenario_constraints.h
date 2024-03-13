@@ -14,15 +14,15 @@ namespace MPCPlanner
     ScenarioConstraints(std::shared_ptr<Solver> solver);
 
   public:
-    void update(State &state, const RealTimeData &data) override;
-    void setParameters(const RealTimeData &data, int k) override;
+    void update(State &state, const RealTimeData &data, ModuleData &module_data) override;
+    void setParameters(const RealTimeData &data, const ModuleData &module_data, int k) override;
 
     void onDataReceived(RealTimeData &data, std::string &&data_name) override;
     bool isDataReady(const RealTimeData &data, std::string &missing_data) override;
 
-    int optimize(State &state, const RealTimeData &data) override; // Default: no custom optimization
+    int optimize(State &state, const RealTimeData &data, ModuleData &module_data) override; // Default: no custom optimization
 
-    void visualize(const RealTimeData &data) override;
+    void visualize(const RealTimeData &data, const ModuleData &module_data) override;
 
   private:
     std::unique_ptr<ScenarioModule::ScenarioModule> _scenario_module;

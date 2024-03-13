@@ -13,20 +13,24 @@ namespace MPCPlanner
     Contouring(std::shared_ptr<Solver> solver);
 
   public:
-    void update(State &state, const RealTimeData &data) override;
-    void setParameters(const RealTimeData &data, int k) override;
+    void update(State &state, const RealTimeData &data, ModuleData &module_data) override;
+    void setParameters(const RealTimeData &data, const ModuleData &module_data, int k) override;
 
     void onDataReceived(RealTimeData &data, std::string &&data_name) override;
     bool isDataReady(const RealTimeData &data, std::string &missing_data) override;
 
     bool isObjectiveReached(const RealTimeData &data) override;
 
-    void visualize(const RealTimeData &data) override;
+    void visualize(const RealTimeData &data, const ModuleData &module_data) override;
 
     void reset() override;
 
   private:
     std::unique_ptr<RosTools::Spline2D> _spline{nullptr};
+
+    void constructRoadConstraints(const RealTimeData &data, ModuleData &module_data);
+
+    void visualizeRoadConstraints(const RealTimeData &data, const ModuleData &module_data);
 
     int _closest_segment{0};
   };

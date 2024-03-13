@@ -13,15 +13,18 @@ namespace MPCPlanner
     _weight_names = WEIGHT_PARAMS;
   }
 
-  void MPCBaseModule::update(State &state, const RealTimeData &data)
+  void MPCBaseModule::update(State &state, const RealTimeData &data, ModuleData &module_data)
   {
     (void)state;
     (void)data;
+    (void)module_data;
   }
 
-  void MPCBaseModule::setParameters(const RealTimeData &data, int k)
+  void MPCBaseModule::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
   {
     (void)data;
+    (void)module_data;
+
     if (k == 0)
       LOG_DEBUG("setParameters()");
 

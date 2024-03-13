@@ -16,13 +16,13 @@ namespace MPCPlanner
     LOG_INITIALIZED();
   }
 
-  void GaussianConstraints::update(State &state, const RealTimeData &data)
+  void GaussianConstraints::update(State &state, const RealTimeData &data, ModuleData &module_data)
   {
     (void)state;
     (void)data;
   }
 
-  void GaussianConstraints::setParameters(const RealTimeData &data, int k)
+  void GaussianConstraints::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
   {
 
     _solver->setParameter(k, "ego_disc_radius", CONFIG["robot_radius"].as<double>());
@@ -75,7 +75,7 @@ namespace MPCPlanner
     return true;
   }
 
-  void GaussianConstraints::visualize(const RealTimeData &data)
+  void GaussianConstraints::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
     LOG_DEBUG("GaussianConstraints::visualize");
     auto &publisher = VISUALS.getPublisher(_name);

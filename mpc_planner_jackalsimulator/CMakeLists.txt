@@ -29,7 +29,7 @@ generate_dynamic_reconfigure_options(cfg/settings.cfg)
 
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}
-  INCLUDE_DIRS include include/${PROJECT_NAME}
+  INCLUDE_DIRS include/${PROJECT_NAME}
 )
 
 include_directories(
@@ -45,6 +45,5 @@ add_definitions(-DMPC_PLANNER_ROS)
 
 install(
   TARGETS jackalsimulator_planner
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

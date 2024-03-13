@@ -291,7 +291,7 @@ void JackalPlanner::visualize()
 
 void JackalPlanner::reset()
 {
-    LOG_INFO("Resetting");
+    LOG_MARK("Resetting");
 
     // Reset the environment
     for (int j = 0; j < 1; j++)

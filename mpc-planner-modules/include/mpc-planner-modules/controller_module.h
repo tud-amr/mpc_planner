@@ -1,6 +1,7 @@
 #ifndef __CONTROLLER_MODULE_H__
 #define __CONTROLLER_MODULE_H__
 
+#include <mpc_planner_types/module_data.h>
 #include <mpc_planner_types/realtime_data.h>
 #include <mpc-planner-solver/solver_interface.h>
 
@@ -43,23 +44,26 @@ namespace MPCPlanner
     public:
         /** ==== MAIN FUNCTIONS ==== */
         /** @brief Update the module (any computations that need to happen before setting solver parameters) */
-        virtual void update(State &state, const RealTimeData &data)
+        virtual void update(State &state, const RealTimeData &data, ModuleData &module_data)
         {
             (void)state;
             (void)data;
+            (void)module_data;
         };
 
         /** @brief Insert computed parameters for the solver */
-        virtual void setParameters(const RealTimeData &data, int k)
+        virtual void setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
         {
             (void)data;
+            (void)module_data;
             (void)k;
         };
 
         /** @brief Visualize the computations in this module */
-        virtual void visualize(const RealTimeData &data)
+        virtual void visualize(const RealTimeData &data, const ModuleData &module_data)
         {
             (void)data;
+            (void)module_data;
         };
 
         /** ==== OPTIONAL FUNCTIONS ==== */
@@ -96,10 +100,11 @@ namespace MPCPlanner
          * @brief Override to define a custom optimization loop. Note that there can only be ONE customized optimization.
          * @return int exit_code of the solver, return any exit_code other than "EXIT_CODE_NOT_OPTIMIZED_YET" to define this as a custom optimization
          */
-        virtual int optimize(State &state, const RealTimeData &data)
+        virtual int optimize(State &state, const RealTimeData &data, ModuleData &module_data)
         {
             (void)state;
             (void)data;
+            (void)module_data;
             return EXIT_CODE_NOT_OPTIMIZED_YET;
         }; // Default: no custom optimization
 

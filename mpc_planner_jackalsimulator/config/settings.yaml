@@ -23,6 +23,13 @@ robot:
   width: 0.65
 obstacle_radius: 0.4
 
+linearized_constraints:
+  add_halfspaces: 2  # For road constraints
+
+road:
+  two_way: false
+  width: 6.0
+
 shift_previous_solution_forward: false
 
 contouring:
@@ -30,7 +37,7 @@ contouring:
   preview: 0.0
 
 t-mpc:
-  use_t-mpc++: false
+  use_t-mpc++: true
   enable_constraints: true
 
 probabilistic:

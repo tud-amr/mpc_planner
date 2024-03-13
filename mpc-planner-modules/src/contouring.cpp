@@ -1,6 +1,7 @@
 #include "mpc-planner-modules/contouring.h"
 
 #include <mpc-planner-util/parameters.h>
+#include <mpc-planner-util/data_visualization.h>
 
 #include <ros_tools/visuals.h>
 #include <ros_tools/profiling.h>
@@ -16,25 +17,26 @@ namespace MPCPlanner
     LOG_INITIALIZED();
   }
 
-  void Contouring::update(State &state, const RealTimeData &data)
+  void Contouring::update(State &state, const RealTimeData &data, ModuleData &module_data)
   {
     (void)data;
     PROFILE_SCOPE("Contouring Update");
 
     LOG_DEBUG("contouring::update()");
 
-    // Get the closest point
-    double closest_s;
-
     // Update the closest point
+    double closest_s;
     _spline->findClosestPoint(state.getPos(), _closest_segment, closest_s);
 
     state.set("spline", closest_s); // We need to initialize the spline state here
+
+    constructRoadConstraints(data, module_data);
   }
 
-  void Contouring::setParameters(const RealTimeData &data, int k)
+  void Contouring::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
   {
     (void)data;
+    (void)module_data;
     LOG_DEBUG("contouring::setparameters");
     PROFILE_SCOPE("Contouring Set Parameters");
 
@@ -132,7 +134,48 @@ namespace MPCPlanner
     return index >= _spline->numSegments();
   }
 
-  void Contouring::visualize(const RealTimeData &data)
+  void Contouring::constructRoadConstraints(const RealTimeData &data, ModuleData &module_data)
+  {
+    LOG_MARK("Constructing road constraints.");
+
+    /** @brief If bounds are not supplied construct road constraints based on a set width*/
+    module_data.static_obstacles.resize(_solver->N);
+
+    // OLD VERSION:
+    bool two_way = CONFIG["road"]["two_way"].as<bool>();
+    double road_width_half = CONFIG["road"]["width"].as<double>() / 2.;
+    for (int k = 0; k < _solver->N; k++)
+    {
+      double cur_s = _solver->getEgoPrediction(k + 1, "spline");
+
+      // This is the final point and the normal vector of the path
+      Eigen::Vector2d path_point = _spline->getPoint(cur_s);
+      Eigen::Vector2d dpath = _spline->getOrthogonal(cur_s);
+
+      // LEFT HALFSPACE
+      Eigen::Vector2d A = _spline->getOrthogonal(cur_s);
+      double width_times = two_way ? 3.0 : 1.0; // 3w for double lane
+
+      // line is parallel to the spline
+      Eigen::Vector2d boundary_left =
+          path_point + dpath * (width_times * road_width_half - data.robot_area[0].radius);
+
+      double b = A.transpose() * boundary_left;
+
+      module_data.static_obstacles[k].emplace_back(A, b);
+
+      // RIGHT HALFSPACE
+      A = _spline->getOrthogonal(cur_s); // Eigen::Vector2d(-path_dy, path_dx); // line is parallel to the spline
+
+      Eigen::Vector2d boundary_right =
+          path_point - dpath * (road_width_half - data.robot_area[0].radius);
+      b = A.transpose() * boundary_right; // And lies on the boundary point
+
+      module_data.static_obstacles[k].emplace_back(-A, -b);
+    }
+  }
+
+  void Contouring::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
     if (_spline.get() == nullptr)
       return;
@@ -171,6 +214,27 @@ namespace MPCPlanner
     }
 
     publisher_path.publish();
+
+    visualizeRoadConstraints(data, module_data);
+  }
+
+  void Contouring::visualizeRoadConstraints(const RealTimeData &data, const ModuleData &module_data)
+  {
+    (void)data;
+    if (module_data.static_obstacles.empty())
+      return;
+
+    for (int k = 0; k < _solver->N; k++)
+    {
+      for (size_t h = 0; h < module_data.static_obstacles[k].size(); h++)
+      {
+        visualizeLinearConstraint(module_data.static_obstacles[k][h],
+                                  k, _solver->N,
+                                  "contouring/road_constraints",
+                                  false, 0.5, 0.1);
+      }
+    }
+    VISUALS.getPublisher("contouring/road_constraints").publish();
   }
 
   void Contouring::reset()
@@ -179,70 +243,6 @@ namespace MPCPlanner
   }
 
 } // namespace MPCPlanner
-
-// Contouring::Contouring(rclcpp::Node *node, std::shared_ptr<SolverInterface> solver, MPCConfiguration *config, VehicleRegion *vehicle, ModuleType type, std::string &&module_name)
-//     : ControllerModule(node, solver, config, vehicle, type, std::forward<std::string>(module_name))
-// {
-//   LMPCC_INFO_ALWAYS(logger_, "Initializing Reference Path");
-
-//   // Reference Path
-//   ros_markers_reference_path_.reset(new RosTools::ROSMarkerPublisher(node, config_->reference_path_topic_.c_str(), config_->target_frame_, 45));
-//   ros_markers_reference_arrows_.reset(new RosTools::ROSMarkerPublisher(node, config_->reference_arrows_topic_.c_str(), config_->target_frame_, 30));
-//   ros_markers_splineindex.reset(new RosTools::ROSMarkerPublisher(node, config_->spline_index_topic_.c_str(), config_->target_frame_, 5));
-//   ros_markers_linearboundaries.reset(new RosTools::ROSMarkerPublisher(node, "lmpcc/linear_road_constraints", config_->target_frame_, 100));
-//   ros_markers_road_limits.reset(new RosTools::ROSMarkerPublisher(node, "lmpcc/road_limits", config_->target_frame_, 300));
-
-//   DeclareROSParameters(node);
-
-//   // Read the reference from ROS Parameters
-//   ReadReferencePath(received_reference_path_.centerline.x,
-//                     received_reference_path_.centerline.y);
-
-//   // Use the read waypoints to construct a reference path
-//   ProcessReceivedReferencePath(received_reference_path_);
-
-//   LMPCC_SUCCESS_ALWAYS(logger_, "Initialized");
-// }
-
-// void Contouring::ProcessReceivedReferencePath(const PathWithBounds &path)
-// {
-//   // Initialize the path from file
-//   ConstructReferencePath(path);
-
-//   // Set the tracking index
-//   spline_index_ = InitializeClosestPoint(solver_.get()); // Stable initialization
-
-//   // Initialize the solver spline parameter
-//   UpdateClosestPoint(solver_.get(), current_s_); // Recursive initialization
-//   solver_->setInitialSpline(current_s_);         // In SetParameters?
-//   for (size_t k = 0; k < solver_->FORCES_N; k++)
-//     solver_->spline(k) = current_s_;
-// }
-
-// void Contouring::ReadReferencePath(std::vector<double> &x_out, std::vector<double> &y_out)
-// {
-//   LMPCC_INFO_ALWAYS(logger_, "Reading Reference Path");
-
-//   // Check if all reference vectors are of the same length
-//   assert(ref_x_.size() == ref_y_.size());
-//   assert(ref_x_.size() == ref_theta_.size());
-
-//   geometry_msgs::msg::Pose pose;
-//   tf2::Quaternion myQuaternion;
-
-//   // Iterate over the reference points given
-//   x_out.resize(ref_x_.size());
-//   y_out.resize(ref_y_.size());
-//   for (size_t ref_point_it = 0; ref_point_it < ref_x_.size(); ref_point_it++)
-//   {
-//     // Create a pose at each position
-//     pose.position.x = ref_x_.at(ref_point_it);
-//     pose.position.y = ref_y_.at(ref_point_it);
-
-//     x_out[ref_point_it] = pose.position.x;
-//     y_out[ref_point_it] = pose.position.y;
-//   }
-// }
 
 // void Contouring::ConstructReferencePath(const PathWithBounds &path)
 // {

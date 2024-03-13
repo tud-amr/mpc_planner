@@ -20,9 +20,15 @@ namespace MPCPlanner
         Eigen::Vector2d getPosition(const Eigen::Vector2d &robot_position, const double angle) const;
     };
 
-    struct StaticObstacle
+    struct Halfspace
     {
+        // Ax <= b
+        Eigen::Vector2d A;
+        double b;
+
+        Halfspace(const Eigen::Vector2d &A, const double b);
     };
+    typedef std::vector<Halfspace> StaticObstacle;
 
     enum class PredictionType
     {

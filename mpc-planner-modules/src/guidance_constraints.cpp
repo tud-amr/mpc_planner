@@ -4,6 +4,7 @@
 #include <mpc-planner-util/data_visualization.h>
 
 #include <ros_tools/visuals.h>
+#include <ros_tools/profiling.h>
 
 #include <omp.h>
 
@@ -44,9 +45,10 @@ namespace MPCPlanner
         LOG_INITIALIZED();
     }
 
-    void GuidanceConstraints::update(State &state, const RealTimeData &data)
+    void GuidanceConstraints::update(State &state, const RealTimeData &data, ModuleData &module_data)
     {
         (void)data;
+        (void)module_data;
         LOG_MARK("Guidance Constraints: Update");
 
         // global_guidance_->LoadHalfspaces(); // Load static obstacles represented by halfspaces
@@ -83,10 +85,13 @@ namespace MPCPlanner
         LOG_MARK("Running Guidance Search");
         global_guidance_->Update(); // data); /** @note The main update */
         // LOG_VALUE("Number of Guidance Trajectories", global_guidance_->NumberOfGuidanceTrajectories());
+        empty_data_ = data;
+        empty_data_.dynamic_obstacles.clear();
     }
 
-    void GuidanceConstraints::setParameters(const RealTimeData &data, int k)
+    void GuidanceConstraints::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
     {
+        (void)module_data;
         (void)data;
         if (k == 0)
         {
@@ -95,7 +100,7 @@ namespace MPCPlanner
         }
     }
 
-    int GuidanceConstraints::optimize(State &state, const RealTimeData &data)
+    int GuidanceConstraints::optimize(State &state, const RealTimeData &data, ModuleData &module_data)
     {
         // Required for parallel call to the solvers when using Forces
         omp_set_nested(1);
@@ -109,6 +114,7 @@ namespace MPCPlanner
 #pragma omp parallel for num_threads(8)
         for (auto &planner : planners_)
         {
+            PROFILE_SCOPE("Guidance Constraints: Parallel Optimization");
             planner.result.Reset();
             planner.disabled = false;
 
@@ -129,11 +135,17 @@ namespace MPCPlanner
             // CONSTRUCT CONSTRAINTS
             if (planner.is_original_planner || (!CONFIG["t-mpc"]["enable_constraints"].as<bool>()))
             {
-                // For the original problem we construct dummy constraints but with the static constraints (no guidance!)
+                // empty_data_.dynamic_obstacles.clear();
+                // // For the original problem we construct dummy constraints but with the static constraints (no guidance!)
+                // for (int i = 0; i < CONFIG["max_obstacles"].as<int>(); i++)
+                // {
+                //     empty_data_.dynamic_obstacles.emplace_back(i, Eigen::Vector2d(100., 100.), 0., 0.);
+                //     empty_data_.dynamic_obstacles.back().prediction = constantVelocityPrediction();
+                // }
                 // empty_data_.halfspaces_ = data_ptr_->halfspaces_; // Copy in the halfspace data
 
-                planner.guidance_constraints->update(state, empty_data_);
-                planner.safety_constraints->update(state, data); // Updates collision avoidance constraints
+                planner.guidance_constraints->update(state, empty_data_, module_data);
+                planner.safety_constraints->update(state, data, module_data); // Updates collision avoidance constraints
             }
             else
             {
@@ -141,16 +153,20 @@ namespace MPCPlanner
 
                 initializeSolverWithGuidance(planner);
 
-                planner.guidance_constraints->update(state, data); // Updates linearization of constraints
-                planner.safety_constraints->update(state, data);   // Updates collision avoidance constraints
+                planner.guidance_constraints->update(state, data, module_data); // Updates linearization of constraints
+                planner.safety_constraints->update(state, data, module_data);   // Updates collision avoidance constraints
             }
 
             // LOAD PARAMETERS
             LOG_MARK("Planner [" << planner.id << "]: Loading updated parameters into the solver");
             for (int k = 0; k < _solver->N; k++)
             {
-                planner.guidance_constraints->setParameters(data, k); // Set this solver's parameters
-                planner.safety_constraints->setParameters(data, k);
+                if (planner.is_original_planner)
+                    planner.guidance_constraints->setParameters(empty_data_, module_data, k); // Set this solver's parameters
+                else
+                    planner.guidance_constraints->setParameters(data, module_data, k); // Set this solver's parameters
+
+                planner.safety_constraints->setParameters(data, module_data, k);
             }
 
             /** @todo Set timeout */
@@ -200,8 +216,8 @@ namespace MPCPlanner
         // LOG_INFO("Best Planner ID: " << best_planner.id);
 
         // VISUALIZATION
-        best_planner.guidance_constraints->visualize(data);
-        best_planner.safety_constraints->visualize(data);
+        best_planner.guidance_constraints->visualize(data, module_data);
+        best_planner.safety_constraints->visualize(data, module_data);
 
         // Communicate to the guidance which topology class we follow (none if it was the original planner)
         global_guidance_->OverrideSelectedTrajectory(best_planner.result.guidance_ID, best_planner.is_original_planner);
@@ -260,9 +276,10 @@ namespace MPCPlanner
     }
 
     /** @brief Visualize the computations in this module  */
-    void GuidanceConstraints::visualize(const RealTimeData &data)
+    void GuidanceConstraints::visualize(const RealTimeData &data, const ModuleData &module_data)
     {
         (void)data;
+        (void)module_data;
         LOG_MARK("Guidance Constraints: Visualize()");
 
         // Contouring::Visualize();
@@ -288,7 +305,7 @@ namespace MPCPlanner
                 for (int k = 1; k < _solver->N; k++)
                     trajectory.add(planner.local_solver->getOutput(k, "x"), planner.local_solver->getOutput(k, "y"));
                 if (planner.is_original_planner)
-                    visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 0.4, 10, 12, true, false);
+                    visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 1.0, 11, 12, true, false);
                 else
                     visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 0.4, planner.result.color, global_guidance_->GetConfig()->n_paths_);
             }

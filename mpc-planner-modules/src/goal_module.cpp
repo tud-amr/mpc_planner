@@ -14,11 +14,11 @@ namespace MPCPlanner
         LOG_INITIALIZED();
     }
 
-    void GoalModule::update(State &state, const RealTimeData &data)
+    void GoalModule::update(State &state, const RealTimeData &data, ModuleData &module_data)
     {
     }
 
-    void GoalModule::setParameters(const RealTimeData &data, int k)
+    void GoalModule::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
     {
         if (k == 0)
             LOG_DEBUG("Goal Module::setParameters()");
@@ -38,7 +38,7 @@ namespace MPCPlanner
         return data.goal_received;
     }
 
-    void GoalModule::visualize(const RealTimeData &data)
+    void GoalModule::visualize(const RealTimeData &data, const ModuleData &module_data)
     {
         if (!data.goal_received)
             return;

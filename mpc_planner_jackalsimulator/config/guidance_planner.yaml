@@ -6,7 +6,7 @@ prm:
   topology_comparison: Homology         # Homology (default) or UVD
   sampling_function: Uniform # Uniform (default)
   use_learning: false
-  predictions_are_constant_velocity: true
+  predictions_are_constant_velocity: false
   track_selected_homology_only: false
   sample_margin: 0. #0. # Was 0.
   min_path_improvement: 0.
@@ -28,7 +28,7 @@ prm:
     velocity: 0. #2.
     acceleration: 1. #1.
   spline_optimization:  # Settings when the splines are optimized and used as reference trajectory
-    enable: false #false
+    enable: true #false
     num_points: 10      # -1 = N
     geometric: 25.
     smoothness: 10.
@@ -37,7 +37,7 @@ prm:
   visuals:
     transparency: 0.9 #0.5 #0.9               # The least transparent the obstacle visualization is (0-1)
     visualize_all_samples: false    # Visualizes all PRM samples
-    visualize_homology: true
+    visualize_homology: false
     show_indices: false
   enable:
     dynamically_propagate_nodes: true  # Propagate the nodes in time (dropping them)

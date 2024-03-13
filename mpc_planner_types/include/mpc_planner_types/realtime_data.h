@@ -11,7 +11,6 @@ namespace MPCPlanner
 
         std::vector<Disc> robot_area;
 
-        std::vector<StaticObstacle> static_obstacles;
         std::vector<DynamicObstacle> dynamic_obstacles;
         ReferencePath reference_path;
 
@@ -30,5 +29,7 @@ namespace MPCPlanner
             robot_area = robot_area_copy;
         }
     };
+
+
 }
 #endif
