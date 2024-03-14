@@ -14,9 +14,13 @@
   <depend>mpc-planner-solver</depend>
   <depend>mpc-planner-util</depend>
   <depend>mpc_planner_types</depend>
+  <depend>mpc_planner_msgs</depend>
   <depend>ros_tools</depend>
 
   <depend>nav_msgs</depend>
+  <depend>derived_object_msgs</depend>
+
+  <exec_depend>roadmap</exec_depend>
 
   <export>
     <build_type>catkin</build_type>

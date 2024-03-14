@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>mpc-planner-jackal</name>
+  <name>mpc_planner_jackalsimulator</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="groot.oscar.de@gmail.com">r2c1</maintainer>
@@ -11,13 +11,20 @@
 
   <depend>roscpp</depend>
   <depend>mpc-planner</depend>
+  <depend>mpc_planner_msgs</depend>
   <depend>mpc-planner-modules</depend>
   <depend>mpc-planner-solver</depend>
   <depend>mpc-planner-util</depend>
   <depend>mpc_planner_types</depend>
   <depend>ros_tools</depend>
+  <depend>dynamic_reconfigure</depend>
 
   <depend>nav_msgs</depend>
+  
+  <exec_depend>pedestrian_simulator</exec_depend>
+  <exec_depend>jackal_gazebo</exec_depend>
+  <exec_depend>mobile_robot_state_publisher</exec_depend>
+  <exec_depend>roadmap</exec_depend>
 
   <export>
     <build_type>catkin</build_type>

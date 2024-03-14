@@ -95,11 +95,12 @@ def main():
 
             print(f"Switching to ROS2")
             if cur_ros_mode != 0:
-                # Move the current ROS1 files to the version with a 1
-                for i in range(len(ROS1)):
-                    print(current[i])
-                    print(ROS1[i])
-                    os.rename(current[i], ROS1[i])
+                if exists:
+                    # Move the current ROS1 files to the version with a 1
+                    for i in range(len(ROS1)):
+                        print(current[i])
+                        print(ROS1[i])
+                        os.rename(current[i], ROS1[i])
 
             # Now move the ROS2 files to the current
             for i in range(len(ROS2)):

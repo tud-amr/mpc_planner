@@ -11,7 +11,7 @@ include_directories(include)
 
 add_message_files(
   DIRECTORY msg
-  FILES gaussian.msg obstacle_gmm.msg obstacle_array.msg
+  FILES Gaussian.msg ObstacleGMM.msg ObstacleArray.msg
 )
 
 generate_messages(DEPENDENCIES nav_msgs std_msgs geometry_msgs)

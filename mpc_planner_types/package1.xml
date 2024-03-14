@@ -9,6 +9,8 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <depend>eigen</depend>
+
   <export>
     <build_type>catkin</build_type>
   </export>

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(mpc-planner-jackal)
+project(mpc_planner_jackalsimulator)
 
 add_compile_options(-std=c++17)
 
@@ -10,12 +10,14 @@ endif()
 set(DEPENDENCIES
   roscpp
   mpc-planner
+  mpc_planner_msgs
   mpc-planner-modules
   mpc-planner-solver
   mpc-planner-util
   mpc_planner_types
   ros_tools
   nav_msgs
+  dynamic_reconfigure
 )
 
 # find dependencies
@@ -23,10 +25,11 @@ find_package(catkin REQUIRED COMPONENTS
   ${DEPENDENCIES}
 )
 
+generate_dynamic_reconfigure_options(cfg/settings.cfg)
+
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}
-  INCLUDE_DIRS include include/${PROJECT_NAME}
-  # LIBRARIES ${PROJECT_NAME}
+  INCLUDE_DIRS include/${PROJECT_NAME}
 )
 
 include_directories(
@@ -34,14 +37,13 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(jackal_planner src/ros1_jackal_planner.cpp)
-add_dependencies(jackal_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(jackal_planner
-  ${catkin_LIBRARIES} 
-  yaml-cpp
-)
+add_executable(jackalsimulator_planner src/ros1_jackalsimulator.cpp)
+add_dependencies(jackalsimulator_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(jackalsimulator_planner ${catkin_LIBRARIES})
+
+add_definitions(-DMPC_PLANNER_ROS)
+
 install(
-  TARGETS jackal_planner
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  TARGETS jackalsimulator_planner
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

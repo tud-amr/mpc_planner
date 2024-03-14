@@ -51,7 +51,16 @@ namespace MPCPlanner
         (void)module_data;
         LOG_MARK("Guidance Constraints: Update");
 
-        // global_guidance_->LoadHalfspaces(); // Load static obstacles represented by halfspaces
+        // Convert static obstacles
+        if (!module_data.static_obstacles.empty())
+        {
+            std::vector<GuidancePlanner::Halfspace> halfspaces;
+            for (size_t i = 0; i < module_data.static_obstacles[0].size(); i++)
+            {
+                halfspaces.emplace_back(module_data.static_obstacles[0][i].A, module_data.static_obstacles[0][i].b);
+            }
+            global_guidance_->LoadStaticObstacles(halfspaces); // Load static obstacles represented by halfspaces
+        }
 
         if (CONFIG["t-mpc"]["use_t-mpc++"].as<bool>() && global_guidance_->GetConfig()->n_paths_ == 0) // No global guidance
             return;
@@ -62,18 +71,16 @@ namespace MPCPlanner
 
         /** @note Reference path */
         // Temporary
-        bool enable_two_way_road_ = false;
-        double road_width_left_ = 3.5;
-        double road_width_right_ = 3.5;
+        bool two_way = CONFIG["road"]["two_way"].as<bool>();
+        double road_width_left_ = CONFIG["road"]["width"].as<double>() / 2.;
+        double road_width_right_ = CONFIG["road"]["width"].as<double>() / 2.;
 
         /** @todo Find where we are on the spline */
         int current_segment;
         double current_s;
         _spline->findClosestPoint(state.getPos(), current_segment, current_s);
 
-        double road_width_left = enable_two_way_road_ ? road_width_left_ * 3. : road_width_left_;
-        // _guidance_spline = std::make_unique<RosTools::Spline2D>(_spline->getXSpline(),
-        // _spline->getYSpline()); // Construct a spline from the given points
+        double road_width_left = two_way ? road_width_left_ * 3. : road_width_left_;
 
         global_guidance_->LoadReferencePath(std::max(0., current_s), _spline,
                                             road_width_left - CONFIG["robot_radius"].as<double>() - 0.1,
@@ -296,7 +303,7 @@ namespace MPCPlanner
             Trajectory initial_trajectory;
             for (int k = 1; k < planner.local_solver->N; k++)
                 initial_trajectory.add(planner.local_solver->getEgoPrediction(k, "x"), planner.local_solver->getEgoPrediction(k, "y"));
-            visualizeTrajectory(initial_trajectory, _name + "/warmstart_trajectories", false, 0.4, 20, 20);
+            visualizeTrajectory(initial_trajectory, _name + "/warmstart_trajectories", false, 0.2, 20, 20);
 
             // Visualize the optimized trajectory
             if (planner.result.success)
@@ -307,7 +314,7 @@ namespace MPCPlanner
                 if (planner.is_original_planner)
                     visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 1.0, 11, 12, true, false);
                 else
-                    visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 0.4, planner.result.color, global_guidance_->GetConfig()->n_paths_);
+                    visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 0.2, planner.result.color, global_guidance_->GetConfig()->n_paths_);
             }
         }
 
