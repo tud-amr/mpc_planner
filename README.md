@@ -18,12 +18,38 @@ If you find this repository useful for your research, please consider citing one
 
 
 ## Installation (Solver Generation)
-The NMPC solver is generated with Forces Pro. For now it is assumed that your Forces directory is placed at `~/forces_pro_client/`. To setup a virtual environment for the solver generation, install `python 3.8.10` (https://www.python.org/downloads/release/python-3810/). Then run:
+The NMPC solver is generated with Forces Pro. For now it is assumed that your Forces directory is placed at `~/forces_pro_client/`. A poetry environment is provided with the solver generation. The environment requires `python 3.8.10`. We recommend to install this version with `pyenv`.
+
+<!-- <details> -->
+<!-- <summary>Safely installing Python 3.8.10</summary> -->
+You can use `pyenv` to safely install the required Python version. Install pyenv with
+
+```
+curl https://pyenv.run | bash
+```
+
+Add the following to ~/.bashrc:
+
+```bash
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+```
+
+Then install python3.8.10 and activate it, before `poetry install`
+
+```
+pyenv install 3.8.10
+pyenv local 3.8.10
+```
+
+To setup the virtual environment run:
 
 ```bash
 pip3 install poetry
 poetry install
 ```
+
 
 To generate a solver for your system (e.g., `jackal`), run
 
