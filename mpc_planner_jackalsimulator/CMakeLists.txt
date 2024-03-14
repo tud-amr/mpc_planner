@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(mpc_planner_jackalsimulator)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
 find_package(OpenMP)
@@ -15,33 +15,19 @@ else()
 endif()
 
 set(DEPENDENCIES
-  mpc-planner
-  mpc-planner-solver
-  mpc-planner-modules
-  mpc-planner-util
-  mpc_planner_types
-  mpc_planner_msgs
-  ros_tools
   rclcpp
   nav_msgs
   std_msgs
   std_srvs
+  ros_tools
+  mpc-planner
+  mpc_planner_msgs
 )
 
-# find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(mpc-planner REQUIRED)
-find_package(mpc-planner-solver REQUIRED)
-find_package(mpc-planner-modules REQUIRED)
-find_package(mpc-planner-util REQUIRED)
-find_package(mpc_planner_types REQUIRED)
-find_package(mpc_planner_msgs REQUIRED)
-
-find_package(rclcpp REQUIRED)
-find_package(ros_tools REQUIRED)
-find_package(nav_msgs REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(std_srvs REQUIRED)
+foreach(pkg IN LISTS DEPENDENCIES)
+  find_package(${pkg} REQUIRED)
+endforeach()
 
 include_directories(
   include
@@ -53,20 +39,6 @@ target_include_directories(jackal_planner PUBLIC
 "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
 ament_target_dependencies(jackal_planner ${DEPENDENCIES})
-# target_link_libraries(jackal_planner)
-
-
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
-  set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # comment the line when this package is in a git repo and when
-  # a copyright and license is added to all source files
-  set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
 
 install(TARGETS jackal_planner
   DESTINATION lib/${PROJECT_NAME})

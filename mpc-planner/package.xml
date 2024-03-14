@@ -12,10 +12,10 @@
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 
-  <build_depend>mpc-planner-util</build_depend>
-  <build_depend>mpc_planner_types</build_depend>
-  <build_depend>mpc-planner-solver</build_depend>
-  <build_depend>mpc-planner-modules</build_depend>
+  <depend>mpc-planner-util</depend>
+  <depend>mpc_planner_types</depend>
+  <depend>mpc-planner-solver</depend>
+  <depend>mpc-planner-modules</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

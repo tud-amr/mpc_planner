@@ -10,23 +10,18 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>mpc-planner</depend>
-  <depend>mpc-planner-solver</depend>
-  <depend>mpc-planner-modules</depend>
-  <depend>mpc-planner-util</depend>
-  <depend>mpc_planner_types</depend>
   <depend>mpc_planner_msgs</depend>
   <depend>ros_tools</depend>
 
-  <build_depend>std_msgs</build_depend>
-  <build_depend>std_srvs</build_depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>nav_msgs</depend>
 
   <depend>autoware_auto_planning_msgs</depend>
   <depend>autoware_auto_vehicle_msgs</depend>
-  <depend>autoware_auto_perception_msgs</depend>
 
-  <exec_depend>nav_msgs</exec_depend>
-  <exec_depend>pedestrian_simulator</exec_depend>
-  <exec_depend>lanelets_to_path</exec_depend>
+  <!-- <exec_depend>pedestrian_simulator</exec_depend> -->
+  <!-- <exec_depend>lanelets_to_path</exec_depend> -->
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

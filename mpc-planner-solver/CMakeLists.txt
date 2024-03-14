@@ -11,30 +11,28 @@ set(DEPENDENCIES
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(mpc-planner-util REQUIRED)
+foreach(pkg IN LISTS DEPENDENCIES)
+  find_package(${pkg} REQUIRED)
+endforeach()
 
 include_directories(
   include
   Solver/include
 )
 
-add_library(${PROJECT_NAME}
-  src/solver_interface.cpp
-  src/state.cpp
+set(SOLVER_LIBRARY ${PROJECT_SOURCE_DIR}/Solver/lib/libSolver.so)
+add_library(${PROJECT_NAME} SHARED
   Solver/Solver_interface.c
   Solver/Solver_model.c
+  src/solver_interface.cpp
+  src/state.cpp
 )
-target_include_directories(${PROJECT_NAME}
-  PUBLIC
+target_include_directories(${PROJECT_NAME} PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
-ament_target_dependencies(${PROJECT_NAME}
-  ${DEPENDENCIES}
-)
-target_link_libraries(${PROJECT_NAME}
-  ${PROJECT_SOURCE_DIR}/Solver/lib/libSolver.so
-)
+ament_target_dependencies(${PROJECT_NAME} ${DEPENDENCIES})
+target_link_libraries(${PROJECT_NAME} ${SOLVER_LIBRARY})
 
 if(BUILD_TESTING)
   # find_package(ament_lint_auto REQUIRED)
@@ -59,7 +57,8 @@ if(BUILD_TESTING)
 endif()
 
 install(
-  TARGETS ${PROJECT_NAME}
+  TARGETS 
+  ${PROJECT_NAME}
   EXPORT export_${PROJECT_NAME}
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -72,7 +71,11 @@ install(DIRECTORY include/${PROJECT_NAME}
 install(DIRECTORY Solver/include/
   DESTINATION include/${PROJECT_NAME}/)
 
+install(
+  DIRECTORY Solver/lib/
+  DESTINATION lib
+)
+
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(${DEPENDENCIES})
-
 ament_package()

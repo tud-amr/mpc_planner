@@ -10,8 +10,8 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>
-  <build_depend>mpc_planner_types</build_depend>
-  <build_depend>ros_tools</build_depend>
+  <depend>ros_tools</depend>
+  <depend>mpc_planner_types</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

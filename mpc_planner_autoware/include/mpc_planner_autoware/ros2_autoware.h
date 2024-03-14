@@ -25,13 +25,13 @@
 #include <autoware_auto_planning_msgs/msg/path_with_lane_id.hpp>
 #include <autoware_auto_vehicle_msgs/msg/steering_report.hpp>
 
-#include <autoware_auto_perception_msgs/msg/predicted_objects.hpp>
+// #include <autoware_auto_perception_msgs/msg/predicted_objects.hpp>
 
 #include <memory>
 
 using namespace MPCPlanner;
 
-using autoware_auto_perception_msgs::msg::PredictedObjects;
+// using autoware_auto_perception_msgs::msg::PredictedObjects;
 using autoware_auto_planning_msgs::msg::PathWithLaneId;
 using autoware_auto_planning_msgs::msg::Trajectory;
 using autoware_auto_planning_msgs::msg::TrajectoryPoint;
