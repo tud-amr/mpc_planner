@@ -37,7 +37,7 @@ export PYENV_ROOT="$HOME/.pyenv"
 eval "$(pyenv init -)"
 ```
 
-Then install python3.8.10 and activate it, before `poetry install`
+Then install python3.8.10 and activate it, before installing the `poetry` environment:
 
 ```
 pyenv install 3.8.10
@@ -48,7 +48,7 @@ To setup the virtual environment run:
 
 ```bash
 pip3 install poetry
-poetry install
+poetry install --no-root
 ```
 
 
