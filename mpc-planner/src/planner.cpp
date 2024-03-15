@@ -135,6 +135,7 @@ namespace MPCPlanner
 
     void Planner::visualize(const State &state, const RealTimeData &data)
     {
+        PROFILE_FUNCTION();
         LOG_MARK("Planner::visualize");
         (void)state;
 

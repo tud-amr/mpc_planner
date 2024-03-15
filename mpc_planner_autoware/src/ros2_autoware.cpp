@@ -61,7 +61,7 @@ AutowarePlanner::AutowarePlanner()
 
 void AutowarePlanner::initializeSubscribersAndPublishers()
 {
-  LOG_INFO("initializeSubscribersAndPublishers");
+  LOG_INITIALIZE("initializeSubscribersAndPublishers");
 
   _state_sub = this->create_subscription<nav_msgs::msg::Odometry>(
       "~/input/state", 5,
@@ -94,6 +94,7 @@ void AutowarePlanner::initializeSubscribersAndPublishers()
   _ped_clock_frequency_pub = this->create_publisher<std_msgs::msg::Float32>(
       "/pedestrian_simulator/clock_frequency", 1);
   _ped_start_client = this->create_client<std_srvs::srv::Empty>("/pedestrian_simulator/start");
+  LOG_INITIALIZED();
 }
 
 void AutowarePlanner::initializeParameterCallbacks()
@@ -116,8 +117,6 @@ void AutowarePlanner::setRobotRegion()
 void AutowarePlanner::startEnvironment()
 {
   LOG_INFO("Starting pedestrian simulator");
-  // for (int i = 0; i < 20; i++)
-  // {
 
   while (!_ped_start_client->wait_for_service(1s))
   {
@@ -181,7 +180,7 @@ void AutowarePlanner::Loop()
 
 void AutowarePlanner::stateCallback(nav_msgs::msg::Odometry::SharedPtr msg)
 {
-  // LOG_INFO("State callback");
+  LOG_MARK("State callback");
   double angle = RosTools::quaternionToAngle(msg->pose.pose.orientation);
   Eigen::Vector2d autoware_pos(msg->pose.pose.position.x, msg->pose.pose.position.y);
   Eigen::Vector2d center_pos = mapToVehicleCenter(autoware_pos, angle);
@@ -198,11 +197,14 @@ void AutowarePlanner::stateCallback(nav_msgs::msg::Odometry::SharedPtr msg)
 
 void AutowarePlanner::steeringCallback(SteeringReport::SharedPtr msg)
 {
+  LOG_MARK("Steering callback");
   _state.set("delta", msg->steering_tire_angle);
 }
 
 void AutowarePlanner::obstacleCallback(mpc_planner_msgs::msg::ObstacleArray::SharedPtr msg)
 {
+  LOG_MARK("Obstacle callback");
+
   _data.dynamic_obstacles.clear();
 
   for (auto &obstacle : msg->obstacles)
@@ -249,12 +251,10 @@ void AutowarePlanner::obstacleCallback(mpc_planner_msgs::msg::ObstacleArray::Sha
 
 void AutowarePlanner::pathCallback(PathWithLaneId::SharedPtr msg)
 {
-  LOG_DEBUG("Path callback");
+  LOG_MARK("Path callback");
 
   if (isPathTheSame(msg))
-  {
     return;
-  }
 
   _data.reference_path.clear();
 
