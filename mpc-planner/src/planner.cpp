@@ -146,6 +146,16 @@ namespace MPCPlanner
         visualizeObstacles(data.dynamic_obstacles, "obstacles", true);
         visualizeObstaclePredictions(data.dynamic_obstacles, "obstacle_predictions", true);
         visualizeRobotArea(state.getPos(), state.get("psi"), data.robot_area, "robot_area", true);
+
+        std::vector<double> angles;
+        for (int k = 1; k < _solver->N; k++)
+            angles.emplace_back(_solver->getOutput(k, "psi"));
+
+        visualizeRectangularRobotArea(state.getPos(), state.get("psi"),
+                                      CONFIG["robot"]["length"].as<double>(), CONFIG["robot"]["width"].as<double>(),
+                                      "robot_rect_area", true);
+
+        visualizeRobotAreaTrajectory(_output.trajectory, angles, data.robot_area, "robot_area_trajectory", true, 0.1);
         LOG_MARK("Planner::visualize Done");
     }
 

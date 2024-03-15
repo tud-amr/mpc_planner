@@ -13,8 +13,9 @@
   </node>
 
   <include file="$(find-pkg-share pedestrian_simulator)/launch/ros2_simulation.launch">
-    <arg name="pedestrian_scenario" value="autoware/several_crossing.xml"/>
+    <arg name="pedestrian_scenario" value="autoware/tryout4.xml"/>
   </include>
+  <!-- several_crossing.xml | crossing_spree.xml -->
 
   <include file="$(find-pkg-share lanelets_to_path)/launch/lanelets_to_path.launch"/>
 

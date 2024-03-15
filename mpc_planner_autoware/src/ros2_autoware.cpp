@@ -1,5 +1,7 @@
 #include <mpc_planner_autoware/ros2_autoware.h>
+#include <mpc_planner_autoware/reconfigure.h>
 
+#include <mpc-planner/planner.h>
 #include <mpc-planner/data_preparation.h>
 
 #include <mpc-planner-util/parameters.h>
@@ -8,6 +10,7 @@
 #include <ros_tools/visuals.h>
 #include <ros_tools/logging.h>
 #include <ros_tools/convertions.h>
+#include <ros_tools/profiling.h>
 
 using namespace MPCPlanner;
 using namespace rclcpp;
@@ -168,18 +171,6 @@ void AutowarePlanner::Loop()
   {
     actuate();
   }
-  //   // Publish the command
-  //   cmd.linear.x = _planner->getSolution(1, "v");  // = x1
-  //   cmd.angular.z = _planner->getSolution(0, "w"); // = u0
-  //   LOG_VALUE_DEBUG("Commanded v", cmd.linear.x);
-  //   LOG_VALUE_DEBUG("Commanded w", cmd.angular.z);
-  // }
-  // else
-  // {
-  //   cmd.linear.x = 0.0;
-  //   cmd.angular.z = 0.0;
-  // }
-  // _cmd_pub->publish(cmd);
   _benchmarker->stop();
 
   _planner->visualize(_state, _data);
@@ -192,17 +183,17 @@ void AutowarePlanner::stateCallback(nav_msgs::msg::Odometry::SharedPtr msg)
 {
   // LOG_INFO("State callback");
   double angle = RosTools::quaternionToAngle(msg->pose.pose.orientation);
-  _state.set("x", msg->pose.pose.position.x + std::cos(angle) * (2.445 - 1.1)); // length - com_to_back
-  _state.set("y", msg->pose.pose.position.y + std::sin(angle) * (2.445 - 1.1));
+  Eigen::Vector2d autoware_pos(msg->pose.pose.position.x, msg->pose.pose.position.y);
+  Eigen::Vector2d center_pos = mapToVehicleCenter(autoware_pos, angle);
+
+  _state.set("x", center_pos(0));
+  _state.set("y", center_pos(1));
   _state.set("psi", angle);
   _state.set("v", std::sqrt(std::pow(msg->twist.twist.linear.x, 2.) + std::pow(msg->twist.twist.linear.y, 2.)));
+  _state_received_time = this->get_clock()->now();
 
-  // LOG_VALUE("x", _state.get("x"));
-  // LOG_VALUE("y", _state.get("y"));
-  // LOG_VALUE("psi", _state.get("psi"));
-  // LOG_VALUE("v", _state.get("v"));
-
-  // _state.print();
+  if (CONFIG["debug_output"].as<bool>())
+    _state.print();
 }
 
 void AutowarePlanner::steeringCallback(SteeringReport::SharedPtr msg)
@@ -224,14 +215,12 @@ void AutowarePlanner::obstacleCallback(mpc_planner_msgs::msg::ObstacleArray::Sha
         CONFIG["obstacle_radius"].as<double>());
     auto &dynamic_obstacle = _data.dynamic_obstacles.back();
 
-    if (obstacle.probabilities.size() == 0)
-    { // No Predictions!
+    if (obstacle.probabilities.size() == 0) // No Predictions!
       continue;
-    }
 
     // Save the prediction
-    if (obstacle.probabilities.size() == 1)
-    { // One mode
+    if (obstacle.probabilities.size() == 1) // One mode
+    {
       dynamic_obstacle.prediction = Prediction(PredictionType::GAUSSIAN);
 
       const auto &mode = obstacle.gaussians[0];
@@ -245,13 +234,9 @@ void AutowarePlanner::obstacleCallback(mpc_planner_msgs::msg::ObstacleArray::Sha
       }
 
       if (mode.major_semiaxis.back() == 0. || !CONFIG["probabilistic"]["enable"].as<bool>())
-      {
         dynamic_obstacle.prediction.type = PredictionType::DETERMINISTIC;
-      }
       else
-      {
         dynamic_obstacle.prediction.type = PredictionType::GAUSSIAN;
-      }
     }
     else
     {
@@ -312,27 +297,94 @@ void AutowarePlanner::actuate()
   int N = CONFIG["N"].as<int>();
   double dt = CONFIG["integrator_step"].as<double>();
 
-  for (int k = 0; k < N - 1; k++) // Start at 1 (to ignore the initial state)
+  for (int k = 0; k < N - 1; k++)
   {
-
-    // Add this step of the solver to the trajectory
     trajectory_msg->points.emplace_back();
     trajectory_msg->points.back().time_from_start = rclcpp::Duration::from_seconds((double)(k + 1) * dt);
 
-    // Copied from lmpcc
-    trajectory_msg->points.back().pose.position.x = _planner->getSolution(k + 1, "x");
-    trajectory_msg->points.back().pose.position.y = _planner->getSolution(k + 1, "y");
-    trajectory_msg->points.back().pose.orientation = RosTools::angleToQuaternion(_planner->getSolution(k + 1, "psi"));
+    double angle = _planner->getSolution(k + 1, "psi");
+    Eigen::Vector2d center_pos(_planner->getSolution(k + 1, "x"), _planner->getSolution(k + 1, "y"));
+
+    // We map here the center state (used in our model) to the autoware position in the center of the rear axel
+    Eigen::Vector2d autoware_pos = mapFromVehicleCenter(center_pos, angle);
+    trajectory_msg->points.back().pose.position.x = autoware_pos(0);
+    trajectory_msg->points.back().pose.position.y = autoware_pos(1);
+    trajectory_msg->points.back().pose.orientation = RosTools::angleToQuaternion(angle);
     trajectory_msg->points.back().longitudinal_velocity_mps = _planner->getSolution(k + 1, "v");
 
-    trajectory_msg->points.back().acceleration_mps2 = _planner->getSolution(k, "a"); // Inputs start from each k, i.e., from 0 - (N-1)
+    // Inputs start from each k, i.e., from 0 - (N-1)
+    trajectory_msg->points.back().acceleration_mps2 = _planner->getSolution(k, "a");
     trajectory_msg->points.back().heading_rate_rps = _planner->getSolution(k, "w");
   }
 
   trajectory_msg->header.frame_id = "map";
-  trajectory_msg->header.stamp = this->get_clock()->now();
+  trajectory_msg->header.stamp = this->now(); // Trajectory is defined from the last state for which we computed the trajectory
 
   _trajectory_pub->publish(*trajectory_msg);
+}
+
+void AutowarePlanner::actuateBackup()
+{
+  auto trajectory_msg = std::make_shared<autoware_auto_planning_msgs::msg::Trajectory>();
+  trajectory_msg->points.clear();
+  int N = CONFIG["N"].as<int>();
+  double dt = CONFIG["integrator_step"].as<double>();
+
+  double x = _state.get("x");
+  double y = _state.get("y");
+  double psi = _state.get("psi");
+  double v = _state.get("v");
+
+  double deceleration = CONFIG["deceleration_at_infeasible"].as<double>();
+
+  auto positive_velocity_lambda = [](double v)
+  { return std::max(v, 0.); };
+
+  // x = x, y = y, psi = psi
+  v = positive_velocity_lambda(v - deceleration * dt); // Update for the initial state
+
+  for (int k = 0; k < N - 1; k++)
+  {
+    trajectory_msg->points.emplace_back();
+    trajectory_msg->points.back().time_from_start = rclcpp::Duration::from_seconds((double)(k + 1) * dt);
+
+    x += v * std::cos(psi) * dt;
+    y += v * std::sin(psi) * dt;
+    Eigen::Vector2d center_pos(x, y);
+
+    // We map here the center state (used in our model) to the autoware position in the center of the rear axel
+    Eigen::Vector2d autoware_pos = mapFromVehicleCenter(center_pos, psi);
+
+    trajectory_msg->points.back().pose.position.x = autoware_pos(0);
+    trajectory_msg->points.back().pose.position.y = autoware_pos(1);
+    trajectory_msg->points.back().pose.orientation = RosTools::angleToQuaternion(psi);
+    trajectory_msg->points.back().longitudinal_velocity_mps = v;
+
+    v = positive_velocity_lambda(v - deceleration * dt); // Brake with deceleration
+  }
+
+  trajectory_msg->header.frame_id = "map";
+  trajectory_msg->header.stamp = this->now(); // Trajectory is defined from the last state for which we computed the trajectory
+
+  _trajectory_pub->publish(*trajectory_msg);
+}
+
+Eigen::Vector2d AutowarePlanner::mapToVehicleCenter(const Eigen::Vector2d &autoware_pos, const double angle) const
+{
+  double length_div_2 = CONFIG["robot"]["length"].as<double>() / 2.;
+  double com_to_back = CONFIG["robot"]["com_to_back"].as<double>();
+  return Eigen::Vector2d(
+      autoware_pos(0) + std::cos(angle) * (length_div_2 - com_to_back),
+      autoware_pos(1) + std::sin(angle) * (length_div_2 - com_to_back));
+}
+
+Eigen::Vector2d AutowarePlanner::mapFromVehicleCenter(const Eigen::Vector2d &center_pos, const double angle) const
+{
+  double length_div_2 = CONFIG["robot"]["length"].as<double>() / 2.;
+  double com_to_back = CONFIG["robot"]["com_to_back"].as<double>();
+  return Eigen::Vector2d(
+      center_pos(0) - std::cos(angle) * (length_div_2 - com_to_back),
+      center_pos(1) - std::sin(angle) * (length_div_2 - com_to_back));
 }
 
 void AutowarePlanner::visualize()

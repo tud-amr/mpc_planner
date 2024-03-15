@@ -17,8 +17,8 @@
   <depend>std_srvs</depend>
   <depend>nav_msgs</depend>
 
-  <depend>autoware_auto_planning_msgs</depend>
-  <depend>autoware_auto_vehicle_msgs</depend>
+  <!-- <depend>autoware_auto_planning_msgs</depend> -->
+  <!-- <depend>autoware_auto_vehicle_msgs</depend> -->
 
   <!-- <exec_depend>pedestrian_simulator</exec_depend> -->
   <!-- <exec_depend>lanelets_to_path</exec_depend> -->

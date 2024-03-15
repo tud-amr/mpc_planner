@@ -95,6 +95,6 @@ def configuration_lmpcc(settings):
 
 settings = load_settings()
 
-model, modules = configuration_tmpc(settings)
+model, modules = configuration_lmpcc(settings)
 
 generate_solver(modules, model, settings)

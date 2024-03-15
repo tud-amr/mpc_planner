@@ -14,14 +14,18 @@ solver_settings:
 debug_output: false
 
 enable_output: true
-control_frequency: 10
+control_frequency: 20
 deceleration_at_infeasible: 1.0
-max_obstacles: 12
+max_obstacles: 4
 robot_radius: 1.125
 robot:
-  length: 4.54
+  # Should be this, but if I look in rviz, it is the ones below
+  # length: 4.54
+  # com_to_back: 1.1
+  length: 4.8
+  com_to_back: 0.95
   width: 2.25
-obstacle_radius: 0.4
+obstacle_radius: 1.0 #0.4
 
 linearized_constraints:
   add_halfspaces: 2 # For road constraints
@@ -30,10 +34,10 @@ road:
   two_way: false
   width: 12.0
 
-shift_previous_solution_forward: false
+shift_previous_solution_forward: true
 
 contouring:
-  num_segments: 8
+  num_segments: 4
   preview: 2.0 # [s], use 0.0 to disable preview
 
 t-mpc:
@@ -51,9 +55,9 @@ weights:
   acceleration: 0.2
   angular_velocity: 0.25 #0.05
   reference_velocity: 3.0 #1.5
-  contour: 0.1 #0.01
-  lag: 0.2
-  preview: 5.0
+  contour: 0.05 #0.01
+  lag: 0.02 #0.2
+  preview: 1.0
   slack: 1000.
 
 # Copied from Prius: https://github.com/oscardegroot/lmpcc/blob/prius/lmpcc/cfg/PredictiveController_Prius.cfg

@@ -224,9 +224,11 @@ class BicycleModel2ndOrder(DynamicsModel):
 
         # Prius limits: https://github.com/oscardegroot/lmpcc/blob/prius/lmpcc_solver/scripts/systems.py
         # w [-0.2, 0.2] | a [-1.0 1.0]
+        # w was 0.5
+        # delta was 0.45
 
-        self.lower_bound = [-3.0, -0.5, -1.0e6, -1.0e6, -np.pi, -2.0, -0.45, -1.0]
-        self.upper_bound = [3.0, 0.5, 1.0e6, 1.0e6, np.pi, 6.0, 0.45, 5000.0]
+        self.lower_bound = [-3.0, -1.5, -1.0e6, -1.0e6, -np.pi, -0.01, -0.45, -1.0]
+        self.upper_bound = [3.0, 1.5, 1.0e6, 1.0e6, np.pi, 8.0, 0.45, 5000.0]
 
     def continuous_model(self, x, u):
         a = u[0]

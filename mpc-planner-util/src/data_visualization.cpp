@@ -1,5 +1,7 @@
 #include <mpc-planner-util/data_visualization.h>
 
+#include <ros_tools/visuals.h>
+
 #include <mpc_planner_types/data_types.h>
 #include <mpc-planner-util/parameters.h>
 
@@ -138,6 +140,47 @@ namespace MPCPlanner
 
         if (publish)
             publisher.publish();
+        return publisher;
+    }
+
+    RosTools::ROSMarkerPublisher &visualizeRectangularRobotArea(const Eigen::Vector2d &position, const double angle,
+                                                                const double width, const double length,
+                                                                const std::string &topic_name,
+                                                                bool publish, double alpha)
+    {
+        RosTools::ROSMarkerPublisher &publisher = VISUALS.getPublisher(topic_name);
+        auto &rect = publisher.getNewPointMarker("CUBE");
+        rect.setColorInt(1, alpha);
+        rect.setScale(width, length, 0.01);
+        rect.setOrientation(angle);
+        rect.addPointMarker(position);
+
+        if (publish)
+            publisher.publish();
+        return publisher;
+    }
+
+    RosTools::ROSMarkerPublisher &visualizeRobotAreaTrajectory(const Trajectory &trajectory,
+                                                               const std::vector<double> angles,
+                                                               const std::vector<Disc> robot_area,
+                                                               const std::string &topic_name,
+                                                               bool publish, double alpha)
+    {
+        RosTools::ROSMarkerPublisher &publisher = VISUALS.getPublisher(topic_name);
+
+        auto &cylinder = publisher.getNewPointMarker("CYLINDER");
+        cylinder.setScale(2. * CONFIG["robot_radius"].as<double>(), 2. * CONFIG["robot_radius"].as<double>(), 0.01);
+        cylinder.setColorInt(0, 10, alpha);
+
+        for (size_t k = 0; k < trajectory.positions.size(); k++)
+        {
+            for (auto &disc : robot_area)
+                cylinder.addPointMarker(disc.getPosition(trajectory.positions[k], angles[k]), 0.0);
+        }
+
+        if (publish)
+            publisher.publish();
+
         return publisher;
     }
 } // namespace MPCPlanner

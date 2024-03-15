@@ -1,16 +1,10 @@
 #ifndef AUTOWARE_PLANNER_H
 #define AUTOWARE_PLANNER_H
 
-#include <mpc-planner/planner.h>
-
-#include <mpc-planner-solver/solver_interface.h>
+#include <rclcpp/rclcpp.hpp>
 
 #include <mpc_planner_types/realtime_data.h>
-
-#include <rclcpp/rclcpp.hpp>
-#include <mpc_planner_autoware/reconfigure.h>
-
-#include <ros_tools/profiling.h>
+#include <mpc-planner-solver/state.h>
 
 #include <mpc_planner_msgs/msg/obstacle_array.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
@@ -29,7 +23,18 @@
 
 #include <memory>
 
+namespace MPCPlanner
+{
+  class Planner;
+}
+
+namespace RosTools
+{
+  class Benchmarker;
+}
+
 using namespace MPCPlanner;
+class Reconfigure;
 
 // using autoware_auto_perception_msgs::msg::PredictedObjects;
 using autoware_auto_planning_msgs::msg::PathWithLaneId;
@@ -60,6 +65,7 @@ public:
   void resetSimulationCallback(const rclcpp::Parameter &p);
 
   void actuate();
+  void actuateBackup();
 
 private:
   std::unique_ptr<Planner> _planner;
@@ -68,6 +74,7 @@ private:
   State _state;
 
   rclcpp::TimerBase::SharedPtr _timer;
+  rclcpp::Time _state_received_time;
 
   std::unique_ptr<Reconfigure> _reconfigure;
 
@@ -92,6 +99,9 @@ private:
   // Parameter updates
   std::shared_ptr<rclcpp::ParameterEventHandler> _param_subscriber;
   std::vector<std::shared_ptr<rclcpp::ParameterCallbackHandle>> _param_cb_handles;
+
+  Eigen::Vector2d mapToVehicleCenter(const Eigen::Vector2d &autoware_pos, const double angle) const;
+  Eigen::Vector2d mapFromVehicleCenter(const Eigen::Vector2d &center_pos, const double angle) const;
 
   bool isPathTheSame(PathWithLaneId::SharedPtr path);
 

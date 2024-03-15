@@ -28,14 +28,11 @@ namespace MPCPlanner
     (void)module_data;
 
     if (k == 1)
-    {
       LOG_MARK("EllipsoidConstraints::setParameters");
-    }
+
     _solver->setParameter(k, "ego_disc_radius", CONFIG["robot_radius"].as<double>());
     for (int d = 0; d < CONFIG["n_discs"].as<int>(); d++)
-    {
-      _solver->setParameter(k, "ego_disc_" + std::to_string(d) + "_offset", data.robot_area[d].offset); /** @todo Fix offsets! */
-    }
+      _solver->setParameter(k, "ego_disc_" + std::to_string(d) + "_offset", data.robot_area[d].offset);
 
     for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
     {
@@ -63,10 +60,9 @@ namespace MPCPlanner
         _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_chi", chi);
       }
     }
+
     if (k == 1)
-    {
       LOG_MARK("EllipsoidConstraints::setParameters Done");
-    }
   }
 
   bool EllipsoidConstraints::isDataReady(const RealTimeData &data, std::string &missing_data)

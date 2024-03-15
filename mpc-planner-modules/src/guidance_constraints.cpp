@@ -67,7 +67,7 @@ namespace MPCPlanner
 
         // Set the goals of the global guidance planner
         global_guidance_->SetStart(state.getPos(), state.get("psi"), state.get("v"));
-        global_guidance_->SetReferenceVelocity(CONFIG["weights"]["reference_velocity"].as<double>()); // solver_interface->weights_.velocity_reference_);
+        global_guidance_->SetReferenceVelocity(CONFIG["weights"]["reference_velocity"].as<double>());
 
         /** @note Reference path */
         // Temporary
@@ -142,15 +142,6 @@ namespace MPCPlanner
             // CONSTRUCT CONSTRAINTS
             if (planner.is_original_planner || (!CONFIG["t-mpc"]["enable_constraints"].as<bool>()))
             {
-                // empty_data_.dynamic_obstacles.clear();
-                // // For the original problem we construct dummy constraints but with the static constraints (no guidance!)
-                // for (int i = 0; i < CONFIG["max_obstacles"].as<int>(); i++)
-                // {
-                //     empty_data_.dynamic_obstacles.emplace_back(i, Eigen::Vector2d(100., 100.), 0., 0.);
-                //     empty_data_.dynamic_obstacles.back().prediction = constantVelocityPrediction();
-                // }
-                // empty_data_.halfspaces_ = data_ptr_->halfspaces_; // Copy in the halfspace data
-
                 planner.guidance_constraints->update(state, empty_data_, module_data);
                 planner.safety_constraints->update(state, data, module_data); // Updates collision avoidance constraints
             }
@@ -352,7 +343,7 @@ namespace MPCPlanner
                 {
                     positions.push_back(obstacle.prediction.modes[0][k].position);
                 }
-                obstacles.emplace_back(obstacle.index, positions, obstacle.radius + CONFIG["robot_radius"].as<double>());
+                obstacles.emplace_back(obstacle.index, positions, obstacle.radius + data.robot_area[0].radius);
             }
 
             global_guidance_->LoadObstacles(obstacles, {});

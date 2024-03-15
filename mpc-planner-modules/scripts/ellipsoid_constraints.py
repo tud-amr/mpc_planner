@@ -50,15 +50,15 @@ class EllipsoidConstraint:
 
     def get_lower_bound(self):
         lower_bound = []
-        for obs in range(0, self.max_obstacles):
-            for disc in range(0, self.n_discs):
+        for obs in range(self.max_obstacles):
+            for disc in range(self.n_discs):
                 lower_bound.append(1.0)
         return lower_bound
 
     def get_upper_bound(self):
         upper_bound = []
-        for obs in range(0, self.max_obstacles):
-            for disc in range(0, self.n_discs):
+        for obs in range(self.max_obstacles):
+            for disc in range(self.n_discs):
                 upper_bound.append(np.Inf)
         return upper_bound
 
@@ -76,7 +76,7 @@ class EllipsoidConstraint:
         r_disc = params.get("ego_disc_radius")
 
         # Constraint for dynamic obstacles
-        for obs_id in range(0, self.max_obstacles):
+        for obs_id in range(self.max_obstacles):
             obst_x = params.get(f"ellipsoid_obst_{obs_id}_x")
             obst_y = params.get(f"ellipsoid_obst_{obs_id}_y")
             obstacle_cog = np.array([obst_x, obst_y])
@@ -104,9 +104,8 @@ class EllipsoidConstraint:
             obstacle_rotation = rotation_matrix(obst_psi)
             obstacle_ellipse_matrix = obstacle_rotation.transpose().dot(ab).dot(obstacle_rotation)
 
-            for disc_it in range(0, self.n_discs):
+            for disc_it in range(self.n_discs):
                 # Get and compute the disc position
-                # disc_x = area.offsets[disc_it]
                 disc_x = params.get(f"ego_disc_{disc_it}_offset")
                 disc_relative_pos = np.array([disc_x, 0])
                 disc_pos = pos + rotation_car.dot(disc_relative_pos)

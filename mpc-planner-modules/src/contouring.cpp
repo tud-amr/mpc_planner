@@ -240,6 +240,7 @@ namespace MPCPlanner
   void Contouring::reset()
   {
     _spline.reset(nullptr);
+    _closest_segment = 0;
   }
 
 } // namespace MPCPlanner
