@@ -1,10 +1,10 @@
 #ifndef __ROS1_JACKAL_PLANNER_H__
 #define __ROS1_JACKAL_PLANNER_H__
 
-#include <mpc-planner/planner.h>
+#include <mpc_planner/planner.h>
 
 #include <mpc_planner_jackalsimulator/jackalsimulator_reconfigure.h>
-#include <mpc-planner-solver/solver_interface.h>
+#include <mpc_planner_solver/solver_interface.h>
 #include <mpc_planner_types/realtime_data.h>
 
 #include <mpc_planner_msgs/ObstacleArray.h> /** @Todo: Replace! */

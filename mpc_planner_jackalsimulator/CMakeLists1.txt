@@ -9,11 +9,11 @@ endif()
 
 set(DEPENDENCIES
   roscpp
-  mpc-planner
+  mpc_planner
   mpc_planner_msgs
-  mpc-planner-modules
-  mpc-planner-solver
-  mpc-planner-util
+  mpc_planner_modules
+  mpc_planner_solver
+  mpc_planner_util
   mpc_planner_types
   ros_tools
   nav_msgs

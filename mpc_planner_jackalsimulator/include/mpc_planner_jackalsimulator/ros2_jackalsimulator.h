@@ -1,9 +1,9 @@
 #ifndef JACKAL_PLANNER_H
 #define JACKAL_PLANNER_H
 
-#include <mpc-planner/planner.h>
+#include <mpc_planner/planner.h>
 
-#include <mpc-planner-solver/state.h>
+#include <mpc_planner_solver/state.h>
 #include <mpc_planner_types/realtime_data.h>
 
 #include <rclcpp/node.hpp>

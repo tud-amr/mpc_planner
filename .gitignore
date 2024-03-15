@@ -1,15 +1,19 @@
 __pycache__/
 
-*.forces
 
 poetry.lock
 
-# Generated files
-mpc-planner-solver/Solver/
-mpc-planner-solver/config/
+# Solver
+Solver.license
+*.forces
 
-mpc-planner-modules/modules.cmake
-mpc-planner-modules/include/mpc-planner-modules/modules.h
+# Generated files
+mpc_planner_solver/Solver/
+mpc_planner_solver/config/
+
+mpc_planner_modules/modules.cmake
+mpc_planner_modules/include/mpc_planner_modules/modules.h
+mpc_planner_modules/include/mpc_planner_modules/definitions.h
 
 *_reconfigure.h
 */cfg/settings.cfg

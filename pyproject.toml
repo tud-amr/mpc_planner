@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "mpc-planner"
+name = "mpc_planner"
 version = "0.1.0"
 description = ""
 authors = ["oscardegroot <groot.oscar.de@gmail.com>"]

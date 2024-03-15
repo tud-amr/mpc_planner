@@ -4,7 +4,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <mpc_planner_types/realtime_data.h>
-#include <mpc-planner-solver/state.h>
+#include <mpc_planner_solver/state.h>
 
 #include <mpc_planner_msgs/msg/obstacle_array.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>

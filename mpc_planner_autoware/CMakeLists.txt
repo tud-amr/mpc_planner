@@ -22,7 +22,7 @@ std_srvs
 ros_tools
 autoware_auto_planning_msgs
 autoware_auto_vehicle_msgs
-mpc-planner
+mpc_planner
 mpc_planner_msgs
 )
 

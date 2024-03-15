@@ -1,13 +1,13 @@
 import sys, os
 
-sys.path.append(os.path.join(sys.path[0], "mpc-planner-solver-generator"))
+sys.path.append(os.path.join(sys.path[0], "solver_generator"))
 
 from pathlib import Path
 import shutil
 
 from util.logging import print_value, print_warning
 
-skip_packages = ["mpc-planner-solver-generator", "docs"]
+skip_packages = ["solver_generator", "docs"]
 
 
 def get_files(folder, ros_version: str):

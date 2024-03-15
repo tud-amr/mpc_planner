@@ -1,16 +1,15 @@
 #include <mpc_planner_jackalsimulator/ros2_jackalsimulator.h>
 #include <mpc_planner_jackalsimulator/jackalsimulator_ros2_reconfigure.h>
 
-#include <mpc-planner/data_preparation.h>
+#include <mpc_planner/data_preparation.h>
 
-#include <mpc-planner-util/parameters.h>
-#include <mpc-planner-util/load_yaml.hpp>
+#include <mpc_planner_util/parameters.h>
+#include <mpc_planner_util/load_yaml.hpp>
 
 #include <ros_tools/visuals.h>
 #include <ros_tools/logging.h>
 #include <ros_tools/convertions.h>
 #include <ros_tools/profiling.h>
-
 
 using namespace MPCPlanner;
 using namespace rclcpp;

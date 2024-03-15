@@ -2,12 +2,12 @@
 <package format="2">
   <name>mpc_planner_msgs</name>
   <version>0.0.0</version>
-  <description>Messages for usage with mpc-planner</description>
+  <description>Messages for usage with mpc_planner</description>
 
   <maintainer email="o.m.degroot@tudelft.nl">Oscar de Groot</maintainer>
 
   <license>TODO</license>
-  
+
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>nav_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>

@@ -20,7 +20,7 @@ set(DEPENDENCIES
   std_msgs
   std_srvs
   ros_tools
-  mpc-planner
+  mpc_planner
   mpc_planner_msgs
 )
 

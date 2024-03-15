@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mpc_planner-jackal</name>
+  <version>0.0.0</version>
+  <description>TODO: Package description</description>
+  <maintainer email="groot.oscar.de@gmail.com">r2c1</maintainer>
+  <license>TODO: License declaration</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <build_depend>mpc_planner</build_depend>
+  <build_depend>mpc_planner_solver</build_depend>
+  <build_depend>mpc_planner_util</build_depend>
+  <build_depend>mpc_planner_types</build_depend>
+  <build_depend>ros_tools</build_depend>
+
+  <exec_depend>nav_msgs</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -1,8 +1,9 @@
-[![Test Solver Generation Package](https://github.com/oscardegroot/mpc-planner/actions/workflows/main.yml/badge.svg)](https://github.com/oscardegroot/mpc-planner/actions/workflows/main.yml)
+[![Test Solver Generation Package](https://github.com/oscardegroot/mpc_planner/actions/workflows/main.yml/badge.svg)](https://github.com/oscardegroot/mpc_planner/actions/workflows/main.yml)
 ![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/oscardegroot/8356b652d94441ec2318b597dcf4680d/raw/test.json)
 
 
-# robot-Agnostic Trajectory Optimization (ATO)
+<!-- # robot-Agnostic Trajectory Optimization (ATO) -->
+# MPC Planner
 This package implements robot agnostic Model Predictive Control (MPC) for motion planning in dynamic environments in ROS1/ROS2 C++.
 
 If you find this repository useful for your research, please consider citing one of the papers below:
@@ -54,7 +55,7 @@ poetry install
 To generate a solver for your system (e.g., `jackal`), run
 
 ```bash
-poetry run python mpc-planner-jackal/scripts/generate_jackal_solver.py
+poetry run python mpc_planner-jackal/scripts/generate_jackal_solver.py
 ```
 
 ## Installation (Planning)
@@ -81,7 +82,7 @@ rosdep install --from-paths src --ignore-src -r -y
 To ignore a system you do not care about use:
 
 ```bash
-rosdep install --from-paths src --ignore-src -r -y --skip-keys="mpc-planner-jackal"
+rosdep install --from-paths src --ignore-src -r -y --skip-keys="mpc_planner-jackal"
 ```
 </details>
 
@@ -91,14 +92,14 @@ Build the repository (`source devel/setup.sh`):
 
 ```bash
 catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
-catkin build mpc-planner-<system>
+catkin build mpc_planner-<system>
 ```
 
 ## Running
 Each system should define its own launch files to launch requirements and this planning node. For example:
 
 ```bash
-roslaunch mpc-planner-jackal jackalsimulator.launch
+roslaunch mpc_planner-jackal jackalsimulator.launch
 ```
 
 <details>
@@ -106,8 +107,8 @@ roslaunch mpc-planner-jackal jackalsimulator.launch
 Example launch file for the jackal:
 
 ```xml
-  <rosparam command="load" file="$(find mpc-planner-jackal)/config/guidance_planner.yaml"/>
-  <node pkg="mpc-planner-jackal" type="jackal_planner" name="jackal_planner" respawn="false" output="screen">
+  <rosparam command="load" file="$(find mpc_planner-jackal)/config/guidance_planner.yaml"/>
+  <node pkg="mpc_planner-jackal" type="jackal_planner" name="jackal_planner" respawn="false" output="screen">
         <remap from="/input/state" to="robot_state"/>
         <remap from="/input/goal" to="/goal_pose"/>
         <remap from="/input/reference_path" to="roadmap/reference"/>
@@ -127,11 +128,11 @@ Example launch file for the jackal:
 ## Adding your system
 See the `jackal` system for an example (best to copy that package and replace all occurences of `jackal` with your robot name):
 
-- **Solver Generation:** [mpc-planner-jackal/scripts/generate_jackal_solver.py](./mpc-planner-jackal/scripts/generate_jackal_solver.py)
+- **Solver Generation:** [mpc_planner-jackal/scripts/generate_jackal_solver.py](./mpc_planner-jackal/scripts/generate_jackal_solver.py)
 
-- **ROS1 Controller:** [mpc-planner-jackal/src/ros1_planner.cpp](./mpc-planner-jackal/src/ros1_planner.cpp)
+- **ROS1 Controller:** [mpc_planner-jackal/src/ros1_planner.cpp](./mpc_planner-jackal/src/ros1_planner.cpp)
 
-- **ROS2 Controller:** [mpc-planner-jackal/src/ros2_planner.cpp](./mpc-planner-jackal/src/ros2_planner.cpp)
+- **ROS2 Controller:** [mpc_planner-jackal/src/ros2_planner.cpp](./mpc_planner-jackal/src/ros2_planner.cpp)
 
 
 For current systems, check the individual `README.md`.
@@ -146,4 +147,4 @@ poetry run python switch_to_ros.py 2
 Note:
 
 - Changes to `CMakelists.txt` and `package.xml` are saved first to the respective files ending with `1` or `2`.
-- The system level packages, e.g., `mpc-planner-jackal` still do need different control files for `ROS1` and `ROS2`, but both versions can be available in one repository.
+- The system level packages, e.g., `mpc_planner-jackal` still do need different control files for `ROS1` and `ROS2`, but both versions can be available in one repository.

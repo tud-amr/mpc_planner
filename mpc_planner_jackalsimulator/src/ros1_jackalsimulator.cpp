@@ -1,9 +1,9 @@
 #include <mpc_planner_jackalsimulator/ros1_jackalsimulator.h>
 
-#include <mpc-planner/data_preparation.h>
+#include <mpc_planner/data_preparation.h>
 
-#include <mpc-planner-util/parameters.h>
-#include <mpc-planner-util/load_yaml.hpp>
+#include <mpc_planner_util/parameters.h>
+#include <mpc_planner_util/load_yaml.hpp>
 
 #include <ros_tools/visuals.h>
 #include <ros_tools/logging.h>

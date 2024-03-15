@@ -1,11 +1,11 @@
 #include <mpc_planner_autoware/ros2_autoware.h>
 #include <mpc_planner_autoware/reconfigure.h>
 
-#include <mpc-planner/planner.h>
-#include <mpc-planner/data_preparation.h>
+#include <mpc_planner/planner.h>
+#include <mpc_planner/data_preparation.h>
 
-#include <mpc-planner-util/parameters.h>
-#include <mpc-planner-util/load_yaml.hpp>
+#include <mpc_planner_util/parameters.h>
+#include <mpc_planner_util/load_yaml.hpp>
 
 #include <ros_tools/visuals.h>
 #include <ros_tools/logging.h>

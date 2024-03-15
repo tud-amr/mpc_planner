@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <node pkg="mpc_planner_dingo" exec="dingo_planner" name="dingo_planner" respawn="false" output="screen">
+    <!-- <param from="$(find-pkg-share mpc_planner_dingo)/config/settings.yaml"/> -->
+    <remap from="~/input/state" to="/dingo_velocity_controller/odom"/>
+    <remap from="~/input/goal" to="/goal_pose"/>
+    <remap from="~/input/reference_path" to="roadmap/reference"/>
+    <remap from="~/input/dynamic_objects" to="None"/>
+    <remap from="~/output/command" to="/cmd_vel"/>
+  </node>
+
+  <include file="$(find-pkg-share pedestrian_simulator)/launch/simulation.launch.py"/>
+  <include file="$(find-pkg-share dingo_gazebo)/launch/dingo_world.launch.py"/>
+
+  <include file="$(find-pkg-share roadmap)/launch/roadmap.launch">
+    <!-- <arg name="map_file_name" value="maps/straight.xml"/> -->
+  </include>
+
+  <node pkg="tf2_ros" exec="static_transform_publisher" name="static_map" output="log" args="0 0 0 0 0 0 odom map"/>
+
+  <node pkg="rviz2" exec="rviz2" name="rviz2" args="-d $(find-pkg-share mpc_planner_dingo)/rviz/ros2.rviz" namespace="/" output="log"/>
+
+  <node pkg="rqt_reconfigure" exec="rqt_reconfigure" name="rqt_reconfigure" namespace="/" output="log"/>
+
+</launch>  

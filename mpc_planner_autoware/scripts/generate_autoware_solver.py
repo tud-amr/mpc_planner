@@ -2,8 +2,8 @@ import os
 import sys
 
 # TODO: Import packages through pypi
-sys.path.append(os.path.join(sys.path[0], "..", "..", "mpc-planner-solver-generator"))
-sys.path.append(os.path.join(sys.path[0], "..", "..", "mpc-planner-modules", "scripts"))
+sys.path.append(os.path.join(sys.path[0], "..", "..", "solver_generator"))
+sys.path.append(os.path.join(sys.path[0], "..", "..", "mpc_planner_modules", "scripts"))
 
 # SET YOUR FORCES PATH HERE (can also be in PYTHONPATH)
 forces_path = os.path.join(os.path.expanduser("~"), "forces_pro_client")
@@ -13,7 +13,7 @@ from util.files import load_settings, get_current_package
 from control_modules import ModuleManager
 from generate_solver import generate_solver
 
-# Import modules here from mpc-planner-modules
+# Import modules here from mpc_planner_modules
 from mpc_base import MPCBaseModule
 from contouring import ContouringModule
 from path_reference_velocity import PathReferenceVelocityModule
