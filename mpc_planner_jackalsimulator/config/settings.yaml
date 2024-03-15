@@ -9,18 +9,19 @@ solver_settings:
   floating_license: false
   enable_timeout: true
   init: 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
-  use_sqp: false
+  use_sqp: true
 
 debug_output: false
 
 enable_output: true
 control_frequency: 20
 deceleration_at_infeasible: 3.0
-max_obstacles: 12
+max_obstacles: 8
 robot_radius: 0.325
 robot:
   length: 0.65
   width: 0.65
+  com_to_back: 0.0
 obstacle_radius: 0.4
 
 linearized_constraints:

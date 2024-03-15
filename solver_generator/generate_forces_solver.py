@@ -115,6 +115,9 @@ def generate_forces_solver(modules, settings, model):
         options.nlp.linear_solver = "symm_indefinite_fast"
         options.sqp_nlp.reg_hessian = 5e-9  # = default
 
+        options.exportBFGS = 1
+        solver.bfgs_init = np.diag(np.array([0.301451, 0.50121, 0.206244, 1.08899, 0.0692479, 0.98321, 0.200556, 1]))
+
     # Creates code for symbolic model formulation given above, then contacts server to generate new solver
     print_header("Generating solver")
     generated_solver = solver.generate_solver(options)

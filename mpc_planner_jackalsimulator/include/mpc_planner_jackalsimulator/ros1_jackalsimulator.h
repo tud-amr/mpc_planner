@@ -1,8 +1,6 @@
 #ifndef __ROS1_JACKAL_PLANNER_H__
 #define __ROS1_JACKAL_PLANNER_H__
 
-#include <mpc_planner/planner.h>
-
 #include <mpc_planner_jackalsimulator/jackalsimulator_reconfigure.h>
 #include <mpc_planner_solver/solver_interface.h>
 #include <mpc_planner_types/realtime_data.h>
@@ -28,6 +26,10 @@
 
 using namespace MPCPlanner;
 
+namespace MPCPlanner
+{
+    class Planner;
+}
 class JackalPlanner
 {
 public:

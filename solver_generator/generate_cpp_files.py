@@ -64,7 +64,7 @@ def generate_module_cmake(modules):
     print_path("Module CMake", path, end="", tab=True)
     module_cmake = open(path, "w")
 
-    module_cmake.write("if(USE_ROS2)\n") # ROS2 find package
+    module_cmake.write("if(USE_ROS2)\n")  # ROS2 find package
     dependencies = []
     for module in modules.modules:
         for dependency in module.dependencies:
@@ -73,7 +73,7 @@ def generate_module_cmake(modules):
                 module_cmake.write(f"\tfind_package({dependency} REQUIRED)\n")
     module_cmake.write("endif()\n")
 
-    module_cmake.write("set(MODULE_DEPENDENCIES\n") # Dependencies
+    module_cmake.write("set(MODULE_DEPENDENCIES\n")  # Dependencies
     dependencies = []
     for module in modules.modules:
         for dependency in module.dependencies:
@@ -82,7 +82,7 @@ def generate_module_cmake(modules):
                 module_cmake.write(f"\t{dependency}\n")
     module_cmake.write(")\n\n")
 
-    module_cmake.write("set(MODULE_SOURCES\n") # Sources
+    module_cmake.write("set(MODULE_SOURCES\n")  # Sources
     for module in modules.modules:
         module_cmake.write(f"\tsrc/{module.import_name.split('.')[0]}.cpp\n")
         for source in module.sources:
@@ -176,7 +176,7 @@ def generate_cpp_code(settings, model):
             header_file.write(f"\t\t\tparams.z_init_{add_zero_below_10(k, N)}[i] = params.x0[{model.get_nvar()}*{k} + i];\n")
         header_file.write("\t\t}\n")
     header_file.write("\t}\n")
-    
+
     header_file.write("}\n#endif")
 
     print_success(" -> generated")
@@ -258,6 +258,7 @@ def generate_rqtreconfigure(settings):
     rqt_header.close()
     print_success(" -> generated")
 
+
 def generate_ros2_rqtreconfigure(settings):
     current_package = get_current_package()
     path = f"{get_package_path(current_package)}/include/{current_package}/"
@@ -290,7 +291,7 @@ def generate_ros2_rqtreconfigure(settings):
     rqt_header.write("\t}\n")
     rqt_header.write("\n")
     rqt_header.write("\tvalue = itr->template get_value<T>();\n")
-    rqt_header.write("\tLOG_INFO(\"Parameter \" + name + \" set to \" + std::to_string(value.as<T>()));\n")
+    rqt_header.write('\tLOG_INFO("Parameter " + name + " set to " + std::to_string(value.as<T>()));\n')
     rqt_header.write("\treturn true;\n")
     rqt_header.write("}\n")
     rqt_header.write("\n")
@@ -299,7 +300,7 @@ def generate_ros2_rqtreconfigure(settings):
     rqt_header.write("public:\n")
     rqt_header.write(f"\t{class_name}(rclcpp::Node *node)\n")
     rqt_header.write("\t{\n")
-    rqt_header.write("\t\tLOG_INFO(\"Setting up dynamic_reconfigure parameters\");\n")
+    rqt_header.write('\t\tLOG_INFO("Setting up dynamic_reconfigure parameters");\n')
     rqt_header.write("\n")
     rqt_header.write("\t\tdeclareROSParameters(node);\n")
     rqt_header.write("\n")
@@ -309,17 +310,23 @@ def generate_ros2_rqtreconfigure(settings):
     rqt_header.write("\n")
     rqt_header.write("\tvirtual void declareROSParameters(rclcpp::Node *node)\n")
     rqt_header.write("\t{\n")
-    
+
     for idx, param in enumerate(rqt_params):
-        rqt_header.write(f"\t\tnode->declare_parameter<double>(\"{param}\", CONFIG{settings['params'].rqt_param_config_names[idx](param)}.as<double>());\n")
-        
+        rqt_header.write(
+            f"\t\tnode->declare_parameter<double>(\"{param}\", CONFIG{settings['params'].rqt_param_config_names[idx](param)}.as<double>());\n"
+        )
+
     rqt_header.write("\t}\n")
     rqt_header.write("\n")
-    rqt_header.write("\tvirtual rcl_interfaces::msg::SetParametersResult updateROSParameters(const std::vector<rclcpp::Parameter> &parameters)\n")
+    rqt_header.write(
+        "\tvirtual rcl_interfaces::msg::SetParametersResult updateROSParameters(const std::vector<rclcpp::Parameter> &parameters)\n"
+    )
     rqt_header.write("\t{\n")
     for idx, param in enumerate(rqt_params):
-        rqt_header.write(f"\t\tupdateParam<double>(parameters, \"{param}\", CONFIG{settings['params'].rqt_param_config_names[idx](param)});\n")
-        
+        rqt_header.write(
+            f"\t\tupdateParam<double>(parameters, \"{param}\", CONFIG{settings['params'].rqt_param_config_names[idx](param)});\n"
+        )
+
     rqt_header.write("\n")
     rqt_header.write("\t\tauto result = rcl_interfaces::msg::SetParametersResult();\n")
     rqt_header.write("\t\tresult.successful = true;\n")
@@ -334,3 +341,14 @@ def generate_ros2_rqtreconfigure(settings):
     rqt_header.write("#endif // __GENERATED_ROS2_RECONFIGURE_H\n")
     rqt_header.close()
     print_success(" -> generated")
+
+
+# TODO Print BFGS when enabled
+# std::cout << "1: options.bfgs_init = np.diag(np.array([";
+# 	for (int i = 0; i < 8; i++)
+# 	{
+# 		std::cout << output.BFGSdiagonal01[i];
+# 		if (i != 7)
+# 			std::cout << ", ";
+# 	}
+# 	std::cout << "]))" << std::endl;

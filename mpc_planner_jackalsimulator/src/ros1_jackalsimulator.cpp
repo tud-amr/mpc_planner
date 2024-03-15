@@ -1,5 +1,7 @@
 #include <mpc_planner_jackalsimulator/ros1_jackalsimulator.h>
 
+#include <mpc_planner/planner.h>
+
 #include <mpc_planner/data_preparation.h>
 
 #include <mpc_planner_util/parameters.h>
@@ -160,8 +162,8 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
         double dt = 1. / CONFIG["control_frequency"].as<double>();
 
         velocity = _state.get("v");
-        velocity_after_braking = velocity - deceleration * (1.0 / dt); // Brake with the given deceleration
-        cmd.linear.x = std::max(velocity_after_braking, 0.);           // Don't drive backwards when braking
+        velocity_after_braking = velocity - deceleration * dt; // Brake with the given deceleration
+        cmd.linear.x = std::max(velocity_after_braking, 0.);   // Don't drive backwards when braking
         cmd.angular.z = 0.0;
     }
     _cmd_pub.publish(cmd);

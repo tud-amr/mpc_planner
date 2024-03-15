@@ -23,12 +23,16 @@ namespace MPCPlanner
   void ScenarioConstraints::update(State &state, const RealTimeData &data, ModuleData &module_data)
   {
     (void)state;
+    (void)module_data;
 
     _scenario_module->update(data);
   }
 
   void ScenarioConstraints::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
   {
+    (void)module_data;
+    LOG_MARK("ScenarioConstraints::setParameters");
+
     _scenario_module->setParameters(data, k);
   }
 
@@ -36,6 +40,8 @@ namespace MPCPlanner
   {
     (void)state;
     (void)data;
+    (void)module_data;
+
     // if (!config_->use_trajectory_sampling_)                        // To test regular optimization with slack
     // return SimpleSequentialScenarioIterations(solver_interface); // S-MPCC (SQP)
 
@@ -60,8 +66,10 @@ namespace MPCPlanner
 
   bool ScenarioConstraints::isDataReady(const RealTimeData &data, std::string &missing_data)
   {
+
     if (data.dynamic_obstacles.size() != CONFIG["max_obstacles"].as<unsigned int>())
     {
+
       missing_data += "Obstacles ";
       return false;
     }
@@ -89,6 +97,8 @@ namespace MPCPlanner
 
   void ScenarioConstraints::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
+    (void)module_data;
+
     LOG_DEBUG("ScenarioConstraints::visualize");
     _scenario_module->visualize(data);
   }
