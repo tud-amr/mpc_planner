@@ -55,7 +55,7 @@ weights:
   contour: 0.5 #0.01
   preview: 0.0
   lag: 0.1
-  slack: 1000.
+  slack: 10000.
 
 visualization:
   draw_every: 5 # stages

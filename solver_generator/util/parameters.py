@@ -11,12 +11,23 @@ class Parameters:
 
     def __init__(self):
         self._params = dict()
+
         self.rqt_params = []
         self.rqt_param_config_names = []
+        self.rqt_param_min_values = []
+        self.rqt_param_max_values = []
+
         self._param_idx = 0
         self._p = None
 
-    def add(self, parameter, add_to_rqt_reconfigure=False, rqt_config_name=lambda p: f'["weights"]["{p}"]'):
+    def add(
+        self,
+        parameter,
+        add_to_rqt_reconfigure=False,
+        rqt_config_name=lambda p: f'["weights"]["{p}"]',
+        rqt_min_value=0.0,
+        rqt_max_value=100.0,
+    ):
         """
         Adds a parameter to the parameter dictionary.
 
@@ -30,6 +41,8 @@ class Parameters:
         if add_to_rqt_reconfigure:
             self.rqt_params.append(parameter)
             self.rqt_param_config_names.append(rqt_config_name)
+            self.rqt_param_min_values.append(rqt_min_value)
+            self.rqt_param_max_values.append(rqt_max_value)
 
     def length(self):
         return self._param_idx

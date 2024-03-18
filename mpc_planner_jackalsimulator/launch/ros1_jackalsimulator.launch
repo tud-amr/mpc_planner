@@ -4,8 +4,8 @@
 
   <arg name="gui" default="false" />
   <arg name="project_name" default="" />
-  <!-- <arg name="pedestrian_scenario" default="random_social/12_corridor.xml" /> -->
-  <arg name="pedestrian_scenario" default="new_safe_horizon/8_gaussian.xml" />
+  <arg name="pedestrian_scenario" default="random_social/8_corridor.xml" />
+  <!-- <arg name="pedestrian_scenario" default="new_safe_horizon/8_gaussian.xml" /> -->
 
   <rosparam command="load" file="$(find mpc_planner_jackalsimulator)/config/guidance_planner.yaml"/>
   <rosparam command="load" file="$(find lmpcc_scenario_module)/config/params.yaml"/>

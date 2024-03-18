@@ -177,6 +177,11 @@ def generate_cpp_code(settings, model):
         header_file.write("\t\t}\n")
     header_file.write("\t}\n")
 
+    header_file.write("\tvoid setForcesReinitialize(Solver_params& params, const bool value){\n")
+    if settings["solver_settings"]["use_sqp"]:
+        header_file.write(f"\t\tparams.reinitialize = value;\n")
+    header_file.write("\t}\n")
+
     header_file.write("}\n#endif")
 
     print_success(" -> generated")
@@ -198,8 +203,10 @@ def generate_rqtreconfigure(settings):
 
     rqt_file.write('weight_params = gen.add_group("Weights", "Weights")\n')
     rqt_params = settings["params"].rqt_params
-    for param in rqt_params:
-        rqt_file.write(f'weight_params.add("{param}", double_t, 1, "{param}", 1.0, 0.0, 100.0)\n')
+    for idx, param in enumerate(rqt_params):
+        rqt_file.write(
+            f'weight_params.add("{param}", double_t, 1, "{param}", 1.0, {settings["params"].rqt_param_min_values[idx]}, {settings["params"].rqt_param_max_values[idx]})\n'
+        )
     rqt_file.write(f'exit(gen.generate(PACKAGE, "{current_package}", ""))\n')
     rqt_file.close()
     print_success(" -> generated")

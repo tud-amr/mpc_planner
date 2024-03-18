@@ -181,7 +181,7 @@ Visualization Manager:
           Marker Topic: /jackalsimulator_planner/planned_trajectory
           Name: Planned Trajectory
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -297,10 +297,10 @@ Visualization Manager:
           Marker Topic: /jackalsimulator_planner/visuals_0
           Name: Safe Horizon
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
-      Enabled: false
+      Enabled: true
       Name: Planner
     - Class: rviz/MarkerArray
       Enabled: false

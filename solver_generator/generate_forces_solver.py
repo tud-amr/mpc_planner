@@ -72,7 +72,7 @@ def generate_forces_solver(modules, settings, model):
     solver.E = np.concatenate([np.zeros((model.nx, model.nu)), np.eye(model.nx)], axis=1)
 
     # Initial stage (k = 0) specifies the states
-    solver.xinitidx = range(model.nu, model.get_nvar())
+    solver.xinitidx = model.get_xinit()  # range(model.nu, model.get_nvar())
 
     """
     Generate a solver

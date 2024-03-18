@@ -50,6 +50,9 @@ class DynamicsModel:
     def get_nvar(self):
         return self.nu + self.nx
 
+    def get_xinit(self):
+        return range(self.nu, self.get_nvar())
+
     def acados_symbolics(self):
         x = cd.SX.sym("x", self.nx)  # [px, py, vx, vy]
         u = cd.SX.sym("u", self.nu)  # [ax, ay]
@@ -193,6 +196,10 @@ class ContouringSecondOrderUnicycleModelWithSlack(DynamicsModel):
 
         return np.array([v * cd.cos(psi), v * cd.sin(psi), w, a, v, 0.0])
 
+    # NOTE: No initialization for slack variable
+    def get_xinit(self):
+        return range(self.nu, self.get_nvar() - 1)
+
 
 class ContouringPointMassModel(DynamicsModel):
 
@@ -219,8 +226,8 @@ class BicycleModel2ndOrder(DynamicsModel):
         self.nu = 2
         self.nx = 6
 
-        self.states = ['x', 'y', 'psi', 'v', 'delta', 'spline']
-        self.inputs = ['a', 'w']
+        self.states = ["x", "y", "psi", "v", "delta", "spline"]
+        self.inputs = ["a", "w"]
 
         # Prius limits: https://github.com/oscardegroot/lmpcc/blob/prius/lmpcc_solver/scripts/systems.py
         # w [-0.2, 0.2] | a [-1.0 1.0]
@@ -237,12 +244,12 @@ class BicycleModel2ndOrder(DynamicsModel):
         v = x[3]
         delta = x[4]
 
-        wheel_base= 2.79 # between front wheel center and rear wheel center
-        wheel_tread= 1.64 # between left wheel center and right wheel center
-        front_overhang= 1.0 # between front wheel center and vehicle front
-        rear_overhang= 1.1 # between rear wheel center and vehicle rear
-        left_overhang= 0.128 # between left wheel center and vehicle left
-        right_overhang= 0.128 # between right wheel center and vehicle right
+        wheel_base = 2.79  # between front wheel center and rear wheel center
+        wheel_tread = 1.64  # between left wheel center and right wheel center
+        front_overhang = 1.0  # between front wheel center and vehicle front
+        rear_overhang = 1.1  # between rear wheel center and vehicle rear
+        left_overhang = 0.128  # between left wheel center and vehicle left
+        right_overhang = 0.128  # between right wheel center and vehicle right
 
         # self.length = front_overhang + rear_overhang + wheel_base #4.54
         # self.width = wheel_tread + left_overhang + right_overhang #2.25
@@ -250,20 +257,16 @@ class BicycleModel2ndOrder(DynamicsModel):
         # NOTE: Is at the rear wheel center.
         # This defines where it is w.r.t. the back
         # self.com_to_back = self.length/2.
-        
+
         # NOTE: Mass is equally distributed according to the parameters
-        lr = wheel_base / 2.
-        lf = wheel_base / 2.
-        ratio = lr/(lr + lf)
+        lr = wheel_base / 2.0
+        lf = wheel_base / 2.0
+        ratio = lr / (lr + lf)
 
         beta = cd.arctan(ratio * cd.tan(delta))
 
-        return np.array([v * cd.cos(psi + beta),
-                         v * cd.sin(psi + beta),
-                         (v/lr) * cd.sin(beta),
-                         a,
-                         w,
-                         v])
+        return np.array([v * cd.cos(psi + beta), v * cd.sin(psi + beta), (v / lr) * cd.sin(beta), a, w, v])
+
 
 # Bicycle model with dynamic steering
 # class BicycleModel2ndOrderWithDelay(DynamicModel):

@@ -51,13 +51,13 @@ class LinearConstraints:
 
     def get_lower_bound(self):
         lower_bound = []
-        for index in range(0, self.n_constraints):
+        for index in range(self.n_constraints):
             lower_bound.append(-np.inf)
         return lower_bound
 
     def get_upper_bound(self):
         upper_bound = []
-        for index in range(0, self.n_constraints):
+        for index in range(self.n_constraints):
             upper_bound.append(0.0)
         return upper_bound
 
@@ -86,6 +86,9 @@ class LinearConstraints:
                 a2 = params.get(self.constraint_name(index, disc_it) + "_a2")
                 b = params.get(self.constraint_name(index, disc_it) + "_b")
 
-                constraints.append(a1 * disc_pos[0] + a2 * disc_pos[1] - (b + slack))
+                if self.use_slack:
+                    constraints.append(a1 * disc_pos[0] + a2 * disc_pos[1] - (b + slack))
+                else:
+                    constraints.append(a1 * disc_pos[0] + a2 * disc_pos[1] - b)
 
         return constraints

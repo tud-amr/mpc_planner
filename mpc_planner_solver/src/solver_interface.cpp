@@ -171,12 +171,9 @@ namespace MPCPlanner
 		return Eigen::Vector2d(getEgoPrediction(k, "x"), getEgoPrediction(k, "y"));
 	}
 
-	void Solver::setReinitialize(bool reinitialize)
+	void Solver::setReinitialize(const bool reinitialize)
 	{
-		if (!CONFIG["solver_settings"]["use_sqp"])
-			return;
-
-		// _params.reinitialize = reinitialize;
+		setForcesReinitialize(_params, reinitialize);
 	}
 
 	int Solver::solve()
