@@ -1,4 +1,4 @@
-#include <mpc_planner-jackal/ros1_jackal.h>
+#include <mpc_planner_jackal/ros1_jackal.h>
 
 #include <mpc_planner/data_preparation.h>
 
@@ -7,7 +7,10 @@
 #include <ros_tools/logging.h>
 #include <mpc_planner_util/load_yaml.hpp>
 
-#include <ros_tools/helpers.h>
+#include <ros_tools/profiling.h>
+#include <ros_tools/convertions.h>
+
+#include <std_msgs/Empty.h>
 
 using namespace MPCPlanner;
 
@@ -19,11 +22,15 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
     // Initialize the configuration
     Configuration::getInstance().initialize(SYSTEM_CONFIG_PATH(__FILE__, "settings"));
 
+    _data.robot_area = {Disc(0., CONFIG["robot_radius"].as<double>())};
+
     // Initialize the planner
     _planner = std::make_unique<Planner>();
 
     // Initialize the ROS interface
     initializeSubscribersAndPublishers(nh);
+
+    _reconfigure = std::make_unique<JackalReconfigure>();
 
     _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
 
@@ -86,7 +93,7 @@ bool JackalPlanner::objectiveReached()
 void JackalPlanner::loop(const ros::TimerEvent &event)
 {
     (void)event;
-    LOG_DEBUG("============= Loop =============");
+    LOG_MARK("============= Loop =============");
 
     _benchmarker->start();
 
@@ -103,11 +110,17 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
     geometry_msgs::Twist cmd;
     if (_enable_output && output.success)
     {
+        LOG_MARK("Publishing command");
         // Publish the command
         cmd.linear.x = _planner->getSolution(1, "v");  // = x1
         cmd.angular.z = _planner->getSolution(0, "w"); // = u0
         LOG_VALUE_DEBUG("Commanded v", cmd.linear.x);
         LOG_VALUE_DEBUG("Commanded w", cmd.angular.z);
+    }
+    else if (!_enable_output)
+    {
+        cmd.linear.x = 0.0;
+        cmd.angular.z = 0.0;
     }
     else
     {
@@ -117,8 +130,8 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
         double dt = 1. / CONFIG["control_frequency"].as<double>();
 
         velocity = _state.get("v");
-        velocity_after_braking = velocity - deceleration * (1.0 / dt); // Brake with the given deceleration
-        cmd.linear.x = std::max(velocity_after_braking, 0.);           // Don't drive backwards when braking
+        velocity_after_braking = velocity - deceleration * dt; // Brake with the given deceleration
+        cmd.linear.x = std::max(velocity_after_braking, 0.);   // Don't drive backwards when braking
         cmd.angular.z = 0.0;
     }
     _cmd_pub.publish(cmd);
@@ -192,6 +205,7 @@ void JackalPlanner::obstacleCallback(const derived_object_msgs::ObjectArray::Con
 {
     _data.dynamic_obstacles.clear();
 
+    int additions = 0;
     for (auto &object : msg->objects)
     {
         double object_angle = RosTools::quaternionToAngle(object.pose.orientation) +
@@ -199,17 +213,71 @@ void JackalPlanner::obstacleCallback(const derived_object_msgs::ObjectArray::Con
                               M_PI_2;
 
         // Save the obstacle
-        _data.dynamic_obstacles.emplace_back(
-            object.id,
-            Eigen::Vector2d(object.pose.position.x, object.pose.position.y),
-            object_angle,
-            object.shape.dimensions[1]);
+        if (object.shape.type == object.shape.CYLINDER)
+        {
+
+            _data.dynamic_obstacles.emplace_back(
+                object.id + additions,
+                Eigen::Vector2d(object.pose.position.x, object.pose.position.y),
+                object_angle,
+                object.shape.dimensions[1]);
+        }
+        else if (object.shape.type == object.shape.BOX)
+        {
+            if (object.shape.dimensions[0] == object.shape.dimensions[1])
+            {
+                _data.dynamic_obstacles.emplace_back(
+                    object.id + additions,
+                    Eigen::Vector2d(object.pose.position.x, object.pose.position.y),
+                    object_angle,
+                    std::sqrt(2) * object.shape.dimensions[0]);
+            }
+            else
+            {
+                Eigen::Vector2d pos(object.pose.position.x, object.pose.position.y);
+
+                double small_dim = std::min(object.shape.dimensions[0], object.shape.dimensions[1]);
+                double large_dim = std::max(object.shape.dimensions[0], object.shape.dimensions[1]);
+                _data.dynamic_obstacles.emplace_back(
+                    object.id + additions,
+                    pos + Eigen::Vector2d(std::cos(object_angle - M_PI_2), std::sin(object_angle - M_PI_2)) * large_dim / 2,
+                    object_angle,
+                    std::sqrt(2) * small_dim,
+                    ObstacleType::STATIC);
+
+                additions++;
+
+                _data.dynamic_obstacles.emplace_back(
+                    object.id + additions,
+                    pos - Eigen::Vector2d(std::cos(object_angle - M_PI_2), std::sin(object_angle - M_PI_2)) * large_dim / 2,
+                    object_angle,
+                    std::sqrt(2) * small_dim,
+                    ObstacleType::STATIC);
+
+                auto &dynamic_obstacle = _data.dynamic_obstacles[_data.dynamic_obstacles.size() - 2];
+
+                // Read the orientation of the obstacle from the velocity estimation!
+                dynamic_obstacle.angle = object_angle;
+
+                geometry_msgs::Twist global_twist = object.twist;
+                Eigen::Matrix2d rot_matrix = RosTools::rotationMatrixFromHeading(-RosTools::quaternionToAngle(object.pose.orientation));
+                Eigen::Vector2d twist_out = rot_matrix * Eigen::Vector2d(global_twist.linear.x, global_twist.linear.y);
+
+                // Eigen::Vector2d velocity = Eigen::Vector2d(object.twist.linear.x, object.twist.linear.y);
+
+                // Make a constant velocity prediction
+                dynamic_obstacle.prediction = getConstantVelocityPrediction(
+                    dynamic_obstacle.position,
+                    twist_out,
+                    CONFIG["integrator_step"].as<double>(),
+                    CONFIG["N"].as<int>());
+            }
+            // Assume that there are two boxes
+        }
         auto &dynamic_obstacle = _data.dynamic_obstacles.back();
 
         // Read the orientation of the obstacle from the velocity estimation!
         dynamic_obstacle.angle = object_angle;
-
-        // std::cout << object.id << ": " << object_angle << std::endl;
 
         geometry_msgs::Twist global_twist = object.twist;
         Eigen::Matrix2d rot_matrix = RosTools::rotationMatrixFromHeading(-RosTools::quaternionToAngle(object.pose.orientation));

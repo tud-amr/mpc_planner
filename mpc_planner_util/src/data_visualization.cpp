@@ -48,8 +48,10 @@ namespace MPCPlanner
 
         for (auto &obstacle : obstacles)
         {
+            if (obstacle.type == ObstacleType::STATIC)
+                continue;
             ped.setColorInt(obstacle.index, alpha, RosTools::Colormap::BRUNO);
-            ped.setOrientation(obstacle.angle); // RosTools::quaternionToAngle(plot_pose.orientation));
+            ped.setOrientation(obstacle.angle);
             ped.addPointMarker(obstacle.position, 0.0);
         }
 

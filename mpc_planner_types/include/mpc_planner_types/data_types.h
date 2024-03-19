@@ -69,6 +69,12 @@ namespace MPCPlanner
         bool empty() const;
     };
 
+    enum class ObstacleType
+    {
+        STATIC = 0,
+        DYNAMIC
+    };
+
     struct DynamicObstacle
     {
         int index;
@@ -77,10 +83,11 @@ namespace MPCPlanner
         double angle;
 
         double radius;
+        ObstacleType type{ObstacleType::DYNAMIC};
 
         Prediction prediction;
 
-        DynamicObstacle(int _index, const Eigen::Vector2d &_position, double _angle, double _radius);
+        DynamicObstacle(int _index, const Eigen::Vector2d &_position, double _angle, double _radius, ObstacleType _type = ObstacleType::DYNAMIC);
     };
 
     struct ReferencePath

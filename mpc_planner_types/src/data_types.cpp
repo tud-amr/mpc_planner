@@ -50,9 +50,10 @@ namespace MPCPlanner
         return modes.empty() || (modes.size() > 0 && modes[0].empty());
     }
 
-    DynamicObstacle::DynamicObstacle(int _index, const Eigen::Vector2d &_position, double _angle, double _radius)
+    DynamicObstacle::DynamicObstacle(int _index, const Eigen::Vector2d &_position, double _angle, double _radius, ObstacleType _type)
         : index(_index), position(_position), angle(_angle), radius(_radius)
     {
+        type = _type;
     }
 
     ReferencePath::ReferencePath(int length)

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(mpc_planner-jackal)
+project(mpc_planner_jackal)
 
 add_compile_options(-std=c++17)
 

@@ -3,29 +3,49 @@ N: 20
 integrator_step: 0.2
 n_discs: 1
 
-# solver: "acados" # acados or forces
-solver: "forces" # acados or forces
+solver_settings:
+  # solver: "acados" # acados or forces
+  solver: "forces" # acados or forces
+  floating_license: false
+  enable_timeout: true
+  init: 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
+  use_sqp: false
 
+debug_output: false
+
+enable_output: true
 control_frequency: 20
 deceleration_at_infeasible: 3.0
-max_obstacles: 12
+max_obstacles: 7
 robot_radius: 0.325
-obstacle_radius: 0.5 # 0.4
+robot:
+  length: 0.65
+  width: 0.65
+  com_to_back: 0.0
+obstacle_radius: 0.4
+
+linearized_constraints:
+  add_halfspaces: 2  # For road constraints
+
+scenario_constraints:
+  parallel_solvers: 1
+
+road:
+  two_way: false
+  width: 6.0
+
+shift_previous_solution_forward: false
 
 contouring:
   num_segments: 3
-  contour: 0.5 #0.01
-  lag: 0.1
-
-linearized_constraints:
-  relax: true
+  preview: 0.0
 
 t-mpc:
   use_t-mpc++: true
   enable_constraints: true
 
 probabilistic:
-  enable: false
+  enable: true
   risk: 0.05
   propagate_uncertainty: true
 
@@ -34,9 +54,11 @@ weights:
   velocity: 0.5 #0.5
   acceleration: 0.15
   angular_velocity: 0.25 #0.05
+  reference_velocity: 2.0 #1.5
+  contour: 0.5 #0.01
+  preview: 0.0
+  lag: 0.1
+  slack: 10000.
 
 visualization:
   draw_every: 5 # stages
-
-reference_velocity: 2.0 #1.5
-

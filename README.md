@@ -55,7 +55,7 @@ poetry install --no-root
 To generate a solver for your system (e.g., `jackal`), run
 
 ```bash
-poetry run python mpc_planner-jackal/scripts/generate_jackal_solver.py
+poetry run python mpc_planner_jackal/scripts/generate_jackal_solver.py
 ```
 
 ## Installation (Planning)
@@ -82,7 +82,7 @@ rosdep install --from-paths src --ignore-src -r -y
 To ignore a system you do not care about use:
 
 ```bash
-rosdep install --from-paths src --ignore-src -r -y --skip-keys="mpc_planner-jackal"
+rosdep install --from-paths src --ignore-src -r -y --skip-keys="mpc_planner_jackal"
 ```
 </details>
 
@@ -99,7 +99,7 @@ catkin build mpc_planner-<system>
 Each system should define its own launch files to launch requirements and this planning node. For example:
 
 ```bash
-roslaunch mpc_planner-jackal jackalsimulator.launch
+roslaunch mpc_planner_jackal jackalsimulator.launch
 ```
 
 <details>
@@ -107,8 +107,8 @@ roslaunch mpc_planner-jackal jackalsimulator.launch
 Example launch file for the jackal:
 
 ```xml
-  <rosparam command="load" file="$(find mpc_planner-jackal)/config/guidance_planner.yaml"/>
-  <node pkg="mpc_planner-jackal" type="jackal_planner" name="jackal_planner" respawn="false" output="screen">
+  <rosparam command="load" file="$(find mpc_planner_jackal)/config/guidance_planner.yaml"/>
+  <node pkg="mpc_planner_jackal" type="jackal_planner" name="jackal_planner" respawn="false" output="screen">
         <remap from="/input/state" to="robot_state"/>
         <remap from="/input/goal" to="/goal_pose"/>
         <remap from="/input/reference_path" to="roadmap/reference"/>
@@ -128,11 +128,11 @@ Example launch file for the jackal:
 ## Adding your system
 See the `jackal` system for an example (best to copy that package and replace all occurences of `jackal` with your robot name):
 
-- **Solver Generation:** [mpc_planner-jackal/scripts/generate_jackal_solver.py](./mpc_planner-jackal/scripts/generate_jackal_solver.py)
+- **Solver Generation:** [mpc_planner_jackal/scripts/generate_jackal_solver.py](./mpc_planner_jackal/scripts/generate_jackal_solver.py)
 
-- **ROS1 Controller:** [mpc_planner-jackal/src/ros1_planner.cpp](./mpc_planner-jackal/src/ros1_planner.cpp)
+- **ROS1 Controller:** [mpc_planner_jackal/src/ros1_planner.cpp](./mpc_planner_jackal/src/ros1_planner.cpp)
 
-- **ROS2 Controller:** [mpc_planner-jackal/src/ros2_planner.cpp](./mpc_planner-jackal/src/ros2_planner.cpp)
+- **ROS2 Controller:** [mpc_planner_jackal/src/ros2_planner.cpp](./mpc_planner_jackal/src/ros2_planner.cpp)
 
 
 For current systems, check the individual `README.md`.
@@ -147,4 +147,4 @@ poetry run python switch_to_ros.py 2
 Note:
 
 - Changes to `CMakelists.txt` and `package.xml` are saved first to the respective files ending with `1` or `2`.
-- The system level packages, e.g., `mpc_planner-jackal` still do need different control files for `ROS1` and `ROS2`, but both versions can be available in one repository.
+- The system level packages, e.g., `mpc_planner_jackal` still do need different control files for `ROS1` and `ROS2`, but both versions can be available in one repository.

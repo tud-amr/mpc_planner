@@ -15,7 +15,7 @@
   <depend>ros_tools</depend>
 
   <!-- START SOLVER DEPENDENT -->
-	<depend>lmpcc_scenario_module</depend>
+	<depend>guidance_planner</depend>
   <!-- END SOLVER DEPENDENT -->
 
   <export>

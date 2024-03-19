@@ -1,0 +1,9 @@
+
+objects:
+  dynamic: 
+    number: 3
+    radius: 0.4
+  static:
+    number: 2
+    radius: 0.3
+    size: [2, 2]

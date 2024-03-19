@@ -1,4 +1,4 @@
-#include <mpc_planner-jackal/ros2_planner.h>
+#include <mpc_planner_jackal/ros2_planner.h>
 
 #include <ros_tools/visuals.h>
 #include <mpc_planner_util/parameters.h>
