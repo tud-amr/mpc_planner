@@ -29,6 +29,7 @@ You can use `pyenv` to safely install the required Python version. Install pyenv
 curl https://pyenv.run | bash
 ```
 
+
 Add the following to ~/.bashrc:
 
 ```bash
@@ -37,11 +38,18 @@ export PYENV_ROOT="$HOME/.pyenv"
 eval "$(pyenv init -)"
 ```
 
-Then install python3.8.10 and activate it, before installing the `poetry` environment:
+Install pyenv system dependencies:
+```
+sudo apt update; sudo apt install build-essential libssl-dev zlib1g-dev \
+libbz2-dev libreadline-dev libsqlite3-dev curl \
+libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+```
+
+Then install python3.8.10 and activate it, before installing the `poetry` environment. In some cases installing with `pyenv local 3.8.10` may work, but in general `pyenv global 3.8.10` is necessary.
 
 ```
 pyenv install 3.8.10
-pyenv local 3.8.10
+pyenv global 3.8.10
 ```
 
 To setup the virtual environment run:
