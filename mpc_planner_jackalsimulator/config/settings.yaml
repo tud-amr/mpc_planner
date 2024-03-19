@@ -27,6 +27,9 @@ obstacle_radius: 0.4
 linearized_constraints:
   add_halfspaces: 2  # For road constraints
 
+scenario_constraints:
+  parallel_solvers: 1
+
 road:
   two_way: false
   width: 6.0

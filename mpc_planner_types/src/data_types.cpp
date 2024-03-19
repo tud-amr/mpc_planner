@@ -15,6 +15,11 @@ namespace MPCPlanner
         return robot_position + Eigen::Vector2d(offset * std::cos(angle), offset * std::sin(angle));
     }
 
+    Eigen::Vector2d Disc::toRobotCenter(const Eigen::Vector2d &disc_position, const double angle) const
+    {
+        return disc_position - Eigen::Vector2d(offset * std::cos(angle), offset * std::sin(angle));
+    }
+
     Halfspace::Halfspace(const Eigen::Vector2d &A, const double b)
         : A(A), b(b)
     {

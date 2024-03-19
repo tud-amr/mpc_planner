@@ -18,6 +18,7 @@ namespace MPCPlanner
         Disc(const double offset_, const double radius_);
 
         Eigen::Vector2d getPosition(const Eigen::Vector2d &robot_position, const double angle) const;
+        Eigen::Vector2d toRobotCenter(const Eigen::Vector2d &disc_position, const double angle) const;
     };
 
     struct Halfspace
@@ -28,7 +29,7 @@ namespace MPCPlanner
 
         Halfspace(const Eigen::Vector2d &A, const double b);
     };
-    typedef std::vector<Halfspace> StaticObstacle;
+    typedef std::vector<Halfspace> StaticObstacle; // For all k, a halfspace
 
     enum class PredictionType
     {

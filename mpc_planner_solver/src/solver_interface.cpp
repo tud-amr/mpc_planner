@@ -54,6 +54,13 @@ namespace MPCPlanner
 		return *this;
 	}
 
+	char *Solver::getSolverMemory() const { return _solver_memory; }
+
+	void Solver::copySolverMemory(const Solver &other)
+	{
+		memcpy(_solver_memory, other.getSolverMemory(), Solver_get_mem_size());
+	}
+
 	bool Solver::hasParameter(std::string &&parameter)
 	{
 		return _parameter_map[parameter].IsDefined();

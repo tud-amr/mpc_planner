@@ -62,6 +62,9 @@ namespace MPCPlanner
 		/** @brief Copy data from another solver. Does not copy solver generic parameters like the horizon N*/
 		Solver &operator=(const Solver &rhs);
 
+		char *getSolverMemory() const;
+		void copySolverMemory(const Solver &other);
+
 		void setEgoPrediction(unsigned int k, std::string &&var_name, double value);
 		double getEgoPrediction(unsigned int k, std::string &&var_name);
 		void setEgoPredictionPosition(unsigned int k, const Eigen::Vector2d &value);
