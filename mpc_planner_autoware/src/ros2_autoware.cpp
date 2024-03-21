@@ -245,6 +245,7 @@ void AutowarePlanner::obstacleCallback(mpc_planner_msgs::msg::ObstacleArray::Sha
       ROSTOOLS_ASSERT(false, "Multiple modes not yet supported");
     }
   }
+  removeDistantObstacles(_data.dynamic_obstacles, _state);
   ensureObstacleSize(_data.dynamic_obstacles, _state);
   _planner->onDataReceived(_data, "dynamic obstacles");
 }

@@ -28,8 +28,11 @@ def print_path(name, value, tab=False, **kwargs):
 def print_success(msg):
     print(bcolors.BOLD + bcolors.OKGREEN + f"{msg}" + bcolors.ENDC)
 
-def print_warning(msg):
-    print("\t" + bcolors.BOLD + bcolors.WARNING + f"{msg}" + bcolors.ENDC)
+def print_warning(msg, no_tab=False):
+    if no_tab:
+        print(bcolors.BOLD + bcolors.WARNING + f"{msg}" + bcolors.ENDC)
+    else:
+        print("\t" + bcolors.BOLD + bcolors.WARNING + f"{msg}" + bcolors.ENDC)
 
 def print_header(msg):
     print("==============================================")

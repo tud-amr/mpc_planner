@@ -7,7 +7,7 @@ import forcespro.nlp
 import numpy as np
 
 from util.files import solver_name, solver_path, default_solver_path
-from util.logging import print_value, print_success, print_header
+from util.logging import print_warning, print_success, print_header
 from util.parameters import Parameters
 
 import solver_model
@@ -23,7 +23,7 @@ from solver_definition import (
 
 
 # Press the green button in the gutter to run the script.
-def generate_forces_solver(modules, settings, model):
+def generate_forces_solver(modules, settings, model, skip_solver_generation):
 
     params = Parameters()
     define_parameters(modules, params, settings)
@@ -116,12 +116,17 @@ def generate_forces_solver(modules, settings, model):
         options.sqp_nlp.reg_hessian = 5e-9  # = default
 
     # Creates code for symbolic model formulation given above, then contacts server to generate new solver
-    print_header("Generating solver")
-    generated_solver = solver.generate_solver(options)
-    print_header("Output")
+    if skip_solver_generation:
+        print_header("Output")
+        print_warning("Solver generation was disabled by the command line option. Skipped.", no_tab=True)
+        return None, None
+    else:
+        print_header("Generating solver")
+        generated_solver = solver.generate_solver(options)
+        print_header("Output")
 
-    if os.path.exists(solver_path(settings)) and os.path.isdir(solver_path(settings)):  # Remove solver if it exists at the destination
-        shutil.rmtree(solver_path(settings))
-    shutil.move(default_solver_path(settings), solver_path(settings))  # Move the solver to this directory
+        if os.path.exists(solver_path(settings)) and os.path.isdir(solver_path(settings)):  # Remove solver if it exists at the destination
+            shutil.rmtree(solver_path(settings))
+        shutil.move(default_solver_path(settings), solver_path(settings))  # Move the solver to this directory        
 
-    return generated_solver, generated_solver.dynamics
+        return generated_solver, generated_solver.dynamics

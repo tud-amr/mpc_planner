@@ -144,9 +144,9 @@ namespace MPCPlanner
     // OLD VERSION:
     bool two_way = CONFIG["road"]["two_way"].as<bool>();
     double road_width_half = CONFIG["road"]["width"].as<double>() / 2.;
-    for (int k = 0; k < _solver->N; k++)
+    for (int k = 1; k < _solver->N; k++)
     {
-      double cur_s = _solver->getEgoPrediction(k + 1, "spline");
+      double cur_s = _solver->getEgoPrediction(k, "spline");
 
       // This is the final point and the normal vector of the path
       Eigen::Vector2d path_point = _spline->getPoint(cur_s);
@@ -216,6 +216,7 @@ namespace MPCPlanner
     publisher_path.publish();
 
     visualizeRoadConstraints(data, module_data);
+    visualizeDebugRoadBoundary(data, module_data);
   }
 
   void Contouring::visualizeRoadConstraints(const RealTimeData &data, const ModuleData &module_data)
@@ -224,17 +225,55 @@ namespace MPCPlanner
     if (module_data.static_obstacles.empty())
       return;
 
-    for (int k = 0; k < _solver->N; k++)
+    for (int k = 1; k < _solver->N; k++)
     {
       for (size_t h = 0; h < module_data.static_obstacles[k].size(); h++)
       {
         visualizeLinearConstraint(module_data.static_obstacles[k][h],
                                   k, _solver->N,
-                                  "contouring/road_constraints",
-                                  false, 0.5, 0.1);
+                                  _name + "/road_boundary_constraints",
+                                  k == _solver->N - 1 && h == module_data.static_obstacles[k].size() - 1,
+                                  0.5, 0.1);
       }
     }
-    VISUALS.getPublisher("contouring/road_constraints").publish();
+    // VISUALS.getPublisher(_name + "/road_boundary_constraints").publish();
+  }
+
+  void Contouring::visualizeDebugRoadBoundary(const RealTimeData &data, const ModuleData &module_data)
+  {
+    LOG_MARK("Constructing road constraints.");
+    auto &publisher = VISUALS.getPublisher(_name + "/road_boundary_points");
+    auto &points = publisher.getNewPointMarker("CUBE");
+    points.setScale(0.15, 0.15, 0.15);
+
+    // OLD VERSION:
+    bool two_way = CONFIG["road"]["two_way"].as<bool>();
+    double road_width_half = CONFIG["road"]["width"].as<double>() / 2.;
+    for (int k = 1; k < _solver->N; k++)
+    {
+
+      double cur_s = _solver->getEgoPrediction(k, "spline");
+      Eigen::Vector2d path_point = _spline->getPoint(cur_s);
+
+      points.setColorInt(5, 10);
+      points.addPointMarker(path_point);
+
+      Eigen::Vector2d dpath = _spline->getOrthogonal(cur_s);
+
+      double width_times = two_way ? 3.0 : 1.0; // 3w for double lane
+
+      // line is parallel to the spline
+      Eigen::Vector2d boundary_left =
+          path_point + dpath * (width_times * road_width_half - data.robot_area[0].radius);
+
+      Eigen::Vector2d boundary_right =
+          path_point - dpath * (road_width_half - data.robot_area[0].radius);
+
+      points.setColor(0., 0., 0.);
+      points.addPointMarker(boundary_left);
+      points.addPointMarker(boundary_right);
+    }
+    publisher.publish();
   }
 
   void Contouring::reset()

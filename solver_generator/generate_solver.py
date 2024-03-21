@@ -1,3 +1,5 @@
+import sys
+
 from util.files import load_settings, write_to_yaml
 from util.files import solver_path, solver_settings_path
 
@@ -9,6 +11,8 @@ from generate_cpp_files import generate_ros2_rqtreconfigure
 
 
 def generate_solver(modules, model, settings=None):
+    skip_solver_generation = len(sys.argv) > 1 and sys.argv[1].lower() == "false"
+
     if settings is None:
         settings = load_settings()
 
@@ -20,7 +24,7 @@ def generate_solver(modules, model, settings=None):
     if settings["solver_settings"]["solver"] == "forces":
         from generate_forces_solver import generate_forces_solver
 
-        solver, simulator = generate_forces_solver(modules, settings, model)
+        solver, simulator = generate_forces_solver(modules, settings, model, skip_solver_generation)
 
     if settings["solver_settings"]["solver"] == "acados":
         from generate_acados_solver import generate_acados_solver

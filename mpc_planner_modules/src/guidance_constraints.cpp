@@ -280,8 +280,6 @@ namespace MPCPlanner
         (void)module_data;
         LOG_MARK("Guidance Constraints: Visualize()");
 
-        // Contouring::Visualize();
-
         // global_guidance_->Visualize(highlight_selected_guidance_, visualized_guidance_trajectory_nr_);
         global_guidance_->Visualize(false, -1);
         for (size_t i = 0; i < planners_.size(); i++)
@@ -289,6 +287,9 @@ namespace MPCPlanner
             auto &planner = planners_[i];
             if (planner.disabled)
                 continue;
+
+            planner.guidance_constraints->visualize(data, module_data);
+            planner.safety_constraints->visualize(data, module_data);
 
             // Visualize the warmstart
             Trajectory initial_trajectory;

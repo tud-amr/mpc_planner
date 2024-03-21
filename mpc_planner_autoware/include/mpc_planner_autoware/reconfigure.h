@@ -21,11 +21,15 @@ public:
     void declareROSParameters(rclcpp::Node *node) override
     {
         (void)node;
+
+        node->declare_parameter<double>("road_width", CONFIG["road"]["width"].as<double>());
     }
 
     rcl_interfaces::msg::SetParametersResult updateROSParameters(const std::vector<rclcpp::Parameter> &parameters)
     {
         AutowareReconfigure::updateROSParameters(parameters);
+
+        updateParam<double>(parameters, "road_width", CONFIG["road"]["width"]);
 
         auto result = rcl_interfaces::msg::SetParametersResult();
         result.successful = true;

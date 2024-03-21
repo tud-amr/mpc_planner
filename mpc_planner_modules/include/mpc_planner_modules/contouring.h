@@ -31,7 +31,7 @@ namespace MPCPlanner
     void constructRoadConstraints(const RealTimeData &data, ModuleData &module_data);
 
     void visualizeRoadConstraints(const RealTimeData &data, const ModuleData &module_data);
-
+void visualizeDebugRoadBoundary(const RealTimeData &data, const ModuleData &module_data);
     int _closest_segment{0};
   };
 }

@@ -195,7 +195,7 @@ namespace MPCPlanner
     {
       for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
       {
-        visualizeLinearConstraint(_a1[0][k](i), _a2[0][k](i), _b[0][k](i), k, _solver->N, _name,
+        visualizeLinearConstraint(_a1[0][k](i), _a2[0][k](i), _b[0][k](i), k, _solver->N, _name + std::to_string(_solver->_solver_id),
                                   k == _solver->N - 1 && i == data.dynamic_obstacles.size() - 1); // Publish at the end
       }
     }

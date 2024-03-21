@@ -32,11 +32,11 @@ namespace MPCPlanner
 
     RosTools::ROSMarkerPublisher &visualizeLinearConstraint(double a1, double a2, double b, int k, int N,
                                                             const std::string &topic_name,
-                                                            bool publish = false, double alpha = 1.0, double thickness = 0.05);
+                                                            bool publish = false, double alpha = 1.0, double thickness = 0.1);
 
     RosTools::ROSMarkerPublisher &visualizeLinearConstraint(const Halfspace &halfspace, int k, int N,
                                                             const std::string &topic_name,
-                                                            bool publish = false, double alpha = 1.0, double thickness = 0.05);
+                                                            bool publish = false, double alpha = 1.0, double thickness = 0.1);
 
     RosTools::ROSMarkerPublisher &visualizeRobotArea(const Eigen::Vector2d &position, const double angle,
                                                      const std::vector<Disc> robot_area,

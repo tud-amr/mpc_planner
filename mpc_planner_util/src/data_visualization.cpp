@@ -90,7 +90,7 @@ namespace MPCPlanner
             return publisher;
 
         Eigen::Vector2d p1, p2;
-        double line_length = 100.0;
+        double line_length = 1.0e6;
 
         // If we cant draw in one direction, draw in the other
         if (std::abs(a2) >= 1e-3)
@@ -115,6 +115,7 @@ namespace MPCPlanner
 
         if (publish)
             publisher.publish();
+
         return publisher;
     }
 
@@ -140,6 +141,7 @@ namespace MPCPlanner
 
         if (publish)
             publisher.publish();
+
         return publisher;
     }
 

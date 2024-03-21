@@ -17,6 +17,7 @@ enable_output: true
 control_frequency: 20
 deceleration_at_infeasible: 1.0
 max_obstacles: 4
+max_obstacle_distance: 100.
 robot_radius: 1.125
 robot:
   # Should be this, but if I look in rviz, it is the ones below
@@ -37,7 +38,7 @@ road:
 shift_previous_solution_forward: true
 
 contouring:
-  num_segments: 4
+  num_segments: 6
   preview: 2.0 # [s], use 0.0 to disable preview
 
 t-mpc:
