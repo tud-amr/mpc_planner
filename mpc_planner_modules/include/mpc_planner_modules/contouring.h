@@ -27,12 +27,16 @@ namespace MPCPlanner
 
   private:
     std::unique_ptr<RosTools::Spline2D> _spline{nullptr};
+    int _closest_segment{0};
 
     void constructRoadConstraints(const RealTimeData &data, ModuleData &module_data);
 
+    void visualizeReferencePath(const RealTimeData &data, const ModuleData &module_data);
+    void visualizeCurrentSegment(const RealTimeData &data, const ModuleData &module_data);
     void visualizeRoadConstraints(const RealTimeData &data, const ModuleData &module_data);
-void visualizeDebugRoadBoundary(const RealTimeData &data, const ModuleData &module_data);
-    int _closest_segment{0};
+
+    void visualizeDebugRoadBoundary(const RealTimeData &data, const ModuleData &module_data);
+    void visualizeDebugGluedSplines(const RealTimeData &data, const ModuleData &module_data);
   };
 }
 #endif // __CONTOURING_H_

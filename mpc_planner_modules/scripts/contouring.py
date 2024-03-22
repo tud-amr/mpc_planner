@@ -35,7 +35,7 @@ class MultiSplineXY:
             path_dx = self.lambdas[k - 1] * self.splines[k - 1].path_dx + (1.0 - self.lambdas[k - 1]) * path_dx
             path_dy = self.lambdas[k - 1] * self.splines[k - 1].path_dy + (1.0 - self.lambdas[k - 1]) * path_dy
 
-        path_norm = np.sqrt(path_dx**2 + path_dy**2)
+        path_norm = np.sqrt(path_dx * path_dx + path_dy * path_dy)
         path_dx_normalized = path_dx / path_norm
         path_dy_normalized = path_dy / path_norm
 
@@ -60,24 +60,11 @@ class SplineXY:
         self.s_start = param.get(f"spline{spline_nr}_start")
 
     def compute_point(self, spline_index):
-        self.path_x = (
-            self.x_a * (spline_index - self.s_start) ** 3
-            + self.x_b * (spline_index - self.s_start) ** 2
-            + self.x_c * (spline_index - self.s_start)
-            + self.x_d
-        )
-
-        self.path_y = (
-            self.y_a * (spline_index - self.s_start) ** 3
-            + self.y_b * (spline_index - self.s_start) ** 2
-            + self.y_c * (spline_index - self.s_start)
-            + self.y_d
-        )
-
-        self.path_dx = 3 * self.x_a * (spline_index - self.s_start) ** 2 + 2 * self.x_b * (spline_index - self.s_start) + self.x_c
-
-        self.path_dy = 3 * self.y_a * (spline_index - self.s_start) ** 2 + 2 * self.y_b * (spline_index - self.s_start) + self.y_c
-
+        s = spline_index - self.s_start
+        self.path_x = self.x_a * s * s * s + self.x_b * s * s + self.x_c * s + self.x_d
+        self.path_y = self.y_a * s * s * s + self.y_b * s * s + self.y_c * s + self.y_d
+        self.path_dx = 3 * self.x_a * s * s + 2 * self.x_b * s + self.x_c
+        self.path_dy = 3 * self.y_a * s * s + 2 * self.y_b * s + self.y_c
 
 def get_preview_state(model, time_ahead):
     # Integrate the trajectory to obtain the preview point

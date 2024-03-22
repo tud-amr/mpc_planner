@@ -159,8 +159,8 @@ void AutowarePlanner::Loop()
 
   _benchmarker->start();
 
-  // Print the state
-  _state.print();
+  if (CONFIG["debug_output"].as<bool>())
+    _state.print();
 
   auto output = _planner->solveMPC(_state, _data);
 
@@ -188,17 +188,14 @@ void AutowarePlanner::stateCallback(nav_msgs::msg::Odometry::SharedPtr msg)
   _state.set("x", center_pos(0));
   _state.set("y", center_pos(1));
   _state.set("psi", angle);
-  _state.set("v", std::sqrt(std::pow(msg->twist.twist.linear.x, 2.) + std::pow(msg->twist.twist.linear.y, 2.)));
+  _state.set("v", msg->twist.twist.linear.x); //, std::sqrt(std::pow(msg->twist.twist.linear.x, 2.) + std::pow(msg->twist.twist.linear.y, 2.)));
   _state_received_time = this->get_clock()->now();
-
-  if (CONFIG["debug_output"].as<bool>())
-    _state.print();
 }
 
 void AutowarePlanner::steeringCallback(SteeringReport::SharedPtr msg)
 {
   LOG_MARK("Steering callback");
-  _state.set("delta", msg->steering_tire_angle);
+  _state.set("delta", msg->steering_tire_angle / 15.06);
 }
 
 void AutowarePlanner::obstacleCallback(mpc_planner_msgs::msg::ObstacleArray::SharedPtr msg)

@@ -26,7 +26,7 @@ robot:
   length: 4.8
   com_to_back: 0.95
   width: 2.25
-obstacle_radius: 1.0 #0.4
+obstacle_radius: 1.0 #1.0 #0.4
 
 linearized_constraints:
   add_halfspaces: 2 # For road constraints
@@ -35,7 +35,7 @@ road:
   two_way: false
   width: 12.0
 
-shift_previous_solution_forward: true
+shift_previous_solution_forward: false # Was true
 
 contouring:
   num_segments: 6
@@ -58,7 +58,7 @@ weights:
   reference_velocity: 3.0 #1.5
   contour: 0.05 #0.01
   lag: 0.02 #0.2
-  preview: 1.0
+  preview: 5.0
   slack: 1000.
 
 # Copied from Prius: https://github.com/oscardegroot/lmpcc/blob/prius/lmpcc/cfg/PredictiveController_Prius.cfg

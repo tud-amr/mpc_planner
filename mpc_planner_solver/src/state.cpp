@@ -38,7 +38,7 @@ void State::print() const
     {
         if (it->second[0].as<std::string>() == "x")
         {
-            LOG_VALUE_DEBUG(it->first.as<std::string>(), get(it->first.as<std::string>()));
+            LOG_VALUE(it->first.as<std::string>(), get(it->first.as<std::string>()));
         }
     }
 }
