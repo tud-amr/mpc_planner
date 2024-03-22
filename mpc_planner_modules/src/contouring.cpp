@@ -111,6 +111,19 @@ namespace MPCPlanner
       // Construct a spline from the given points
       _spline = std::make_unique<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y);
 
+      if (!data.left_bound.empty() && !data.right_bound.empty())
+      {
+        // Add bounds
+        _bound_left = std::make_unique<RosTools::Spline2D>(
+            data.left_bound.x,
+            data.left_bound.y,
+            _spline->getTVector());
+        _bound_right = std::make_unique<RosTools::Spline2D>(
+            data.right_bound.x,
+            data.right_bound.y,
+            _spline->getTVector());
+      }
+
       _closest_segment = -1;
     }
   }
@@ -138,6 +151,14 @@ namespace MPCPlanner
   {
     LOG_MARK("Constructing road constraints.");
 
+    if (data.left_bound.empty() || data.right_bound.empty())
+      constructRoadConstraintsFromCenterline(data, module_data);
+    else
+      constructRoadConstraintsFromBounds(data, module_data);
+  }
+
+  void Contouring::constructRoadConstraintsFromCenterline(const RealTimeData &data, ModuleData &module_data)
+  {
     /** @brief If bounds are not supplied construct road constraints based on a set width*/
     module_data.static_obstacles.resize(_solver->N);
 
@@ -175,6 +196,27 @@ namespace MPCPlanner
     }
   }
 
+  void Contouring::constructRoadConstraintsFromBounds(const RealTimeData &data, ModuleData &module_data)
+  {
+    /** @todo */
+    module_data.static_obstacles.resize(_solver->N);
+
+    for (int k = 1; k < _solver->N; k++)
+    {
+      double cur_s = _solver->getEgoPrediction(k, "spline");
+
+      // Left
+      Eigen::Vector2d Al = _bound_left->getOrthogonal(cur_s);
+      double bl = Al.transpose() * (_bound_left->getPoint(cur_s) + Al * data.robot_area[0].radius);
+      module_data.static_obstacles[k].emplace_back(-Al, -bl);
+
+      // RIGHT HALFSPACE
+      Eigen::Vector2d Ar = _bound_right->getOrthogonal(cur_s);
+      double br = Ar.transpose() * (_bound_right->getPoint(cur_s) - Ar * data.robot_area[0].radius);
+      module_data.static_obstacles[k].emplace_back(Ar, br);
+    }
+  }
+
   void Contouring::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
     if (_spline.get() == nullptr)
@@ -201,36 +243,48 @@ namespace MPCPlanner
     publisher_current.publish();
   }
 
+  // Move to data visualization
   void Contouring::visualizeReferencePath(const RealTimeData &data, const ModuleData &module_data)
   {
-    // Visualize the points
-    auto &publisher_points = VISUALS.getPublisher(_name + "/points");
-    auto &point = publisher_points.getNewPointMarker("CYLINDER");
-    point.setColor(0., 0., 0.);
-    point.setScale(0.15, 0.15, 0.05);
+    visualizePathPoints(data.reference_path, _name + "/points", true);
+    visualizePathPoints(data.left_bound, _name + "/boundary_points", false);
+    visualizePathPoints(data.right_bound, _name + "/boundary_points", true);
+    // // Visualize the points
+    // auto &publisher_points = VISUALS.getPublisher(_name + "/points");
+    // auto &point = publisher_points.getNewPointMarker("CYLINDER");
+    // point.setColor(0., 0., 0.);
+    // point.setScale(0.15, 0.15, 0.05);
 
-    for (size_t p = 0; p < data.reference_path.x.size(); p++)
-      point.addPointMarker(Eigen::Vector3d(data.reference_path.x[p], data.reference_path.y[p], 0.1));
-    publisher_points.publish();
+    // for (size_t p = 0; p < data.reference_path.x.size(); p++)
+    //   point.addPointMarker(Eigen::Vector3d(data.reference_path.x[p], data.reference_path.y[p], 0.1));
+    // publisher_points.publish();
 
-    // Visualize the path
-    auto &publisher_path = VISUALS.getPublisher(_name + "/path");
-    auto &line = publisher_path.getNewLine();
-    line.setColorInt(5);
-    line.setScale(0.1);
+    visualizeSpline(*_spline, _name + "/path", true);
 
-    Eigen::Vector2d p;
-    for (double s = 0.; s < _spline->parameterLength(); s += 1.)
+    if (_bound_left != nullptr)
     {
-      if (s > 0.)
-        line.addLine(p, _spline->getPoint(s));
-
-      p = _spline->getPoint(s);
+      visualizeSpline(*_bound_left, _name + "/boundary_path", false);
+      visualizeSpline(*_bound_right, _name + "/boundary_path", true);
     }
-    line.addLine(p, _spline->getPoint(_spline->parameterLength())); // Connect to the end
+    // // Visualize the path
+    // auto &publisher_path = VISUALS.getPublisher(_name + "/path");
+    // auto &line = publisher_path.getNewLine();
+    // line.setColorInt(5);
+    // line.setScale(0.1);
 
-    publisher_path.publish();
+    // Eigen::Vector2d p;
+    // for (double s = 0.; s < _spline->parameterLength(); s += 1.)
+    // {
+    //   if (s > 0.)
+    //     line.addLine(p, _spline->getPoint(s));
+
+    //   p = _spline->getPoint(s);
+    // }
+    // line.addLine(p, _spline->getPoint(_spline->parameterLength())); // Connect to the end
+
+    // publisher_path.publish();
   }
+
   void Contouring::visualizeRoadConstraints(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)data;

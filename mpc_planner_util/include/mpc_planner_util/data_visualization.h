@@ -9,6 +9,7 @@
 namespace RosTools
 {
     class ROSMarkerPublisher;
+    class Spline2D;
 }
 // Tools for visualizing custom data types
 namespace MPCPlanner
@@ -17,6 +18,15 @@ namespace MPCPlanner
     struct DynamicObstacle;
     struct Disc;
     struct Halfspace;
+    struct ReferencePath;
+
+    RosTools::ROSMarkerPublisher &visualizePathPoints(const ReferencePath &path, const std::string &topic_name,
+                                                      bool publish = false, double alpha = 1.0);
+
+    RosTools::ROSMarkerPublisher &visualizeSpline(const RosTools::Spline2D &path, const std::string &topic_name,
+                                                  bool publish = false, double alpha = 1.0,
+                                                  int color_index = 5, int color_max = 10);
+
     RosTools::ROSMarkerPublisher &visualizeTrajectory(const Trajectory &trajectory, const std::string &topic_name,
                                                       bool publish = false, double alpha = 0.4,
                                                       int color_index = 0, int color_max = 10,

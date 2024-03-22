@@ -33,7 +33,7 @@ linearized_constraints:
 
 road:
   two_way: false
-  width: 12.0
+  width: 10.0
 
 shift_previous_solution_forward: false # Was true
 

@@ -1,6 +1,7 @@
 #include <mpc_planner_util/data_visualization.h>
 
 #include <ros_tools/visuals.h>
+#include <ros_tools/spline.h>
 
 #include <mpc_planner_types/data_types.h>
 #include <mpc_planner_util/parameters.h>
@@ -38,6 +39,50 @@ namespace MPCPlanner
             publisher.publish();
 
         return publisher;
+    }
+
+    RosTools::ROSMarkerPublisher &visualizePathPoints(const ReferencePath &path, const std::string &topic_name,
+                                                      bool publish, double alpha)
+    {
+        RosTools::ROSMarkerPublisher &publisher = VISUALS.getPublisher(topic_name);
+
+        auto &point = publisher.getNewPointMarker("CYLINDER");
+
+        point.setColor(0., 0., 0., alpha);
+        point.setScale(0.15, 0.15, 0.05);
+
+        for (size_t p = 0; p < path.x.size(); p++)
+            point.addPointMarker(Eigen::Vector3d(path.x[p], path.y[p], 0.1));
+
+        if (publish)
+            publisher.publish();
+
+        return publisher;
+    }
+
+    RosTools::ROSMarkerPublisher &visualizeSpline(const RosTools::Spline2D &spline, const std::string &topic_name,
+                                                  bool publish, double alpha, int color_index, int color_max)
+    {
+        // Visualize the path
+        auto &publisher_path = VISUALS.getPublisher(topic_name);
+        auto &line = publisher_path.getNewLine();
+        line.setColorInt(color_index, color_max, alpha);
+        line.setScale(0.1);
+
+        Eigen::Vector2d p;
+        for (double s = 0.; s < spline.parameterLength(); s += 1.)
+        {
+            if (s > 0.)
+                line.addLine(p, spline.getPoint(s));
+
+            p = spline.getPoint(s);
+        }
+        line.addLine(p, spline.getPoint(spline.parameterLength())); // Connect to the end
+
+        if (publish)
+            publisher_path.publish();
+
+        return publisher_path;
     }
 
     RosTools::ROSMarkerPublisher &visualizeObstacles(const std::vector<DynamicObstacle> &obstacles, const std::string &topic_name,

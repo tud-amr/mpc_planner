@@ -94,8 +94,10 @@ namespace MPCPlanner
 
         bool pointInPath(int point_num, double other_x, double other_y) const;
 
+        bool empty() const { return x.empty(); }
         // friend std::ostream &operator<<(std::ostream &out, const ReferencePath &path);
     };
+    typedef ReferencePath Boundary;
 
     struct Trajectory
     {

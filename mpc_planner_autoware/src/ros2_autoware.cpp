@@ -255,12 +255,28 @@ void AutowarePlanner::pathCallback(PathWithLaneId::SharedPtr msg)
     return;
 
   _data.reference_path.clear();
+  _data.left_bound.clear();
+  _data.right_bound.clear();
 
   for (auto &point : msg->points)
   {
     _data.reference_path.x.push_back(point.point.pose.position.x);
     _data.reference_path.y.push_back(point.point.pose.position.y);
     _data.reference_path.psi.push_back(0.0);
+  }
+
+  if (!msg->left_bound.empty())
+  {
+    for (auto &point : msg->left_bound) // Left
+    {
+      _data.left_bound.x.push_back(point.x);
+      _data.left_bound.y.push_back(point.y);
+    }
+    for (auto &point : msg->right_bound) // Right
+    {
+      _data.right_bound.x.push_back(point.x);
+      _data.right_bound.y.push_back(point.y);
+    }
   }
 
   _planner->onDataReceived(_data, "reference_path");

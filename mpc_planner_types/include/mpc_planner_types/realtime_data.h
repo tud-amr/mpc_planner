@@ -13,6 +13,7 @@ namespace MPCPlanner
 
         std::vector<DynamicObstacle> dynamic_obstacles;
         ReferencePath reference_path;
+        Boundary left_bound, right_bound;
 
         Eigen::Vector2d goal;
         bool goal_received{false};
@@ -29,7 +30,6 @@ namespace MPCPlanner
             robot_area = robot_area_copy;
         }
     };
-
 
 }
 #endif
