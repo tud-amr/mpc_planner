@@ -55,12 +55,52 @@ inline DynamicObstacle getDummyObstacle(const State &state)
       0.);
 }
 
+inline void propagatePredictionUncertainty(Prediction &prediction)
+{
+  if (prediction.type != PredictionType::GAUSSIAN)
+  {
+    LOG_WARN("Cannot propagate uncertainty for predictions that are not GAUSSIAN");
+    return;
+  }
+
+  double dt = CONFIG["integrator_step"].as<double>();
+  double major = 0.;
+  double minor = 0.;
+
+  for (int k = 0; k < CONFIG["N"].as<int>(); k++)
+  {
+    major = std::sqrt(std::pow(major, 2.0) + std::pow(prediction.modes[0][k].major_radius * dt, 2.));
+    minor = std::sqrt(std::pow(minor, 2.0) + std::pow(prediction.modes[0][k].minor_radius * dt, 2.));
+    prediction.modes[0][k].major_radius = major;
+    prediction.modes[0][k].minor_radius = minor;
+  }
+}
+
+inline void propagatePredictionUncertainty(std::vector<DynamicObstacle> &obstacles)
+{
+  for (auto &obstacle : obstacles)
+    propagatePredictionUncertainty(obstacle.prediction);
+}
+
 inline Prediction getConstantVelocityPrediction(const Eigen::Vector2d &position, const Eigen::Vector2d &velocity, double dt, int steps)
 {
-  Prediction prediction(PredictionType::DETERMINISTIC);
+  Prediction prediction;
+  double noise = 0.;
+  if (CONFIG["probabilistic"]["enable"].as<bool>())
+  {
+    prediction = Prediction(PredictionType::GAUSSIAN);
+    noise = 0.3;
+  }
+  else
+  {
+    prediction = Prediction(PredictionType::DETERMINISTIC);
+  }
 
   for (int i = 0; i < steps; i++)
-    prediction.modes[0].push_back(PredictionStep(position + velocity * dt * i, 0., 0., 0.));
+    prediction.modes[0].push_back(PredictionStep(position + velocity * dt * i, 0., noise, noise));
+
+  if (CONFIG["probabilistic"]["enable"].as<bool>())
+    propagatePredictionUncertainty(prediction);
 
   return prediction;
 }
@@ -123,33 +163,6 @@ inline void ensureObstacleSize(std::vector<DynamicObstacle> &obstacles, const St
   }
 
   LOG_MARK("Obstacle size (after processing) is: " << obstacles.size());
-}
-
-inline void propagatePredictionUncertainty(Prediction &prediction)
-{
-  if (prediction.type != PredictionType::GAUSSIAN)
-  {
-    LOG_WARN("Cannot propagate uncertainty for predictions that are not GAUSSIAN");
-    return;
-  }
-
-  double dt = CONFIG["integrator_step"].as<double>();
-  double major = 0.;
-  double minor = 0.;
-
-  for (int k = 0; k < CONFIG["N"].as<int>(); k++)
-  {
-    major = std::sqrt(std::pow(major, 2.0) + std::pow(prediction.modes[0][k].major_radius * dt, 2.));
-    minor = std::sqrt(std::pow(minor, 2.0) + std::pow(prediction.modes[0][k].minor_radius * dt, 2.));
-    prediction.modes[0][k].major_radius = major;
-    prediction.modes[0][k].minor_radius = minor;
-  }
-}
-
-inline void propagatePredictionUncertainty(std::vector<DynamicObstacle> &obstacles)
-{
-  for (auto &obstacle : obstacles)
-    propagatePredictionUncertainty(obstacle.prediction);
 }
 
 #endif // DATA_PREPARATION_H

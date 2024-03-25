@@ -10,7 +10,7 @@
     <param name="simulation" value="false"/>
     <remap from="/input/state" to="/jackal3/odometry/filtered"/>
     <remap from="/input/state_pose" to="none_state_pose"/>
-    <remap from="/input/goal" to="/goal_pose"/>
+    <remap from="/input/goal" to="/roadmap/goal"/>
     <remap from="/input/reference_path" to="roadmap/reference"/>
     <remap from="/input/obstacles_sim" to="none_obstacles_sim"/>
     <remap from="/input/obstacles" to="/dynamic_objects"/>

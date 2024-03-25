@@ -22,6 +22,6 @@ namespace MPCPlanner
 
   private:
   };
-};
+}
 
 #endif // __MPC_GOAL_MODULE_H__

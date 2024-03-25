@@ -51,6 +51,7 @@ public:
     void obstacleCallback(const derived_object_msgs::ObjectArray::ConstPtr &msg);
     void bluetoothCallback(const sensor_msgs::Joy::ConstPtr &msg);
 
+    void rotateToGoal();
     void reset();
 
 private:
@@ -63,6 +64,7 @@ private:
     ros::Timer _timer;
 
     bool _enable_output{false};
+    bool _rotate_to_goal{false};
     bool _forward_x_experiment{true};
 
     std::unique_ptr<RosTools::Benchmarker> _benchmarker;

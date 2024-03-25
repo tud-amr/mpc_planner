@@ -190,7 +190,7 @@ Visualization Manager:
           Marker Topic: /jackal_planner/contouring/path
           Name: Reference Path
           Namespaces:
-            "": true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -198,7 +198,7 @@ Visualization Manager:
           Marker Topic: /jackal_planner/contouring/points
           Name: Reference Path Points
           Namespaces:
-            "": true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -224,7 +224,7 @@ Visualization Manager:
               Marker Topic: /jackal_planner/guidance_planner/start_and_goals
               Name: Start and Goals
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
               Value: true
             - Class: rviz/MarkerArray
@@ -232,7 +232,7 @@ Visualization Manager:
               Marker Topic: /jackal_planner/guidance_planner/graph
               Name: Graph
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
               Value: true
             - Class: rviz/MarkerArray
@@ -248,7 +248,7 @@ Visualization Manager:
               Marker Topic: /jackal_planner/guidance_planner/trajectories
               Name: Guidance Trajectories
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
               Value: true
             - Class: rviz/MarkerArray
@@ -256,7 +256,7 @@ Visualization Manager:
               Marker Topic: /jackal_planner/guidance_planner/obstacles_3d
               Name: 3D Obstacles
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
               Value: true
             - Class: rviz/MarkerArray
@@ -272,7 +272,7 @@ Visualization Manager:
               Marker Topic: /jackal_planner/guidance_constraints/optimized_trajectories
               Name: Optimized Trajectories
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
               Value: true
           Enabled: true
@@ -488,6 +488,22 @@ Visualization Manager:
       Marker Topic: /jackal_planner/contouring/road_constraints
       Name: MarkerArray
       Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /jackal_planner/goal
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /jackal_planner/goal_module
+      Name: MarkerArray
+      Namespaces:
         "": true
       Queue Size: 100
       Value: true
@@ -511,7 +527,7 @@ Visualization Manager:
       X std deviation: 0.5
       Y std deviation: 0.5
     - Class: rviz/SetGoal
-      Topic: /move_base_simple/goal
+      Topic: /roadmap/goal
     - Class: rviz/PublishPoint
       Single click: true
       Topic: /clicked_point
@@ -519,7 +535,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 23.816875457763672
+      Distance: 17.287513732910156
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -527,17 +543,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -2.7300667762756348
-        Y: 1.0920741558074951
-        Z: 1.0188348293304443
+        X: -0.6267812252044678
+        Y: -0.0432579331099987
+        Z: 2.253340482711792
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.8547972440719604
+      Pitch: 1.1197971105575562
       Target Frame: <Fixed Frame>
-      Yaw: 3.540006637573242
+      Yaw: 3.1749982833862305
     Saved: ~
 Window Geometry:
   Displays:

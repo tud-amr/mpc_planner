@@ -313,6 +313,26 @@ namespace MPCPlanner
         VISUALS.getPublisher(_name + "/warmstart_trajectories").publish();
     }
 
+    bool GuidanceConstraints::isDataReady(const RealTimeData &data, std::string &missing_data)
+    {
+        (void)data;
+        (void)missing_data;
+
+        bool ready = true;
+        ready = ready && planners_[0].guidance_constraints->isDataReady(data, missing_data);
+        ready = ready && planners_[0].safety_constraints->isDataReady(data, missing_data);
+        if (!ready)
+            return false;
+
+        if (_spline == nullptr)
+        {
+            missing_data += "Reference Path, ";
+            return false;
+        }
+
+        return true;
+    }
+
     //     /** @brief Load obstacles into the Homotopy module */
     void GuidanceConstraints::onDataReceived(RealTimeData &data, std::string &&data_name)
     {
@@ -321,6 +341,15 @@ namespace MPCPlanner
             LOG_MARK("Received Reference Path");
 
             _spline = std::make_unique<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y); // Construct a spline from the given points
+        }
+        else if (data_name == "goal") // New
+        {
+            LOG_WARN("Received Goal");
+
+            std::vector<double> x = {data.goal(0), data.goal(0) + 1., data.goal(0) + 1., data.goal(0)};
+            std::vector<double> y = {data.goal(1), data.goal(1), data.goal(1) + 1., data.goal(1) + 1.};
+
+            _spline = std::make_unique<RosTools::Spline2D>(x, y); // Construct a spline from the given points
         }
 
         // We wait for both the obstacles and state to arrive before we compute here

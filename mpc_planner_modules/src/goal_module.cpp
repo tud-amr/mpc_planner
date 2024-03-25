@@ -16,18 +16,23 @@ namespace MPCPlanner
 
     void GoalModule::update(State &state, const RealTimeData &data, ModuleData &module_data)
     {
+        (void)state;
+        (void)data;
+        (void)module_data;
     }
 
     void GoalModule::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
     {
+        (void)module_data;
         if (k == 0)
-            LOG_DEBUG("Goal Module::setParameters()");
+            LOG_INFO("Goal Module::setParameters()");
 
         // Set the parameters for the solver
         _solver->setParameter(k, "goal_x", data.goal(0));
         _solver->setParameter(k, "goal_y", data.goal(1));
 
-        _solver->setParameter(k, "goal_weight", CONFIG["weights"]["goal"].as<double>());
+        LOG_VALUE("goal_weight", CONFIG["weights"]["goal_weight"].as<double>());
+        _solver->setParameter(k, "goal_weight", CONFIG["weights"]["goal_weight"].as<double>());
     }
 
     bool GoalModule::isDataReady(const RealTimeData &data, std::string &missing_data)
@@ -40,10 +45,10 @@ namespace MPCPlanner
 
     void GoalModule::visualize(const RealTimeData &data, const ModuleData &module_data)
     {
+        (void)module_data;
         if (!data.goal_received)
             return;
 
-        LOG_DEBUG("GoalModule::visualize()");
         auto &publisher = VISUALS.getPublisher(_name);
         auto &sphere = publisher.getNewPointMarker("SPHERE");
 
@@ -53,4 +58,4 @@ namespace MPCPlanner
 
         publisher.publish();
     }
-};
+}

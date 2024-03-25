@@ -38,11 +38,11 @@ class WeightsObjective(Objective):
         # # Add all weights in the list
         for weight_name in weight_names:
             self._weights.append(weight_name)
+            self._kwarg_list.append(kwargs)
 
         self._weights_per_function.append(weight_names)
         self._variables_per_function.append(variable_to_weight)
         self._cost_functions.append(cost_function)
-        self._kwarg_list.append(kwargs)
 
     def get_value(self, model, params, settings, stage_idx):
         cost = 0.0

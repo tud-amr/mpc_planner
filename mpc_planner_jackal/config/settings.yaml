@@ -32,7 +32,7 @@ scenario_constraints:
 
 road:
   two_way: false
-  width: 6.0
+  width: 7.0
 
 shift_previous_solution_forward: false
 
@@ -50,12 +50,12 @@ probabilistic:
   propagate_uncertainty: true
 
 weights:
-  goal: 10.
-  velocity: 0.5 #0.5
-  acceleration: 0.15
-  angular_velocity: 0.25 #0.05
-  reference_velocity: 2.0 #1.5
-  contour: 0.5 #0.01
+  goal_weight: 10.
+  velocity: 0.3 
+  acceleration: 0.25 #0.15
+  angular_velocity: 0.25 
+  reference_velocity: 1.5 #2.0 
+  contour: 0.01 #0.05
   preview: 0.0
   lag: 0.1
   slack: 10000.

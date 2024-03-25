@@ -80,8 +80,8 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
 
 bool JackalPlanner::objectiveReached()
 {
-    bool reset_condition_forward_x = (_forward_x_experiment) && (_state.get("x") > 2.7);
-    bool reset_condition_backward_x = (!_forward_x_experiment) && (_state.get("x") < -2.5);
+    bool reset_condition_forward_x = (_forward_x_experiment) && (_state.get("x") > 3.0);
+    bool reset_condition_backward_x = (!_forward_x_experiment) && (_state.get("x") < -3.0);
     bool reset_condition = reset_condition_forward_x || reset_condition_backward_x;
     if (reset_condition)
     {
@@ -102,6 +102,12 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
 
     // Print the state
     _state.print();
+
+    if (_rotate_to_goal)
+    {
+        rotateToGoal();
+        return;
+    }
 
     auto output = _planner->solveMPC(_state, _data);
 
@@ -143,6 +149,44 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
     LOG_DEBUG("============= End Loop =============");
 }
 
+void JackalPlanner::rotateToGoal()
+{
+    LOG_INFO("Rotate to goal");
+    if (!_data.goal_received)
+    {
+        LOG_INFO("Waiting for the goal");
+        return;
+    }
+
+    LOG_VALUE("goal x", _data.goal(0));
+    LOG_VALUE("goal y", _data.goal(1));
+
+    double goal_angle = std::atan2(_data.goal(1) - _state.get("y"), _data.goal(0) - _state.get("x"));
+    double angle_diff = goal_angle - _state.get("psi"); // RosTools::angleDifference(_state.get("psi"), goal_angle);
+
+    LOG_VALUE("goal angle", goal_angle);
+
+    if (angle_diff > M_PI)
+        angle_diff -= 2 * M_PI;
+
+    LOG_VALUE("diff", angle_diff);
+    geometry_msgs::Twist cmd;
+    if (std::abs(angle_diff) > 0.1)
+    {
+        cmd.linear.x = 0.0;
+        if (_enable_output)
+            cmd.angular.z = 1.5 * RosTools::sgn(angle_diff);
+        else
+            cmd.angular.z = 0.;
+
+        _cmd_pub.publish(cmd);
+    }
+    else
+    {
+        _rotate_to_goal = false;
+    }
+}
+
 void JackalPlanner::stateCallback(const nav_msgs::Odometry::ConstPtr &msg)
 {
     _state.set("x", msg->pose.pose.position.x);
@@ -161,10 +205,12 @@ void JackalPlanner::statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr
 
 void JackalPlanner::goalCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
-    LOG_DEBUG("Goal callback");
+    LOG_WARN("Goal callback");
     _data.goal(0) = msg->pose.position.x;
     _data.goal(1) = msg->pose.position.y;
     _data.goal_received = true;
+
+    _planner->onDataReceived(_data, "goal");
 }
 
 bool JackalPlanner::isPathTheSame(const nav_msgs::Path::ConstPtr &msg)
@@ -238,11 +284,13 @@ void JackalPlanner::obstacleCallback(const derived_object_msgs::ObjectArray::Con
 
                 double small_dim = std::min(object.shape.dimensions[0], object.shape.dimensions[1]);
                 double large_dim = std::max(object.shape.dimensions[0], object.shape.dimensions[1]);
+                double margin = 0.05;
+
                 _data.dynamic_obstacles.emplace_back(
                     object.id + additions,
                     pos + Eigen::Vector2d(std::cos(object_angle - M_PI_2), std::sin(object_angle - M_PI_2)) * large_dim / 2,
                     object_angle,
-                    std::sqrt(2) * small_dim,
+                    std::sqrt(2) * small_dim + margin,
                     ObstacleType::STATIC);
 
                 additions++;
@@ -251,7 +299,7 @@ void JackalPlanner::obstacleCallback(const derived_object_msgs::ObjectArray::Con
                     object.id + additions,
                     pos - Eigen::Vector2d(std::cos(object_angle - M_PI_2), std::sin(object_angle - M_PI_2)) * large_dim / 2,
                     object_angle,
-                    std::sqrt(2) * small_dim,
+                    std::sqrt(2) * small_dim + margin,
                     ObstacleType::STATIC);
 
                 auto &dynamic_obstacle = _data.dynamic_obstacles[_data.dynamic_obstacles.size() - 2];
@@ -315,6 +363,15 @@ void JackalPlanner::visualize()
     line.addLine(Eigen::Vector2d(_state.get("x"), _state.get("y")),
                  Eigen::Vector2d(_state.get("x") + 1.0 * std::cos(_state.get("psi")), _state.get("y") + 1.0 * std::sin(_state.get("psi"))));
     publisher.publish();
+
+    auto &goal_publisher = VISUALS.getPublisher("goal");
+    auto &cube = goal_publisher.getNewPointMarker("CUBE");
+
+    cube.setScale(0.05, 0.05, 0.2);
+    cube.setColorInt(4, 5);
+
+    cube.addPointMarker(Eigen::Vector3d(_data.goal(0), _data.goal(1), 0.0));
+    goal_publisher.publish();
 }
 
 void JackalPlanner::reset()
@@ -325,6 +382,7 @@ void JackalPlanner::reset()
     _reverse_roadmap_pub.publish(empty_msg);
 
     _planner->reset(_state, _data);
+    _rotate_to_goal = true;
 }
 
 int main(int argc, char **argv)

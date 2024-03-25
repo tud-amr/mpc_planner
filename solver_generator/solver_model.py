@@ -161,8 +161,8 @@ class ContouringSecondOrderUnicycleModel(DynamicsModel):
         self.states = ["x", "y", "psi", "v", "spline"]
         self.inputs = ["a", "w"]
 
-        self.lower_bound = [-2.0, -0.8, -2000.0, -2000.0, -np.pi, -2.0, -1.0]
-        self.upper_bound = [2.0, 0.8, 2000.0, 2000.0, np.pi, 3.0, 10000.0]
+        self.lower_bound = [-2.0, -0.8, -2000.0, -2000.0, -4 * np.pi, -2.0, -1.0]
+        self.upper_bound = [2.0, 0.8, 2000.0, 2000.0, 4 * np.pi, 3.0, 10000.0]
 
     def continuous_model(self, x, u):
 
