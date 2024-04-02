@@ -9,6 +9,7 @@
 
 #include <ros_tools/profiling.h>
 #include <ros_tools/convertions.h>
+#include <ros_tools/math.h>
 
 #include <std_msgs/Empty.h>
 
