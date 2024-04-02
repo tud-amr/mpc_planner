@@ -3,10 +3,6 @@ project(mpc_planner_jackal)
 
 add_compile_options(-std=c++17)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
-
 set(DEPENDENCIES
   roscpp
   mpc_planner
@@ -17,18 +13,17 @@ set(DEPENDENCIES
   ros_tools
   nav_msgs
   derived_object_msgs
+  dynamic_reconfigure
 )
 
 # find dependencies
-find_package(catkin REQUIRED COMPONENTS
-  ${DEPENDENCIES}
-)
+find_package(catkin REQUIRED COMPONENTS ${DEPENDENCIES})
+
+generate_dynamic_reconfigure_options(cfg/settings.cfg)
 
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}
   INCLUDE_DIRS include include/${PROJECT_NAME}
-
-  # LIBRARIES ${PROJECT_NAME}
 )
 
 include_directories(
@@ -38,10 +33,10 @@ include_directories(
 
 add_executable(jackal_planner src/ros1_jackal.cpp)
 add_dependencies(jackal_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(jackal_planner
-  ${catkin_LIBRARIES}
-  yaml-cpp
-)
+target_link_libraries(jackal_planner ${catkin_LIBRARIES})
+
+add_definitions(-DMPC_PLANNER_ROS)
+
 install(
   TARGETS jackal_planner
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
