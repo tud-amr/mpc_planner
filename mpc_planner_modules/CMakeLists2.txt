@@ -5,10 +5,6 @@ if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
-
 option(USE_ROS2 "Use ROS2 CMake" ON)
 
 find_package(OpenMP)
@@ -22,18 +18,17 @@ endif()
 
 # General requirements
 set(DEPENDENCIES
+  ros_tools
   mpc_planner_types
   mpc_planner_util
   mpc_planner_solver
-  ros_tools
 )
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(mpc_planner_util REQUIRED)
-find_package(mpc_planner_types REQUIRED)
-find_package(mpc_planner_solver REQUIRED)
-find_package(ros_tools REQUIRED)
+foreach(pkg IN LISTS DEPENDENCIES)
+  find_package(${pkg} REQUIRED)
+endforeach()
 
 include(modules.cmake)
 list(APPEND DEPENDENCIES ${MODULE_DEPENDENCIES})
@@ -43,18 +38,14 @@ include_directories(
   include
 )
 
-add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME} SHARED
   ${MODULE_SOURCES}
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
     "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
-ament_target_dependencies(${PROJECT_NAME}
-  ${DEPENDENCIES}
-)
-target_link_libraries(${PROJECT_NAME}
-)
+ament_target_dependencies(${PROJECT_NAME} ${DEPENDENCIES})
 
 install(
   TARGETS ${PROJECT_NAME}

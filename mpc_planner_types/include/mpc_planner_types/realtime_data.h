@@ -28,6 +28,7 @@ namespace MPCPlanner
             *this = RealTimeData();
 
             robot_area = robot_area_copy;
+            goal_received = false;
         }
     };
 

@@ -8,24 +8,22 @@ endif()
 # General requirements
 set(DEPENDENCIES
   rclcpp
-  yaml-cpp
-  mpc_planner_types
   ros_tools
+  mpc_planner_types
 )
 
-# find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
-find_package(mpc_planner_types REQUIRED)
-find_package(ros_tools REQUIRED)
+
+# find dependencies
+foreach(pkg IN LISTS DEPENDENCIES)
+  find_package(${pkg} REQUIRED)
+endforeach()
 
 # # BUILD ###
 include_directories(
   include
 )
-
-# set(ENV{MPC_PLANNER_ROS} ${MPC_PLANNER_ROS})
 
 add_library(${PROJECT_NAME} SHARED
   src/data_visualization.cpp
@@ -50,5 +48,4 @@ install(DIRECTORY include/${PROJECT_NAME}
 
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(${DEPENDENCIES})
-
 ament_package()

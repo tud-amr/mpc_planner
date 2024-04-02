@@ -72,7 +72,7 @@ def generate_forces_solver(modules, settings, model, skip_solver_generation):
     solver.E = np.concatenate([np.zeros((model.nx, model.nu)), np.eye(model.nx)], axis=1)
 
     # Initial stage (k = 0) specifies the states
-    solver.xinitidx = range(model.nu, model.get_nvar())
+    solver.xinitidx = model.get_xinit()  # range(model.nu, model.get_nvar())
 
     """
     Generate a solver
@@ -114,6 +114,9 @@ def generate_forces_solver(modules, settings, model, skip_solver_generation):
 
         options.nlp.linear_solver = "symm_indefinite_fast"
         options.sqp_nlp.reg_hessian = 5e-9  # = default
+
+        options.exportBFGS = 1
+        solver.bfgs_init = np.diag(np.array([0.301451, 0.50121, 0.206244, 1.08899, 0.0692479, 0.98321, 0.200556, 1]))
 
     # Creates code for symbolic model formulation given above, then contacts server to generate new solver
     if skip_solver_generation:

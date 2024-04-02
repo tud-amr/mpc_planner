@@ -18,6 +18,7 @@ namespace MPCPlanner
         Disc(const double offset_, const double radius_);
 
         Eigen::Vector2d getPosition(const Eigen::Vector2d &robot_position, const double angle) const;
+        Eigen::Vector2d toRobotCenter(const Eigen::Vector2d &disc_position, const double angle) const;
     };
 
     struct Halfspace
@@ -28,7 +29,7 @@ namespace MPCPlanner
 
         Halfspace(const Eigen::Vector2d &A, const double b);
     };
-    typedef std::vector<Halfspace> StaticObstacle;
+    typedef std::vector<Halfspace> StaticObstacle; // For all k, a halfspace
 
     enum class PredictionType
     {
@@ -68,6 +69,12 @@ namespace MPCPlanner
         bool empty() const;
     };
 
+    enum class ObstacleType
+    {
+        STATIC = 0,
+        DYNAMIC
+    };
+
     struct DynamicObstacle
     {
         int index;
@@ -76,10 +83,11 @@ namespace MPCPlanner
         double angle;
 
         double radius;
+        ObstacleType type{ObstacleType::DYNAMIC};
 
         Prediction prediction;
 
-        DynamicObstacle(int _index, const Eigen::Vector2d &_position, double _angle, double _radius);
+        DynamicObstacle(int _index, const Eigen::Vector2d &_position, double _angle, double _radius, ObstacleType _type = ObstacleType::DYNAMIC);
     };
 
     struct ReferencePath

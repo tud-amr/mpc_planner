@@ -5,6 +5,8 @@
 
 #include <lmpcc_scenario_module/lmpcc_scenario_module.h>
 
+#include <list>
+
 namespace MPCPlanner
 {
 
@@ -25,19 +27,22 @@ namespace MPCPlanner
     void visualize(const RealTimeData &data, const ModuleData &module_data) override;
 
   private:
-    std::unique_ptr<ScenarioModule::ScenarioModule> _scenario_module;
-    // struct ScenarioSolver
-    // {
-    //   std::unique_ptr<ScenarioModule::ScenarioModule> scenario_module_;
+    // std::unique_ptr<ScenarioModule::ScenarioModule> _scenario_module;
 
-    //   std::unique_ptr<Solver> solver;
+    /** @brief a struct to collect parallel scenario optimizations */
+    struct ScenarioSolver
+    {
+      ScenarioModule::ScenarioModule scenario_module; // Declared here for memory continuity
+      std::shared_ptr<Solver> solver;
 
-    //   // Outputs
-    //   int exit_code;
-    //   ScenarioModule::ScenarioStatus status;
-    //   ScenarioModule::SupportSubsample support, removed_scenarios;
-    // };
-    // std::vector<ScenarioSolver> solvers_;
+      // Outputs
+      int exit_code{-1};
+      ScenarioModule::ScenarioStatus status{ScenarioModule::ScenarioStatus::SUCCESS};
+      ScenarioModule::SupportSubsample support;
+
+      ScenarioSolver(int id);
+    };
+    std::vector<std::unique_ptr<ScenarioSolver>> _scenario_solvers;
 
     // ScenarioSolveStatus solve_status_;
 

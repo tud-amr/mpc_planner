@@ -5,12 +5,12 @@
   <arg name="gui" default="false" />
   <arg name="project_name" default="" />
 
-  <rosparam command="load" file="$(find mpc_planner-jackal)/config/guidance_planner.yaml"/>
-  <node pkg="mpc_planner-jackal" type="jackal_planner" name="jackal_planner" respawn="false" output="screen">
+  <rosparam command="load" file="$(find mpc_planner_jackal)/config/guidance_planner.yaml"/>
+  <node pkg="mpc_planner_jackal" type="jackal_planner" name="jackal_planner" respawn="false" output="screen">
     <param name="simulation" value="false"/>
     <remap from="/input/state" to="/jackal3/odometry/filtered"/>
     <remap from="/input/state_pose" to="none_state_pose"/>
-    <remap from="/input/goal" to="/goal_pose"/>
+    <remap from="/input/goal" to="/roadmap/goal"/>
     <remap from="/input/reference_path" to="roadmap/reference"/>
     <remap from="/input/obstacles_sim" to="none_obstacles_sim"/>
     <remap from="/input/obstacles" to="/dynamic_objects"/>
@@ -22,17 +22,17 @@
   <include file="$(find vicon_bridge)/launch/jackal.launch"/>
 
   <!-- Bundle dynamic obstacles in one convenient message -->
-  <include file="$(find obstacle_bundle_util)/launch/bundle_obstacles.launch">
-    <arg name="num_dynamic_obstacles" value="3"/>
-    <arg name="num_static_obstacles" value="0"/>
-    <arg name="obstacle_radius" value="0.4"/>
-  </include>
+  <rosparam command="load" file="$(find mpc_planner_jackal)/config/obstacles.yaml"/>
+  <include file="$(find obstacle_bundle_util)/launch/bundle_obstacles.launch"/>
+
+  <include file="$(find jackal_description)/launch/description.launch"/>
 
   <include file="$(find roadmap)/launch/roadmap.launch">
     <arg name="map_file_name" value="maps/mobile_robotics_lab/straight.xml"/>
   </include>
+  <!-- _side -->
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_planner-jackal)/rviz/ros1.rviz" output="screen"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_planner_jackal)/rviz/ros1.rviz" output="screen"/>
 
   <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" output="log"/>
 

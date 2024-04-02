@@ -16,8 +16,11 @@ from generate_solver import generate_solver
 # Import modules here from mpc_planner_modules
 from mpc_base import MPCBaseModule
 from contouring import ContouringModule
+from goal_module import GoalModule
+from path_reference_velocity import PathReferenceVelocityModule
 
 from ellipsoid_constraints import EllipsoidConstraintModule
+from gaussian_constraints import GaussianConstraintModule
 from guidance_constraints import GuidanceConstraintModule
 from linearized_constraints import LinearizedConstraintModule
 
@@ -25,16 +28,13 @@ from linearized_constraints import LinearizedConstraintModule
 from solver_model import ContouringSecondOrderUnicycleModel
 
 
-def define_modules(settings) -> ModuleManager:
+def configuration_goal_tmpc(settings):
     modules = ModuleManager()
+    model = ContouringSecondOrderUnicycleModel()
 
-    # Module that allows for penalization of variables
     base_module = modules.add_module(MPCBaseModule(settings))
-
-    # Penalize ||a||_2^2 and ||w||_2^2
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
-
     # Penalize ||v - v_ref||_2^2
     base_module.weigh_variable(
         var_name="v",
@@ -42,24 +42,50 @@ def define_modules(settings) -> ModuleManager:
         cost_function=lambda x, w: w[0] * (x - w[1]) ** 2,
     )
 
-    # modules.add_module(GoalModule(settings))  # Track a goal
-    modules.add_module(
-        ContouringModule(settings, num_segments=settings["contouring"]["num_segments"])
-    )
+    modules.add_module(GoalModule(settings))
+    modules.add_module(EllipsoidConstraintModule(settings))
 
-    # modules.add_module(EllipsoidConstraintModule(settings))
-    modules.add_module(
-        GuidanceConstraintModule(
-            settings, constraint_submodule=EllipsoidConstraintModule
-        )
-    )
-    # modules.add_module(LinearizedConstraintModule(settings))
+    # modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
 
-    return modules
+    return model, modules
+
+
+def configuration_tmpc(settings):
+    modules = ModuleManager()
+    model = ContouringSecondOrderUnicycleModel()
+
+    base_module = modules.add_module(MPCBaseModule(settings))
+    base_module.weigh_variable(var_name="a", weight_names="acceleration")
+    base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
+
+    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
+
+    # modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
+    modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=GaussianConstraintModule))
+
+    return model, modules
+
+
+def configuration_lmpcc(settings):
+    modules = ModuleManager()
+    model = ContouringSecondOrderUnicycleModel()
+
+    # Penalize ||a||_2^2 and ||w||_2^2
+    base_module = modules.add_module(MPCBaseModule(settings))
+    base_module.weigh_variable(var_name="a", weight_names="acceleration")
+    base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
+
+    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
+
+    modules.add_module(EllipsoidConstraintModule(settings))
+
+    return model, modules
 
 
 settings = load_settings()
-modules = define_modules(settings)
-model = ContouringSecondOrderUnicycleModel()
+
+model, modules = configuration_tmpc(settings)
 
 generate_solver(modules, model, settings)

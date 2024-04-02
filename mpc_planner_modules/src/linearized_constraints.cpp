@@ -177,9 +177,10 @@ namespace MPCPlanner
         return false;
       }
 
-      if (data.dynamic_obstacles[i].prediction.type != PredictionType::DETERMINISTIC)
+      if (data.dynamic_obstacles[i].prediction.type != PredictionType::DETERMINISTIC && data.dynamic_obstacles[i].prediction.type != PredictionType::GAUSSIAN)
       {
-        missing_data += "Obstacle Prediction (type must be deterministic) ";
+
+        missing_data += "Obstacle Prediction (type must be deterministic, or gaussian) ";
         return false;
       }
     }

@@ -24,5 +24,6 @@ namespace MPCPlanner
 
   void propagatePredictionUncertainty(Prediction &prediction);
   void propagatePredictionUncertainty(std::vector<DynamicObstacle> &obstacles);
-}
+} // namespace MPCPlanner
+
 #endif // DATA_PREPARATION_H

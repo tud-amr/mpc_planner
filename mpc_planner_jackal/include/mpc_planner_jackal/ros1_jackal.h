@@ -1,15 +1,15 @@
 #ifndef __ROS1_JACKAL_PLANNER_H__
 #define __ROS1_JACKAL_PLANNER_H__
 
+#include <mpc_planner_jackal/jackal_reconfigure.h>
+
 #include <mpc_planner/planner.h>
 
 #include <mpc_planner_solver/solver_interface.h>
 
 #include <mpc_planner_types/realtime_data.h>
 
-#include <mpc_planner_msgs/obstacle_array.h> /** @Todo: Replace! */
-
-#include <ros_tools/helpers.h>
+#include <mpc_planner_msgs/ObstacleArray.h> /** @Todo: Replace! */
 
 #include <ros/ros.h>
 
@@ -27,6 +27,11 @@
 #include <memory>
 
 using namespace MPCPlanner;
+
+namespace RosTools
+{
+    class Benchmarker;
+}
 
 class JackalPlanner
 {
@@ -46,10 +51,12 @@ public:
     void obstacleCallback(const derived_object_msgs::ObjectArray::ConstPtr &msg);
     void bluetoothCallback(const sensor_msgs::Joy::ConstPtr &msg);
 
+    void rotateToGoal();
     void reset();
 
 private:
     std::unique_ptr<Planner> _planner;
+    std::unique_ptr<JackalReconfigure> _reconfigure;
 
     RealTimeData _data;
     State _state;
@@ -57,6 +64,7 @@ private:
     ros::Timer _timer;
 
     bool _enable_output{false};
+    bool _rotate_to_goal{false};
     bool _forward_x_experiment{true};
 
     std::unique_ptr<RosTools::Benchmarker> _benchmarker;
