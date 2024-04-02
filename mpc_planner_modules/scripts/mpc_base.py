@@ -19,16 +19,17 @@ class WeightsObjective(Objective):
         self._weights_per_function = []
         self._variables_per_function = []
         self._cost_functions = []
+        self._kwarg_list = []
 
     def define_parameters(self, params):
-        for param in self._weights:
-            params.add(param, add_to_rqt_reconfigure=True)
+        for idx, param in enumerate(self._weights):
+            params.add(param, add_to_rqt_reconfigure=True, **self._kwarg_list[idx])
 
         return params
 
     # Weights w are a parameter vector
     # Only add weights if they are not also parameters!
-    def add(self, variable_to_weight, weight_names, cost_function=lambda x, w: w[0] * x**2):
+    def add(self, variable_to_weight, weight_names, cost_function=lambda x, w: w[0] * x**2, **kwargs):
 
         # # Make sure it's a list if it isn't yet
         if type(weight_names) != list:
@@ -37,6 +38,7 @@ class WeightsObjective(Objective):
         # # Add all weights in the list
         for weight_name in weight_names:
             self._weights.append(weight_name)
+            self._kwarg_list.append(kwargs)
 
         self._weights_per_function.append(weight_names)
         self._variables_per_function.append(variable_to_weight)

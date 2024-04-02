@@ -15,6 +15,11 @@ namespace MPCPlanner
         return robot_position + Eigen::Vector2d(offset * std::cos(angle), offset * std::sin(angle));
     }
 
+    Eigen::Vector2d Disc::toRobotCenter(const Eigen::Vector2d &disc_position, const double angle) const
+    {
+        return disc_position - Eigen::Vector2d(offset * std::cos(angle), offset * std::sin(angle));
+    }
+
     Halfspace::Halfspace(const Eigen::Vector2d &A, const double b)
         : A(A), b(b)
     {
@@ -45,9 +50,10 @@ namespace MPCPlanner
         return modes.empty() || (modes.size() > 0 && modes[0].empty());
     }
 
-    DynamicObstacle::DynamicObstacle(int _index, const Eigen::Vector2d &_position, double _angle, double _radius)
+    DynamicObstacle::DynamicObstacle(int _index, const Eigen::Vector2d &_position, double _angle, double _radius, ObstacleType _type)
         : index(_index), position(_position), angle(_angle), radius(_radius)
     {
+        type = _type;
     }
 
     ReferencePath::ReferencePath(int length)

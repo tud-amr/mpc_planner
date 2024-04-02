@@ -58,10 +58,23 @@ namespace MPCPlanner
 
         Prediction getConstantVelocityPrediction(const Eigen::Vector2d &position, const Eigen::Vector2d &velocity, double dt, int steps)
         {
-                Prediction prediction(PredictionType::DETERMINISTIC);
+                Prediction prediction;
+                double noise = 0.;
+                if (CONFIG["probabilistic"]["enable"].as<bool>())
+                {
+                        prediction = Prediction(PredictionType::GAUSSIAN);
+                        noise = 0.3;
+                }
+                else
+                {
+                        prediction = Prediction(PredictionType::DETERMINISTIC);
+                }
 
                 for (int i = 0; i < steps; i++)
-                        prediction.modes[0].push_back(PredictionStep(position + velocity * dt * i, 0., 0., 0.));
+                        prediction.modes[0].push_back(PredictionStep(position + velocity * dt * i, 0., noise, noise));
+
+                if (CONFIG["probabilistic"]["enable"].as<bool>())
+                        propagatePredictionUncertainty(prediction);
 
                 return prediction;
         }

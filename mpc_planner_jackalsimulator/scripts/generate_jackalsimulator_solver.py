@@ -67,7 +67,7 @@ def configuration_safe_horizon(settings):
     # Penalize ||a||_2^2 and ||w||_2^2
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
-    base_module.weigh_variable(var_name="slack", weight_names="slack")
+    base_module.weigh_variable(var_name="slack", weight_names="slack", rqt_max_value=10000.0)
 
     # modules.add_module(GoalModule(settings))  # Track a goal
     modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
@@ -109,8 +109,9 @@ def configuration_lmpcc(settings):
 
     return model, modules
 
+
 settings = load_settings()
 
-model, modules = configuration_tmpc(settings)
+model, modules = configuration_safe_horizon(settings)
 
 generate_solver(modules, model, settings)

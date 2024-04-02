@@ -54,6 +54,13 @@ namespace MPCPlanner
 		return *this;
 	}
 
+	char *Solver::getSolverMemory() const { return _solver_memory; }
+
+	void Solver::copySolverMemory(const Solver &other)
+	{
+		memcpy(_solver_memory, other.getSolverMemory(), Solver_get_mem_size());
+	}
+
 	bool Solver::hasParameter(std::string &&parameter)
 	{
 		return _parameter_map[parameter].IsDefined();
@@ -171,12 +178,9 @@ namespace MPCPlanner
 		return Eigen::Vector2d(getEgoPrediction(k, "x"), getEgoPrediction(k, "y"));
 	}
 
-	void Solver::setReinitialize(bool reinitialize)
+	void Solver::setReinitialize(const bool reinitialize)
 	{
-		if (!CONFIG["solver_settings"]["use_sqp"])
-			return;
-
-		// _params.reinitialize = reinitialize;
+		setForcesReinitialize(_params, reinitialize);
 	}
 
 	int Solver::solve()

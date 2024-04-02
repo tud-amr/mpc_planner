@@ -33,7 +33,7 @@ class SolverTest : public ::testing::Test
 protected:
     void SetUp() override
     {
-        std::string path = std::filesystem::path(__FILE__).parent_path().string() + "/../../mpc_planner-jackal/src/src";
+        std::string path = std::filesystem::path(__FILE__).parent_path().string() + "/../../mpc_planner_jackal/src/src";
         path = SYSTEM_CONFIG_PATH(path, "settings");
         Configuration::getInstance().initialize(path);
 

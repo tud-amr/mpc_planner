@@ -20,10 +20,12 @@ namespace MPCPlanner
   {
     (void)state;
     (void)data;
+    (void)module_data;
   }
 
   void GaussianConstraints::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
   {
+    (void)module_data;
 
     _solver->setParameter(k, "ego_disc_radius", CONFIG["robot_radius"].as<double>());
     for (int d = 0; d < CONFIG["n_discs"].as<int>(); d++)
@@ -37,11 +39,11 @@ namespace MPCPlanner
 
       if (obstacle.prediction.type == PredictionType::GAUSSIAN)
       {
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_x", obstacle.prediction.steps[k - 1].position(0));
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_y", obstacle.prediction.steps[k - 1].position(1));
+        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_x", obstacle.prediction.modes[0][k - 1].position(0));
+        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_y", obstacle.prediction.modes[0][k - 1].position(1));
 
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_minor", obstacle.prediction.steps[k - 1].minor_radius);
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_major", obstacle.prediction.steps[k - 1].major_radius);
+        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_minor", obstacle.prediction.modes[0][k - 1].minor_radius);
+        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_major", obstacle.prediction.modes[0][k - 1].major_radius);
 
         _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_risk", CONFIG["probabilistic"]["risk"].as<double>());
         _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_r", CONFIG["obstacle_radius"].as<double>());
@@ -59,7 +61,7 @@ namespace MPCPlanner
 
     for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
     {
-      if (data.dynamic_obstacles[i].prediction.steps.empty())
+      if (data.dynamic_obstacles[i].prediction.modes.empty())
       {
         missing_data += "Obstacle Prediction ";
         return false;
@@ -90,10 +92,10 @@ namespace MPCPlanner
         ellipsoid.setColorInt(k, _solver->N, 0.5);
 
         double chi = RosTools::ExponentialQuantile(0.5, 1.0 - CONFIG["probabilistic"]["risk"].as<double>());
-        ellipsoid.setScale(2 * (obstacle.prediction.steps[k - 1].major_radius * std::sqrt(chi) + obstacle.radius),
-                           2 * (obstacle.prediction.steps[k - 1].major_radius * std::sqrt(chi) + obstacle.radius), 0.005);
+        ellipsoid.setScale(2 * (obstacle.prediction.modes[0][k - 1].major_radius * std::sqrt(chi) + obstacle.radius),
+                           2 * (obstacle.prediction.modes[0][k - 1].major_radius * std::sqrt(chi) + obstacle.radius), 0.005);
 
-        ellipsoid.addPointMarker(obstacle.prediction.steps[k - 1].position);
+        ellipsoid.addPointMarker(obstacle.prediction.modes[0][k - 1].position);
       }
     }
     publisher.publish();
