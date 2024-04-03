@@ -130,16 +130,22 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
         // Publish the command
         cmd.linear.x = _planner->getSolution(1, "v");  // = x1
         cmd.angular.z = _planner->getSolution(0, "w"); // = u0
+        _state.set("v", cmd.linear.x);                 // Use the commanded speed
         LOG_VALUE_DEBUG("Commanded v", cmd.linear.x);
         LOG_VALUE_DEBUG("Commanded w", cmd.angular.z);
+        CONFIG["enable_output"] = true;
     }
     else if (!_enable_output)
     {
+        _state.set("v", _measured_velocity); // Use the commanded speed
+
         cmd.linear.x = 0.0;
         cmd.angular.z = 0.0;
     }
     else
     {
+        _state.set("v", _measured_velocity); // Use the commanded speed
+
         double deceleration = CONFIG["deceleration_at_infeasible"].as<double>();
         double velocity_after_braking;
         double velocity;
@@ -202,7 +208,8 @@ void JackalPlanner::stateCallback(const nav_msgs::Odometry::ConstPtr &msg)
     _state.set("x", msg->pose.pose.position.x);
     _state.set("y", msg->pose.pose.position.y);
     _state.set("psi", RosTools::quaternionToAngle(msg->pose.pose.orientation));
-    _state.set("v", std::sqrt(std::pow(msg->twist.twist.linear.x, 2.) + std::pow(msg->twist.twist.linear.y, 2.)));
+    _measured_velocity = std::sqrt(std::pow(msg->twist.twist.linear.x, 2.) + std::pow(msg->twist.twist.linear.y, 2.));
+    // _state.set("v", std::sqrt(std::pow(msg->twist.twist.linear.x, 2.) + std::pow(msg->twist.twist.linear.y, 2.)));
 }
 
 void JackalPlanner::statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -210,7 +217,9 @@ void JackalPlanner::statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr
     _state.set("x", msg->pose.position.x);
     _state.set("y", msg->pose.position.y);
     _state.set("psi", msg->pose.orientation.z);
-    _state.set("v", msg->pose.position.z);
+    _measured_velocity = msg->pose.position.z;
+
+    // _state.set("v", msg->pose.position.z);
 }
 
 void JackalPlanner::goalCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -372,6 +381,7 @@ void JackalPlanner::bluetoothCallback(const sensor_msgs::Joy::ConstPtr &msg)
         LOG_INFO("Deadmanswitch enabled (deadman switch released)");
 
     _enable_output = msg->axes[2] < -0.9;
+    CONFIG["enable_output"] = _enable_output;
 }
 
 void JackalPlanner::visualize()

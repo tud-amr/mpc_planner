@@ -38,7 +38,7 @@ class JackalPlanner
 public:
     JackalPlanner(ros::NodeHandle &nh);
     ~JackalPlanner();
-    
+
     void initializeSubscribersAndPublishers(ros::NodeHandle &nh);
 
     bool objectiveReached();
@@ -67,6 +67,8 @@ private:
     bool _enable_output{false};
     bool _rotate_to_goal{false};
     bool _forward_x_experiment{true};
+
+    double _measured_velocity{0.};
 
     std::unique_ptr<RosTools::Benchmarker> _benchmarker;
 

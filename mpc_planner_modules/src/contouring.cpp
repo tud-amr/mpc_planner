@@ -39,7 +39,6 @@ namespace MPCPlanner
   {
     (void)data;
     (void)module_data;
-    LOG_MARK("contouring::setParameters");
 
     _solver->setParameter(k, "contour", CONFIG["weights"]["contour"].as<double>());
     _solver->setParameter(k, "lag", CONFIG["weights"]["lag"].as<double>());
