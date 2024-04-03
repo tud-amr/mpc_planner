@@ -1,9 +1,10 @@
 
 objects:
   dynamic: 
-    number: 3
+    number: 5
     radius: 0.4
   static:
-    number: 2
+    number: 1
     radius: 0.3
-    size: [2, 2]
+    size: [2]
+    names: ["/vicon/static_object2_mapped_with_covariance"]

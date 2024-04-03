@@ -52,10 +52,10 @@ probabilistic:
 weights:
   goal_weight: 10.
   velocity: 0.3 
-  acceleration: 0.25 #0.15
+  acceleration: 0.15 #0.25 #0.15
   angular_velocity: 0.25 
   reference_velocity: 1.5 #2.0 
-  contour: 0.01 #0.05
+  contour: 0.05 #0.01 #0.05
   preview: 0.0
   lag: 0.1
   slack: 10000.

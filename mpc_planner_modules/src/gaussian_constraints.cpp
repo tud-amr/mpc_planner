@@ -44,9 +44,16 @@ namespace MPCPlanner
         setForcesParameterGaussianObstX(k, _solver->_params, obstacle.prediction.modes[0][k - 1].position(0), i);
         setForcesParameterGaussianObstY(k, _solver->_params, obstacle.prediction.modes[0][k - 1].position(1), i);
 
-        setForcesParameterGaussianObstMajor(k, _solver->_params, obstacle.prediction.modes[0][k - 1].major_radius, i);
-        setForcesParameterGaussianObstMinor(k, _solver->_params, obstacle.prediction.modes[0][k - 1].minor_radius, i);
-
+        if (obstacle.type == ObstacleType::DYNAMIC)
+        {
+          setForcesParameterGaussianObstMajor(k, _solver->_params, obstacle.prediction.modes[0][k - 1].major_radius, i);
+          setForcesParameterGaussianObstMinor(k, _solver->_params, obstacle.prediction.modes[0][k - 1].minor_radius, i);
+        }
+        else // Static obstacles have no uncertainty
+        {
+          setForcesParameterGaussianObstMajor(k, _solver->_params, 0.001, i);
+          setForcesParameterGaussianObstMinor(k, _solver->_params, 0.001, i);
+        }
         setForcesParameterGaussianObstRisk(k, _solver->_params, CONFIG["probabilistic"]["risk"].as<double>(), i);
         setForcesParameterGaussianObstR(k, _solver->_params, CONFIG["obstacle_radius"].as<double>(), i);
       }
@@ -94,7 +101,9 @@ namespace MPCPlanner
       {
         ellipsoid.setColorInt(k, _solver->N, 0.5);
 
-        double chi = RosTools::ExponentialQuantile(0.5, 1.0 - CONFIG["probabilistic"]["risk"].as<double>());
+        double chi = obstacle.type == ObstacleType::DYNAMIC
+                         ? RosTools::ExponentialQuantile(0.5, 1.0 - CONFIG["probabilistic"]["risk"].as<double>())
+                         : 0.;
         ellipsoid.setScale(2 * (obstacle.prediction.modes[0][k - 1].major_radius * std::sqrt(chi) + obstacle.radius),
                            2 * (obstacle.prediction.modes[0][k - 1].major_radius * std::sqrt(chi) + obstacle.radius), 0.005);
 

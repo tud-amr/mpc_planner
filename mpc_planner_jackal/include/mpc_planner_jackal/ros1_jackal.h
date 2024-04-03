@@ -37,7 +37,8 @@ class JackalPlanner
 {
 public:
     JackalPlanner(ros::NodeHandle &nh);
-
+    ~JackalPlanner();
+    
     void initializeSubscribersAndPublishers(ros::NodeHandle &nh);
 
     bool objectiveReached();
@@ -79,6 +80,9 @@ private:
     ros::Publisher _reverse_roadmap_pub;
 
     ros::Publisher _cmd_pub;
+
+    void parseObstacle(const derived_object_msgs::Object &object, double object_angle,
+                       std::vector<Eigen::Vector2d> &positions_out, std::vector<double> &radii_out);
 
     bool isPathTheSame(const nav_msgs::Path::ConstPtr &path);
 
