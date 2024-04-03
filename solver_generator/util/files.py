@@ -74,8 +74,8 @@ def planner_path():
 def generated_include_file(settings):
     include_path = os.path.join(solver_path(settings), f"include/")
     os.makedirs(include_path, exist_ok=True)
-    print_path("Generated Header", f"{include_path}mpc_planner_generated.h", tab=True, end="")
-    return f"{include_path}mpc_planner_generated.h"
+    print_path("Generated Header", f"{include_path}mpc_planner_generated.h/cpp", tab=True, end="")
+    return f"{include_path}mpc_planner_generated.h", f"{include_path}mpc_planner_generated.cpp"
 
 
 def solver_name(settings):

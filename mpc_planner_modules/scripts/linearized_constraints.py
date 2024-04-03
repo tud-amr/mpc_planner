@@ -38,12 +38,12 @@ class LinearConstraints:
     def define_parameters(self, params):
 
         for disc_id in range(self.n_discs):
-            params.add(f"ego_disc_{disc_id}_offset")
+            params.add(f"ego_disc_{disc_id}_offset", bundle_name="ego_disc_offset")
 
             for index in range(self.max_obstacles):
-                params.add(self.constraint_name(index, disc_id) + "_a1")
-                params.add(self.constraint_name(index, disc_id) + "_a2")
-                params.add(self.constraint_name(index, disc_id) + "_b")
+                params.add(self.constraint_name(index, disc_id) + "_a1", bundle_name="lin_constraint_a1")
+                params.add(self.constraint_name(index, disc_id) + "_a2", bundle_name="lin_constraint_a2")
+                params.add(self.constraint_name(index, disc_id) + "_b", bundle_name="lin_constraint_b")
 
     def constraint_name(self, index, disc_id):
         return f"disc_{disc_id}_lin_constraint_{index}"

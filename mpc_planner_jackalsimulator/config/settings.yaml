@@ -9,7 +9,7 @@ solver_settings:
   floating_license: false
   enable_timeout: true
   init: 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
-  use_sqp: true
+  use_sqp: false
 
 debug_output: false
 

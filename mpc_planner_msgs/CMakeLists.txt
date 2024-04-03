@@ -1,27 +1,27 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 2.8.3)
 project(mpc_planner_msgs)
 
-set(DEPENDENCIES
+find_package(catkin REQUIRED COMPONENTS
+  nav_msgs
   std_msgs
   geometry_msgs
-  nav_msgs
 )
 
-find_package(ament_cmake REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
+include_directories(include)
 
-foreach(pkg IN LISTS DEPENDENCIES)
-  find_package(${pkg} REQUIRED)
-endforeach()
-
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/ObstacleArray.msg"
-  "msg/Gaussian.msg"
-  "msg/ObstacleGMM.msg"
-  DEPENDENCIES ${DEPENDENCIES}
+add_message_files(
+  DIRECTORY msg
+  FILES Gaussian.msg ObstacleGMM.msg ObstacleArray.msg
 )
 
-# Generate messages in the 'msg' folder
-ament_export_dependencies(${DEPENDENCIES})
-ament_export_dependencies(rosidl_default_runtime)
-ament_package()
+generate_messages(DEPENDENCIES nav_msgs std_msgs geometry_msgs)
+
+catkin_package(
+  DEPENDS nav_msgs std_msgs geometry_msgs
+)
+
+install(DIRECTORY include/
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)

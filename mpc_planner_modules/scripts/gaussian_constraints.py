@@ -39,16 +39,15 @@ class GaussianConstraint:
         params.add("ego_disc_radius")
 
         for disc_id in range(self.n_discs):
-            params.add(f"ego_disc_{disc_id}_offset")
+            params.add(f"ego_disc_{disc_id}_offset", bundle_name="ego_disc_offset")
 
         for obs_id in range(self.max_obstacles):
-            params.add(f"gaussian_obst_{obs_id}_x")
-            params.add(f"gaussian_obst_{obs_id}_y")
-            # params.add(f"gaussian_obst_{obs_id}_psi")
-            params.add(f"gaussian_obst_{obs_id}_major")
-            params.add(f"gaussian_obst_{obs_id}_minor")
-            params.add(f"gaussian_obst_{obs_id}_risk")
-            params.add(f"gaussian_obst_{obs_id}_r")
+            params.add(f"gaussian_obst_{obs_id}_x", bundle_name="gaussian_obst_x")
+            params.add(f"gaussian_obst_{obs_id}_y", bundle_name="gaussian_obst_y")
+            params.add(f"gaussian_obst_{obs_id}_major", bundle_name="gaussian_obst_major")
+            params.add(f"gaussian_obst_{obs_id}_minor", bundle_name="gaussian_obst_minor")
+            params.add(f"gaussian_obst_{obs_id}_risk", bundle_name="gaussian_obst_risk")
+            params.add(f"gaussian_obst_{obs_id}_r", bundle_name="gaussian_obst_r")
 
     def get_lower_bound(self):
         lower_bound = []

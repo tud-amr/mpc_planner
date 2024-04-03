@@ -1,5 +1,7 @@
 #include "mpc_planner_modules/gaussian_constraints.h"
 
+#include <mpc_planner_generated.h>
+
 #include <mpc_planner_util/parameters.h>
 
 #include <ros_tools/visuals.h>
@@ -27,9 +29,9 @@ namespace MPCPlanner
   {
     (void)module_data;
 
-    _solver->setParameter(k, "ego_disc_radius", CONFIG["robot_radius"].as<double>());
+    setForcesParameterEgoDiscRadius(k, _solver->_params, CONFIG["robot_radius"].as<double>());
     for (int d = 0; d < CONFIG["n_discs"].as<int>(); d++)
-      _solver->setParameter(k, "ego_disc_" + std::to_string(d) + "_offset", 0.); /** @todo Fix offsets! */
+      setForcesParameterEgoDiscOffset(k, _solver->_params, data.robot_area[d].offset, d);
 
     std::vector<DynamicObstacle> copied_obstacles = data.dynamic_obstacles;
 
@@ -39,14 +41,14 @@ namespace MPCPlanner
 
       if (obstacle.prediction.type == PredictionType::GAUSSIAN)
       {
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_x", obstacle.prediction.modes[0][k - 1].position(0));
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_y", obstacle.prediction.modes[0][k - 1].position(1));
+        setForcesParameterGaussianObstX(k, _solver->_params, obstacle.prediction.modes[0][k - 1].position(0), i);
+        setForcesParameterGaussianObstY(k, _solver->_params, obstacle.prediction.modes[0][k - 1].position(1), i);
 
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_minor", obstacle.prediction.modes[0][k - 1].minor_radius);
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_major", obstacle.prediction.modes[0][k - 1].major_radius);
+        setForcesParameterGaussianObstMajor(k, _solver->_params, obstacle.prediction.modes[0][k - 1].major_radius, i);
+        setForcesParameterGaussianObstMinor(k, _solver->_params, obstacle.prediction.modes[0][k - 1].minor_radius, i);
 
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_risk", CONFIG["probabilistic"]["risk"].as<double>());
-        _solver->setParameter(k, "gaussian_obst_" + std::to_string(i) + "_r", CONFIG["obstacle_radius"].as<double>());
+        setForcesParameterGaussianObstRisk(k, _solver->_params, CONFIG["probabilistic"]["risk"].as<double>(), i);
+        setForcesParameterGaussianObstR(k, _solver->_params, CONFIG["obstacle_radius"].as<double>(), i);
       }
     }
   }
@@ -79,6 +81,7 @@ namespace MPCPlanner
 
   void GaussianConstraints::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
+    (void)module_data;
     LOG_DEBUG("GaussianConstraints::visualize");
     auto &publisher = VISUALS.getPublisher(_name);
 
