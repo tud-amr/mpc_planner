@@ -215,7 +215,8 @@ void AutowarePlanner::obstacleCallback(mpc_planner_msgs::msg::ObstacleArray::Sha
         obstacle.id,
         Eigen::Vector2d(obstacle.pose.position.x, obstacle.pose.position.y),
         RosTools::quaternionToAngle(obstacle.pose),
-        CONFIG["obstacle_radius"].as<double>());
+        CONFIG["obstacle_radius"].as<double>(),
+        ObstacleType::DYNAMIC);
     auto &dynamic_obstacle = _data.dynamic_obstacles.back();
 
     if (obstacle.probabilities.size() == 0) // No Predictions!
@@ -246,8 +247,13 @@ void AutowarePlanner::obstacleCallback(mpc_planner_msgs::msg::ObstacleArray::Sha
       ROSTOOLS_ASSERT(false, "Multiple modes not yet supported");
     }
   }
+
   removeDistantObstacles(_data.dynamic_obstacles, _state);
   ensureObstacleSize(_data.dynamic_obstacles, _state);
+
+  if (CONFIG["probabilistic"]["propagate_uncertainty"].as<bool>())
+    propagatePredictionUncertainty(_data.dynamic_obstacles);
+
   _planner->onDataReceived(_data, "dynamic obstacles");
 }
 

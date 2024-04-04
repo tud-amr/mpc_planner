@@ -25,6 +25,7 @@ set(DEPENDENCIES
   autoware_auto_planning_msgs
   autoware_auto_vehicle_msgs
   autoware_auto_perception_msgs
+  autoware_adapi_v1_msgs
 )
 
 # find dependencies

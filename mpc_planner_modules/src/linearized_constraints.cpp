@@ -5,6 +5,8 @@
 #include <mpc_planner_util/parameters.h>
 #include <mpc_planner_util/data_visualization.h>
 
+#include <ros_tools/profiling.h>
+
 #include <algorithm>
 
 namespace MPCPlanner
@@ -196,12 +198,13 @@ namespace MPCPlanner
   void LinearizedConstraints::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)module_data;
+    PROFILE_FUNCTION();
 
     for (int k = 1; k < _solver->N; k++)
     {
       for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
       {
-        visualizeLinearConstraint(_a1[0][k](i), _a2[0][k](i), _b[0][k](i), k, _solver->N, _name + std::to_string(_solver->_solver_id),
+        visualizeLinearConstraint(_a1[0][k](i), _a2[0][k](i), _b[0][k](i), k, _solver->N, _name,
                                   k == _solver->N - 1 && i == data.dynamic_obstacles.size() - 1); // Publish at the end
       }
     }

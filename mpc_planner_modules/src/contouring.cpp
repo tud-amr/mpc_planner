@@ -221,6 +221,8 @@ namespace MPCPlanner
     if (_spline.get() == nullptr)
       return;
 
+    PROFILE_FUNCTION();
+
     visualizeReferencePath(data, module_data);
     visualizeCurrentSegment(data, module_data);
 
