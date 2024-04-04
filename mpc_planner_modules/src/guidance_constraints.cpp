@@ -282,6 +282,7 @@ namespace MPCPlanner
     {
         (void)data;
         (void)module_data;
+        PROFILE_SCOPE("GuidanceConstraints::Visualize");
         LOG_MARK("Guidance Constraints: Visualize()");
 
         // global_guidance_->Visualize(highlight_selected_guidance_, visualized_guidance_trajectory_nr_);
@@ -292,8 +293,11 @@ namespace MPCPlanner
             if (planner.disabled)
                 continue;
 
-            planner.guidance_constraints->visualize(data, module_data);
-            planner.safety_constraints->visualize(data, module_data);
+            if (i == 0)
+            {
+                planner.guidance_constraints->visualize(data, module_data);
+                planner.safety_constraints->visualize(data, module_data);
+            }
 
             // Visualize the warmstart
             Trajectory initial_trajectory;
@@ -314,8 +318,11 @@ namespace MPCPlanner
             }
         }
 
-        VISUALS.getPublisher(_name + "/optimized_trajectories").publish();
-        VISUALS.getPublisher(_name + "/warmstart_trajectories").publish();
+        {
+            PROFILE_SCOPE("TEST");
+            VISUALS.getPublisher(_name + "/optimized_trajectories").publish();
+            VISUALS.getPublisher(_name + "/warmstart_trajectories").publish();
+        }
     }
 
     bool GuidanceConstraints::isDataReady(const RealTimeData &data, std::string &missing_data)

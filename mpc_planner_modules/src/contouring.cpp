@@ -68,7 +68,6 @@ namespace MPCPlanner
       }
       else
       {
-        LOG_WARN_THROTTLE(3000, "Beyond the spline");
         // If we are beyond the spline, we should use the last spline
         _spline->getParameters(_spline->numSegments() - 1,
                                ax, bx, cx, dx,
@@ -143,15 +142,18 @@ namespace MPCPlanner
     return !data.reference_path.x.empty();
   }
 
-  bool Contouring::isObjectiveReached(const RealTimeData &data)
+  bool Contouring::isObjectiveReached(const State &state, const RealTimeData &data)
   {
     (void)data;
 
     if (!_spline)
       return false;
 
-    int index = _closest_segment + _n_segments - 1;
-    return index >= _spline->numSegments();
+    // Check if we reached the end of the spline
+    return RosTools::distance(state.getPos(), _spline->getPoint(_spline->parameterLength())) < 0.1;
+
+    // int index = _closest_segment + _n_segments - 1;
+    // return index >= _spline->numSegments();
   }
 
   void Contouring::constructRoadConstraints(const RealTimeData &data, ModuleData &module_data)
@@ -229,7 +231,7 @@ namespace MPCPlanner
     if (_spline.get() == nullptr)
       return;
 
-    PROFILE_FUNCTION();
+    PROFILE_SCOPE("Contouring::Visualize");
 
     visualizeReferencePath(data, module_data);
     visualizeCurrentSegment(data, module_data);

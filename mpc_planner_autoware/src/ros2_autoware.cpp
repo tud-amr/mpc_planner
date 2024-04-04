@@ -25,11 +25,11 @@ AutowarePlanner::~AutowarePlanner()
 AutowarePlanner::AutowarePlanner()
     : Node("autoware_planner")
 {
+  STATIC_NODE_POINTER.init(this);
+
   LOG_INFO("Started Autoware Planner");
 
   RosTools::Instrumentor::Get().BeginSession("mpc_planner_autoware");
-
-  STATIC_NODE_POINTER.init(this);
 
   // Initialize the configuration
   Configuration::getInstance().initialize(SYSTEM_CONFIG_PATH(__FILE__, "settings"));
@@ -165,12 +165,22 @@ void AutowarePlanner::Loop()
   if (CONFIG["debug_output"].as<bool>())
     _state.print();
 
+  if (_planner->isObjectiveReached(_state, _data))
+  {
+    LOG_SUCCESS("Planner completed its task.");
+    _planner->reset(_state, _data); // Remove previous planner instructions
+  }
+
   auto output = _planner->solveMPC(_state, _data);
 
   LOG_VALUE_DEBUG("Success", output.success);
   if (output.success)
   {
     actuate();
+  }
+  else
+  {
+    actuateBackup();
   }
 
   BENCHMARKERS.getBenchmarker("loop").stop();
@@ -216,6 +226,7 @@ void AutowarePlanner::obstacleCallback(mpc_planner_msgs::msg::ObstacleArray::Sha
         RosTools::quaternionToAngle(obstacle.pose),
         CONFIG["obstacle_radius"].as<double>(),
         ObstacleType::DYNAMIC);
+
     auto &dynamic_obstacle = _data.dynamic_obstacles.back();
 
     if (obstacle.probabilities.size() == 0) // No Predictions!
@@ -366,8 +377,9 @@ void AutowarePlanner::actuateBackup()
 
   double deceleration = CONFIG["deceleration_at_infeasible"].as<double>();
 
+  /** @note: Returning 1e-2 instead of zero prevents Autoware from choking */
   auto positive_velocity_lambda = [](double v)
-  { return std::max(v, 0.); };
+  { return std::max(v, 1e-2); };
 
   // x = x, y = y, psi = psi
   v = positive_velocity_lambda(v - deceleration * dt); // Update for the initial state

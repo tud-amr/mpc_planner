@@ -6,6 +6,7 @@
 
 #include <ros_tools/visuals.h>
 #include <ros_tools/math.h>
+#include <ros_tools/profiling.h>
 
 #include <algorithm>
 
@@ -89,7 +90,8 @@ namespace MPCPlanner
   void GaussianConstraints::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)module_data;
-    LOG_DEBUG("GaussianConstraints::visualize");
+    PROFILE_SCOPE("GuidanceConstraints::Visualize");
+    LOG_MARK("GaussianConstraints::visualize");
     auto &publisher = VISUALS.getPublisher(_name);
 
     auto &ellipsoid = publisher.getNewPointMarker("CYLINDER");

@@ -41,7 +41,7 @@ namespace MPCPlanner
 
         void reset(State &state, RealTimeData &data);
 
-        bool isObjectiveReached(const RealTimeData &data) const;
+        bool isObjectiveReached(const State &state, const RealTimeData &data) const;
 
     private:
         std::shared_ptr<Solver> _solver;
