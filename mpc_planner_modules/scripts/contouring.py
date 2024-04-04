@@ -66,31 +66,32 @@ class SplineXY:
         self.path_dx = 3 * self.x_a * s * s + 2 * self.x_b * s + self.x_c
         self.path_dy = 3 * self.y_a * s * s + 2 * self.y_b * s + self.y_c
 
+
 def get_preview_state(model, time_ahead):
     # Integrate the trajectory to obtain the preview point
     copied_model = copy.deepcopy(model)
 
     z_constant_input = cd.vertcat(np.zeros((model.nu)), model.get_x())
 
-    z_preview = model.integrate(z_constant_input, time_ahead) # Integrate the dynamics T seconds ahead
+    z_preview = model.integrate(z_constant_input, time_ahead)  # Integrate the dynamics T seconds ahead
     z_preview = cd.vertcat(np.zeros((model.nu)), z_preview)
 
     # Retrieve the resulting position and spline
     copied_model.load(z_preview)
-    pos_x = copied_model.get('x')
-    pos_y = copied_model.get('y')
-    s = copied_model.get('spline')
+    pos_x = copied_model.get("x")
+    pos_y = copied_model.get("y")
+    s = copied_model.get("spline")
 
     return pos_x, pos_y, s
 
 
 class ContouringObjective:
 
-    def __init__(self, settings, num_segments, preview=0.):
+    def __init__(self, settings, num_segments, preview=0.0):
 
         self.num_segments = num_segments
 
-        self.enable_preview = preview != 0.
+        self.enable_preview = preview != 0.0
         self.preview = preview
 
     def define_parameters(self, params):
@@ -101,17 +102,17 @@ class ContouringObjective:
             params.add("preview", add_to_rqt_reconfigure=True)
 
         for i in range(self.num_segments):
-            params.add(f"spline{i}_ax")
-            params.add(f"spline{i}_bx")
-            params.add(f"spline{i}_cx")
-            params.add(f"spline{i}_dx")
+            params.add(f"spline{i}_ax", bundle_name="spline_ax")
+            params.add(f"spline{i}_bx", bundle_name="spline_bx")
+            params.add(f"spline{i}_cx", bundle_name="spline_cx")
+            params.add(f"spline{i}_dx", bundle_name="spline_dx")
 
-            params.add(f"spline{i}_ay")
-            params.add(f"spline{i}_by")
-            params.add(f"spline{i}_cy")
-            params.add(f"spline{i}_dy")
+            params.add(f"spline{i}_ay", bundle_name="spline_ay")
+            params.add(f"spline{i}_by", bundle_name="spline_by")
+            params.add(f"spline{i}_cy", bundle_name="spline_cy")
+            params.add(f"spline{i}_dy", bundle_name="spline_dy")
 
-            params.add(f"spline{i}_start")
+            params.add(f"spline{i}_start", bundle_name="spline_start")
 
         return params
 
@@ -141,13 +142,14 @@ class ContouringObjective:
             preview_pos_x, preview_pos_y, preview_s = get_preview_state(model, self.preview)
 
             preview_splines = MultiSplineXY(params, self.num_segments, preview_s)
-            preview_path_x, preview_path_y, preview_path_dx_normalized, preview_path_dy_normalized =\
-                preview_splines.get_path_and_dpath()
+            preview_path_x, preview_path_y, preview_path_dx_normalized, preview_path_dy_normalized = preview_splines.get_path_and_dpath()
 
-            preview_contour_error = preview_path_dy_normalized * (preview_pos_x - preview_path_x)\
-                - preview_path_dx_normalized * (preview_pos_y - preview_path_y)
-            preview_lag_error = -preview_path_dx_normalized * (preview_pos_x - preview_path_x)\
-                - preview_path_dy_normalized * (preview_pos_y - preview_path_y)
+            preview_contour_error = preview_path_dy_normalized * (preview_pos_x - preview_path_x) - preview_path_dx_normalized * (
+                preview_pos_y - preview_path_y
+            )
+            preview_lag_error = -preview_path_dx_normalized * (preview_pos_x - preview_path_x) - preview_path_dy_normalized * (
+                preview_pos_y - preview_path_y
+            )
 
             # We use the existing weights here to sort of scale the contribution w.r.t. the regular contouring cost
             cost += preview_weight * contour_weight * preview_contour_error**2
@@ -158,7 +160,7 @@ class ContouringObjective:
 
 class ContouringModule(ObjectiveModule):
 
-    def __init__(self, settings, num_segments, preview=0.):
+    def __init__(self, settings, num_segments, preview=0.0):
         super().__init__()
         self.module_name = "Contouring"  # Needs to correspond to the c++ name of the module
         self.import_name = "contouring.h"

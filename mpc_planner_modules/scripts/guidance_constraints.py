@@ -69,9 +69,9 @@ class LinearConstraints:
     def define_parameters(self, params):
 
         for index in range(self.nh):
-            params.add(self.constraint_name(index) + "_a1")
-            params.add(self.constraint_name(index) + "_a2")
-            params.add(self.constraint_name(index) + "_b")
+            params.add(self.constraint_name(index) + "_a1", bundle_name="lin_constraint_a1")
+            params.add(self.constraint_name(index) + "_a2", bundle_name="lin_constraint_a2")
+            params.add(self.constraint_name(index) + "_b", bundle_name="lin_constraint_b")
 
     def constraint_name(self, index):
         return f"lin_constraint_{index}"

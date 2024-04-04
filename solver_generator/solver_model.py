@@ -138,8 +138,8 @@ class SecondOrderUnicycleModel(DynamicsModel):
         self.states = ["x", "y", "psi", "v"]
         self.inputs = ["a", "w"]
 
-        self.lower_bound = [-2.0, -2.0, -200.0, -200.0, -np.pi*4, -2.0]
-        self.upper_bound = [2.0, 2.0, 200.0, 200.0, np.pi*4, 3.0]
+        self.lower_bound = [-2.0, -2.0, -200.0, -200.0, -np.pi * 4, -2.0]
+        self.upper_bound = [2.0, 2.0, 200.0, 200.0, np.pi * 4, 3.0]
 
     def continuous_model(self, x, u):
 
@@ -161,8 +161,8 @@ class ContouringSecondOrderUnicycleModel(DynamicsModel):
         self.states = ["x", "y", "psi", "v", "spline"]
         self.inputs = ["a", "w"]
 
-        self.lower_bound = [-2.0, -0.8, -2000.0, -2000.0, -np.pi*4, -0.01, -1.0]
-        self.upper_bound = [2.0, 0.8, 2000.0, 2000.0, np.pi*4, 3.0, 10000.0]
+        self.lower_bound = [-4.0, -0.8, -2000.0, -2000.0, -np.pi * 4, -0.01, -1.0]
+        self.upper_bound = [4.0, 0.8, 2000.0, 2000.0, np.pi * 4, 3.0, 10000.0]
 
     def continuous_model(self, x, u):
 
@@ -184,8 +184,8 @@ class ContouringSecondOrderUnicycleModelWithSlack(DynamicsModel):
         self.states = ["x", "y", "psi", "v", "spline", "slack"]
         self.inputs = ["a", "w"]
 
-        self.lower_bound = [-2.0, -0.8, -2000.0, -2000.0, -np.pi*4, -0.01, -1.0, 0.0]
-        self.upper_bound = [2.0, 0.8, 2000.0, 2000.0, np.pi*4, 3.0, 10000.0, 5000.0]
+        self.lower_bound = [-2.0, -0.8, -2000.0, -2000.0, -np.pi * 4, -0.01, -1.0, 0.0]
+        self.upper_bound = [2.0, 0.8, 2000.0, 2000.0, np.pi * 4, 3.0, 10000.0, 5000.0]
 
     def continuous_model(self, x, u):
 
@@ -235,8 +235,8 @@ class BicycleModel2ndOrder(DynamicsModel):
         # delta was 0.45
 
         # NOTE: the angle of the vehicle should not be limited to -pi, pi, as the solution will not shift when it is at the border!
-        self.lower_bound = [-3.0, -1.5, -1.0e6, -1.0e6, -np.pi*4, -0.01, -0.45, -1.0]
-        self.upper_bound = [3.0, 1.5, 1.0e6, 1.0e6, np.pi*4, 8.0, 0.45, 5000.0]
+        self.lower_bound = [-3.0, -1.5, -1.0e6, -1.0e6, -np.pi * 4, -0.01, -0.45, -1.0]
+        self.upper_bound = [3.0, 1.5, 1.0e6, 1.0e6, np.pi * 4, 8.0, 0.45, 5000.0]
 
     def continuous_model(self, x, u):
         a = u[0]

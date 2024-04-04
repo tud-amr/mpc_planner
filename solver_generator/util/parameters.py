@@ -12,6 +12,8 @@ class Parameters:
     def __init__(self):
         self._params = dict()
 
+        self.parameter_bundles = dict()  # Used to generate function names in C++ with an integer parameter
+
         self.rqt_params = []
         self.rqt_param_config_names = []
         self.rqt_param_min_values = []
@@ -25,6 +27,7 @@ class Parameters:
         parameter,
         add_to_rqt_reconfigure=False,
         rqt_config_name=lambda p: f'["weights"]["{p}"]',
+        bundle_name=None,
         rqt_min_value=0.0,
         rqt_max_value=100.0,
     ):
@@ -37,7 +40,16 @@ class Parameters:
             rqt_config_name (function, optional): A function that returns the name of the parameter in CONFIG for the parameter in RQT Reconfigure. Defaults to lambda p: f'["weights"]["{p}"]'.
         """
         self._params[parameter] = copy.deepcopy(self._param_idx)
+        if bundle_name is None:
+            bundle_name = parameter
+
+        if bundle_name not in self.parameter_bundles.keys():
+            self.parameter_bundles[bundle_name] = [copy.deepcopy(self._param_idx)]
+        else:
+            self.parameter_bundles[bundle_name].append(copy.deepcopy(self._param_idx))
+
         self._param_idx += 1
+
         if add_to_rqt_reconfigure:
             self.rqt_params.append(parameter)
             self.rqt_param_config_names.append(rqt_config_name)

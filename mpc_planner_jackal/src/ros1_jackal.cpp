@@ -35,6 +35,8 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
 
     _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
 
+    RosTools::Instrumentor::Get().BeginSession("mpc_planner_jackal");
+
     // Start the control loop
     _timer = nh.createTimer(
         ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()),
@@ -42,6 +44,12 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
         this);
 
     LOG_DIVIDER();
+}
+
+JackalPlanner::~JackalPlanner()
+{
+    LOG_INFO("Stopped Jackal Planner");
+    RosTools::Instrumentor::Get().EndSession();
 }
 
 void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
@@ -81,8 +89,8 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
 
 bool JackalPlanner::objectiveReached()
 {
-    bool reset_condition_forward_x = (_forward_x_experiment) && (_state.get("x") > 3.0);
-    bool reset_condition_backward_x = (!_forward_x_experiment) && (_state.get("x") < -3.0);
+    bool reset_condition_forward_x = (_forward_x_experiment) && (_state.get("x") > 3.5 || _state.get("y") > 2.6);
+    bool reset_condition_backward_x = (!_forward_x_experiment) && (_state.get("x") < -3.5 || _state.get("y") < -2.6);
     bool reset_condition = reset_condition_forward_x || reset_condition_backward_x;
     if (reset_condition)
     {
@@ -102,7 +110,8 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
         reset();
 
     // Print the state
-    _state.print();
+    if (CONFIG["debug_output"].as<bool>())
+        _state.print();
 
     if (_rotate_to_goal)
     {
@@ -121,16 +130,22 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
         // Publish the command
         cmd.linear.x = _planner->getSolution(1, "v");  // = x1
         cmd.angular.z = _planner->getSolution(0, "w"); // = u0
+        _state.set("v", cmd.linear.x);                 // Use the commanded speed
         LOG_VALUE_DEBUG("Commanded v", cmd.linear.x);
         LOG_VALUE_DEBUG("Commanded w", cmd.angular.z);
+        CONFIG["enable_output"] = true;
     }
     else if (!_enable_output)
     {
+        _state.set("v", _measured_velocity); // Use the commanded speed
+
         cmd.linear.x = 0.0;
         cmd.angular.z = 0.0;
     }
     else
     {
+        _state.set("v", _measured_velocity); // Use the commanded speed
+
         double deceleration = CONFIG["deceleration_at_infeasible"].as<double>();
         double velocity_after_braking;
         double velocity;
@@ -152,25 +167,25 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
 
 void JackalPlanner::rotateToGoal()
 {
-    LOG_INFO("Rotate to goal");
+    LOG_INFO_THROTTLE(500, "Rotating to the goal");
     if (!_data.goal_received)
     {
         LOG_INFO("Waiting for the goal");
         return;
     }
 
-    LOG_VALUE("goal x", _data.goal(0));
-    LOG_VALUE("goal y", _data.goal(1));
+    // LOG_VALUE("goal x", _data.goal(0));
+    // LOG_VALUE("goal y", _data.goal(1));
 
     double goal_angle = std::atan2(_data.goal(1) - _state.get("y"), _data.goal(0) - _state.get("x"));
     double angle_diff = goal_angle - _state.get("psi"); // RosTools::angleDifference(_state.get("psi"), goal_angle);
 
-    LOG_VALUE("goal angle", goal_angle);
+    // LOG_VALUE("goal angle", goal_angle);
 
     if (angle_diff > M_PI)
         angle_diff -= 2 * M_PI;
 
-    LOG_VALUE("diff", angle_diff);
+    // LOG_VALUE("diff", angle_diff);
     geometry_msgs::Twist cmd;
     if (std::abs(angle_diff) > 0.1)
     {
@@ -193,7 +208,8 @@ void JackalPlanner::stateCallback(const nav_msgs::Odometry::ConstPtr &msg)
     _state.set("x", msg->pose.pose.position.x);
     _state.set("y", msg->pose.pose.position.y);
     _state.set("psi", RosTools::quaternionToAngle(msg->pose.pose.orientation));
-    _state.set("v", std::sqrt(std::pow(msg->twist.twist.linear.x, 2.) + std::pow(msg->twist.twist.linear.y, 2.)));
+    _measured_velocity = std::sqrt(std::pow(msg->twist.twist.linear.x, 2.) + std::pow(msg->twist.twist.linear.y, 2.));
+    // _state.set("v", std::sqrt(std::pow(msg->twist.twist.linear.x, 2.) + std::pow(msg->twist.twist.linear.y, 2.)));
 }
 
 void JackalPlanner::statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -201,7 +217,9 @@ void JackalPlanner::statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr
     _state.set("x", msg->pose.position.x);
     _state.set("y", msg->pose.position.y);
     _state.set("psi", msg->pose.orientation.z);
-    _state.set("v", msg->pose.position.z);
+    _measured_velocity = msg->pose.position.z;
+
+    // _state.set("v", msg->pose.position.z);
 }
 
 void JackalPlanner::goalCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -253,97 +271,106 @@ void JackalPlanner::obstacleCallback(const derived_object_msgs::ObjectArray::Con
     _data.dynamic_obstacles.clear();
 
     int additions = 0;
+    std::vector<double> angles;
+    std::vector<Eigen::Vector2d> positions;
+    std::vector<double> radii;
+    std::vector<Eigen::Vector2d> twists;
+    std::vector<ObstacleType> types;
+
     for (auto &object : msg->objects)
     {
         double object_angle = RosTools::quaternionToAngle(object.pose.orientation) +
                               std::atan2(object.twist.linear.y, object.twist.linear.x) +
                               M_PI_2;
+        double velocity = std::sqrt(object.twist.linear.x * object.twist.linear.x +
+                                    object.twist.linear.y * object.twist.linear.y);
+        if (velocity < 0.01) // Stop the visualization from rotating if standing still
+            object_angle = RosTools::quaternionToAngle(object.pose.orientation);
 
-        // Save the obstacle
-        if (object.shape.type == object.shape.CYLINDER)
-        {
+        int prev_size = positions.size();
+        parseObstacle(object, object_angle, positions, radii);
+        int new_obstacles = positions.size() - prev_size;
 
-            _data.dynamic_obstacles.emplace_back(
-                object.id + additions,
-                Eigen::Vector2d(object.pose.position.x, object.pose.position.y),
-                object_angle,
-                object.shape.dimensions[1]);
-        }
-        else if (object.shape.type == object.shape.BOX)
-        {
-            if (object.shape.dimensions[0] == object.shape.dimensions[1])
-            {
-                _data.dynamic_obstacles.emplace_back(
-                    object.id + additions,
-                    Eigen::Vector2d(object.pose.position.x, object.pose.position.y),
-                    object_angle,
-                    std::sqrt(2) * object.shape.dimensions[0]);
-            }
-            else
-            {
-                Eigen::Vector2d pos(object.pose.position.x, object.pose.position.y);
-
-                double small_dim = std::min(object.shape.dimensions[0], object.shape.dimensions[1]);
-                double large_dim = std::max(object.shape.dimensions[0], object.shape.dimensions[1]);
-                double margin = 0.05;
-
-                _data.dynamic_obstacles.emplace_back(
-                    object.id + additions,
-                    pos + Eigen::Vector2d(std::cos(object_angle - M_PI_2), std::sin(object_angle - M_PI_2)) * large_dim / 2,
-                    object_angle,
-                    std::sqrt(2) * small_dim + margin,
-                    ObstacleType::STATIC);
-
-                additions++;
-
-                _data.dynamic_obstacles.emplace_back(
-                    object.id + additions,
-                    pos - Eigen::Vector2d(std::cos(object_angle - M_PI_2), std::sin(object_angle - M_PI_2)) * large_dim / 2,
-                    object_angle,
-                    std::sqrt(2) * small_dim + margin,
-                    ObstacleType::STATIC);
-
-                auto &dynamic_obstacle = _data.dynamic_obstacles[_data.dynamic_obstacles.size() - 2];
-
-                // Read the orientation of the obstacle from the velocity estimation!
-                dynamic_obstacle.angle = object_angle;
-
-                geometry_msgs::Twist global_twist = object.twist;
-                Eigen::Matrix2d rot_matrix = RosTools::rotationMatrixFromHeading(-RosTools::quaternionToAngle(object.pose.orientation));
-                Eigen::Vector2d twist_out = rot_matrix * Eigen::Vector2d(global_twist.linear.x, global_twist.linear.y);
-
-                // Eigen::Vector2d velocity = Eigen::Vector2d(object.twist.linear.x, object.twist.linear.y);
-
-                // Make a constant velocity prediction
-                dynamic_obstacle.prediction = getConstantVelocityPrediction(
-                    dynamic_obstacle.position,
-                    twist_out,
-                    CONFIG["integrator_step"].as<double>(),
-                    CONFIG["N"].as<int>());
-            }
-            // Assume that there are two boxes
-        }
-        auto &dynamic_obstacle = _data.dynamic_obstacles.back();
-
-        // Read the orientation of the obstacle from the velocity estimation!
-        dynamic_obstacle.angle = object_angle;
+        for (int i = 0; i < new_obstacles; i++)
+            angles.push_back(object_angle);
 
         geometry_msgs::Twist global_twist = object.twist;
         Eigen::Matrix2d rot_matrix = RosTools::rotationMatrixFromHeading(-RosTools::quaternionToAngle(object.pose.orientation));
         Eigen::Vector2d twist_out = rot_matrix * Eigen::Vector2d(global_twist.linear.x, global_twist.linear.y);
 
-        // Eigen::Vector2d velocity = Eigen::Vector2d(object.twist.linear.x, object.twist.linear.y);
+        for (int i = 0; i < new_obstacles; i++)
+            twists.push_back(twist_out);
 
-        // Make a constant velocity prediction
+        // Assume obstacles consisting of multiple parts are static
+        if (new_obstacles > 1)
+        {
+            for (int i = 0; i < new_obstacles; i++)
+                types.push_back(ObstacleType::STATIC);
+        }
+        else
+            types.push_back(ObstacleType::DYNAMIC);
+    }
+
+    for (int i = 0; i < positions.size(); i++)
+    {
+        _data.dynamic_obstacles.emplace_back(
+            i,
+            positions[i],
+            angles[i],
+            radii[i],
+            types[i]);
+
+        auto &dynamic_obstacle = _data.dynamic_obstacles.back();
+
         dynamic_obstacle.prediction = getConstantVelocityPrediction(
             dynamic_obstacle.position,
-            twist_out,
+            twists[i],
             CONFIG["integrator_step"].as<double>(),
             CONFIG["N"].as<int>());
     }
+
+    // Eigen::Vector2d velocity = Eigen::Vector2d(object.twist.linear.x, object.twist.linear.y);
+
     ensureObstacleSize(_data.dynamic_obstacles, _state);
 
     _planner->onDataReceived(_data, "dynamic obstacles");
+}
+
+void JackalPlanner::parseObstacle(const derived_object_msgs::Object &object, double object_angle,
+                                  std::vector<Eigen::Vector2d> &positions_out, std::vector<double> &radii_out)
+{
+    // Depending on the shape of the obstacle, interpret it differently
+    if (object.shape.type == object.shape.CYLINDER)
+    {
+        positions_out.emplace_back(object.pose.position.x, object.pose.position.y);
+        radii_out.push_back(object.shape.dimensions[1]);
+    }
+    else if (object.shape.type == object.shape.BOX)
+    {
+        if (object.shape.dimensions[0] == object.shape.dimensions[1])
+        {
+            positions_out.emplace_back(object.pose.position.x, object.pose.position.y);
+            radii_out.push_back(std::sqrt(2) * object.shape.dimensions[0]);
+        }
+        else
+        {
+            Eigen::Vector2d pos(object.pose.position.x, object.pose.position.y);
+
+            double small_dim = std::min(object.shape.dimensions[0], object.shape.dimensions[1]);
+            double large_dim = std::max(object.shape.dimensions[0], object.shape.dimensions[1]);
+            double margin = 0.05;
+
+            positions_out.emplace_back(pos + Eigen::Vector2d(std::cos(object_angle - M_PI_2),
+                                                             std::sin(object_angle - M_PI_2)) *
+                                                 large_dim / 2);
+            radii_out.emplace_back(std::sqrt(2) * small_dim + margin);
+
+            positions_out.emplace_back(pos - Eigen::Vector2d(std::cos(object_angle - M_PI_2),
+                                                             std::sin(object_angle - M_PI_2)) *
+                                                 large_dim / 2);
+            radii_out.emplace_back(std::sqrt(2) * small_dim + margin);
+        }
+    }
 }
 
 void JackalPlanner::bluetoothCallback(const sensor_msgs::Joy::ConstPtr &msg)
@@ -354,6 +381,7 @@ void JackalPlanner::bluetoothCallback(const sensor_msgs::Joy::ConstPtr &msg)
         LOG_INFO("Deadmanswitch enabled (deadman switch released)");
 
     _enable_output = msg->axes[2] < -0.9;
+    CONFIG["enable_output"] = _enable_output;
 }
 
 void JackalPlanner::visualize()

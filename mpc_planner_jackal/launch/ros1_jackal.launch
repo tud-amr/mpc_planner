@@ -4,6 +4,8 @@
 
   <arg name="gui" default="false" />
   <arg name="project_name" default="" />
+  <!-- <arg name="roadmap" default="maps/mobile_robotics_lab/straight.xml"/> -->
+  <arg name="roadmap" default="maps/mobile_robotics_lab/diagonal.xml"/>
 
   <rosparam command="load" file="$(find mpc_planner_jackal)/config/guidance_planner.yaml"/>
   <node pkg="mpc_planner_jackal" type="jackal_planner" name="jackal_planner" respawn="false" output="screen">
@@ -28,7 +30,7 @@
   <include file="$(find jackal_description)/launch/description.launch"/>
 
   <include file="$(find roadmap)/launch/roadmap.launch">
-    <arg name="map_file_name" value="maps/mobile_robotics_lab/straight.xml"/>
+    <arg name="map_file_name" value="$(arg roadmap)"/>
   </include>
   <!-- _side -->
 

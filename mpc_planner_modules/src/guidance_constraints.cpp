@@ -69,6 +69,11 @@ namespace MPCPlanner
         global_guidance_->SetStart(state.getPos(), state.get("psi"), state.get("v"));
         global_guidance_->SetReferenceVelocity(CONFIG["weights"]["reference_velocity"].as<double>());
 
+        if (!CONFIG["enable_output"].as<bool>())
+        {
+            LOG_INFO_THROTTLE(5000, "Not propagating nodes (output is disabled)");
+            global_guidance_->DoNotPropagateNodes();
+        }
         /** @note Reference path */
         // Temporary
         bool two_way = CONFIG["road"]["two_way"].as<bool>();

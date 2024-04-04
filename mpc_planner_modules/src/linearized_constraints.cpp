@@ -1,5 +1,7 @@
 #include "mpc_planner_modules/linearized_constraints.h"
 
+#include <mpc_planner_generated.h>
+
 #include <mpc_planner_util/parameters.h>
 #include <mpc_planner_util/data_visualization.h>
 
@@ -140,23 +142,26 @@ namespace MPCPlanner
   void LinearizedConstraints::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
   {
     (void)module_data;
+    int constraint_counter = 0; // Necessary for now to map the disc and obstacle index to a single index
     for (int d = 0; d < _n_discs; d++)
     {
       if (!_use_guidance)
-        _solver->setParameter(k, "ego_disc_" + std::to_string(d) + "_offset", data.robot_area[d].offset);
+        setForcesParameterEgoDiscOffset(k, _solver->_params, data.robot_area[d].offset, d);
 
       for (size_t i = 0; i < data.dynamic_obstacles.size() + _n_other_halfspaces; i++)
       {
-        _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_a1", _a1[d][k](i));
-        _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_a2", _a2[d][k](i));
-        _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_b", _b[d][k](i));
+        setForcesParameterLinConstraintA1(k, _solver->_params, _a1[d][k](i), constraint_counter);
+        setForcesParameterLinConstraintA2(k, _solver->_params, _a2[d][k](i), constraint_counter);
+        setForcesParameterLinConstraintB(k, _solver->_params, _b[d][k](i), constraint_counter);
+        constraint_counter++;
       }
 
       for (int i = data.dynamic_obstacles.size() + _n_other_halfspaces; i < CONFIG["max_obstacles"].as<int>() + _n_other_halfspaces; i++)
       {
-        _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_a1", _dummy_a1);
-        _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_a2", _dummy_a2);
-        _solver->setParameter(k, "lin_constraint_" + std::to_string(i) + "_b", _dummy_b);
+        setForcesParameterLinConstraintA1(k, _solver->_params, _dummy_a1, constraint_counter);
+        setForcesParameterLinConstraintA2(k, _solver->_params, _dummy_a2, constraint_counter);
+        setForcesParameterLinConstraintB(k, _solver->_params, _dummy_b, constraint_counter);
+        constraint_counter++;
       }
     }
   }

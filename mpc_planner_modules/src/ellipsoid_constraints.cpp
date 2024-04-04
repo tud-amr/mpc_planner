@@ -1,10 +1,11 @@
 #include "mpc_planner_modules/ellipsoid_constraints.h"
 
+#include <mpc_planner_generated.h>
+
 #include <mpc_planner_util/parameters.h>
 
 #include <ros_tools/visuals.h>
 #include <ros_tools/math.h>
-
 #include <algorithm>
 
 namespace MPCPlanner
@@ -30,34 +31,34 @@ namespace MPCPlanner
     if (k == 1)
       LOG_MARK("EllipsoidConstraints::setParameters");
 
-    _solver->setParameter(k, "ego_disc_radius", CONFIG["robot_radius"].as<double>());
+    setForcesParameterEgoDiscRadius(k, _solver->_params, CONFIG["robot_radius"].as<double>());
     for (int d = 0; d < CONFIG["n_discs"].as<int>(); d++)
-      _solver->setParameter(k, "ego_disc_" + std::to_string(d) + "_offset", data.robot_area[d].offset);
+      setForcesParameterEgoDiscOffset(k, _solver->_params, data.robot_area[d].offset, d);
 
     for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
     {
       const auto &obstacle = data.dynamic_obstacles[i];
       const auto &mode = obstacle.prediction.modes[0];
-      /** @note The first prediction step is index 1 of the optimization problem, i.e., k-1 maps to the predictions for this stage */
-      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_x", mode[k - 1].position(0));
-      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_y", mode[k - 1].position(1));
-      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_psi", mode[k - 1].angle);
 
-      _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_r", obstacle.radius);
+      /** @note The first prediction step is index 1 of the optimization problem, i.e., k-1 maps to the predictions for this stage */
+      setForcesParameterEllipsoidObstX(k, _solver->_params, mode[k - 1].position(0), i);
+      setForcesParameterEllipsoidObstY(k, _solver->_params, mode[k - 1].position(1), i);
+      setForcesParameterEllipsoidObstPsi(k, _solver->_params, mode[k - 1].angle, i);
+      setForcesParameterEllipsoidObstR(k, _solver->_params, obstacle.radius, i);
 
       if (obstacle.prediction.type == PredictionType::DETERMINISTIC)
       {
-        _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_major", 0.);
-        _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_minor", 0.);
-        _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_chi", 1.0);
+        setForcesParameterEllipsoidObstMajor(k, _solver->_params, 0., i);
+        setForcesParameterEllipsoidObstMinor(k, _solver->_params, 0., i);
+        setForcesParameterEllipsoidObstChi(k, _solver->_params, 1., i);
       }
       else if (obstacle.prediction.type == PredictionType::GAUSSIAN)
       {
         double chi = RosTools::ExponentialQuantile(0.5, 1.0 - CONFIG["probabilistic"]["risk"].as<double>());
 
-        _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_major", mode[k - 1].major_radius);
-        _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_minor", mode[k - 1].minor_radius);
-        _solver->setParameter(k, "ellipsoid_obst_" + std::to_string(i) + "_chi", chi);
+        setForcesParameterEllipsoidObstMajor(k, i, _solver->_params, mode[k - 1].major_radius);
+        setForcesParameterEllipsoidObstMinor(k, i, _solver->_params, mode[k - 1].minor_radius);
+        setForcesParameterEllipsoidObstChi(k, i, _solver->_params, chi);
       }
     }
 

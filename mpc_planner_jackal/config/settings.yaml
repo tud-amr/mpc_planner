@@ -1,6 +1,6 @@
 name: "jackal"
-N: 20
-integrator_step: 0.2
+N: 30
+integrator_step: 0.1
 n_discs: 1
 
 solver_settings:
@@ -22,7 +22,7 @@ robot:
   length: 0.65
   width: 0.65
   com_to_back: 0.0
-obstacle_radius: 0.4
+obstacle_radius: 0.3
 
 linearized_constraints:
   add_halfspaces: 2  # For road constraints
@@ -53,9 +53,9 @@ weights:
   goal_weight: 10.
   velocity: 0.3 
   acceleration: 0.25 #0.15
-  angular_velocity: 0.25 
+  angular_velocity: 0.5 #0.25 
   reference_velocity: 1.5 #2.0 
-  contour: 0.01 #0.05
+  contour: 0.05 #0.01 #0.05
   preview: 0.0
   lag: 0.1
   slack: 10000.

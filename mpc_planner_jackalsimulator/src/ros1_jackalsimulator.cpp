@@ -139,7 +139,8 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
         reset();
 
     // Print the state
-    _state.print();
+    if (CONFIG["debug_output"].as<bool>())
+        _state.print();
 
     auto output = _planner->solveMPC(_state, _data);
 

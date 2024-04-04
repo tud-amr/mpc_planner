@@ -1,5 +1,7 @@
 #include "mpc_planner_modules/contouring.h"
 
+#include <mpc_planner_generated.h>
+
 #include <mpc_planner_util/parameters.h>
 #include <mpc_planner_util/data_visualization.h>
 
@@ -37,8 +39,6 @@ namespace MPCPlanner
   {
     (void)data;
     (void)module_data;
-    LOG_MARK("contouring::setParameters");
-    PROFILE_SCOPE("Contouring Set Parameters");
 
     _solver->setParameter(k, "contour", CONFIG["weights"]["contour"].as<double>());
     _solver->setParameter(k, "lag", CONFIG["weights"]["lag"].as<double>());
@@ -85,20 +85,19 @@ namespace MPCPlanner
         start = _spline->parameterLength();
       }
 
-      std::string spline_name = "spline" + std::to_string(i) + "_";
+      /** @note: We use the fast loading interface here as we need to load many parameters */
+      setForcesParameterSplineAx(k, _solver->_params, ax, i);
+      setForcesParameterSplineBx(k, _solver->_params, bx, i);
+      setForcesParameterSplineCx(k, _solver->_params, cx, i);
+      setForcesParameterSplineDx(k, _solver->_params, dx, i);
 
-      _solver->setParameter(k, spline_name + "ax", ax);
-      _solver->setParameter(k, spline_name + "bx", bx);
-      _solver->setParameter(k, spline_name + "cx", cx);
-      _solver->setParameter(k, spline_name + "dx", dx);
-
-      _solver->setParameter(k, spline_name + "ay", ay);
-      _solver->setParameter(k, spline_name + "by", by);
-      _solver->setParameter(k, spline_name + "cy", cy);
-      _solver->setParameter(k, spline_name + "dy", dy);
+      setForcesParameterSplineAy(k, _solver->_params, ay, i);
+      setForcesParameterSplineBy(k, _solver->_params, by, i);
+      setForcesParameterSplineCy(k, _solver->_params, cy, i);
+      setForcesParameterSplineDy(k, _solver->_params, dy, i);
 
       // Distance where this spline starts
-      _solver->setParameter(k, spline_name + "start", start);
+      setForcesParameterSplineStart(k, _solver->_params, start, i);
     }
   }
 
@@ -233,6 +232,8 @@ namespace MPCPlanner
 
   void Contouring::visualizeCurrentSegment(const RealTimeData &data, const ModuleData &module_data)
   {
+    (void)data;
+    (void)module_data;
 
     // Visualize the current points
     auto &publisher_current = VISUALS.getPublisher(_name + "/current");
@@ -246,6 +247,7 @@ namespace MPCPlanner
   // Move to data visualization
   void Contouring::visualizeReferencePath(const RealTimeData &data, const ModuleData &module_data)
   {
+    (void)module_data;
     visualizePathPoints(data.reference_path, _name + "/points", true);
     visualizePathPoints(data.left_bound, _name + "/boundary_points", false);
     visualizePathPoints(data.right_bound, _name + "/boundary_points", true);
@@ -306,6 +308,7 @@ namespace MPCPlanner
 
   void Contouring::visualizeDebugRoadBoundary(const RealTimeData &data, const ModuleData &module_data)
   {
+    (void)module_data;
     LOG_MARK("Constructing road constraints.");
     auto &publisher = VISUALS.getPublisher(_name + "/road_boundary_points");
     auto &points = publisher.getNewPointMarker("CUBE");
@@ -343,6 +346,8 @@ namespace MPCPlanner
 
   void Contouring::visualizeDebugGluedSplines(const RealTimeData &data, const ModuleData &module_data)
   {
+    (void)data;
+    (void)module_data;
 
     // Plot how the optimization joins the splines together to debug its internal contouring error computation
     auto &publisher = VISUALS.getPublisher(_name + "/glued_spline_points");
