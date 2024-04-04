@@ -23,8 +23,6 @@ namespace MPCPlanner
         _solver->reset();
 
         initializeModules(_modules, _solver);
-
-        _benchmarker = std::make_unique<RosTools::Benchmarker>("optimization");
     }
 
     // Given real-time data, solve the MPC problem
@@ -92,7 +90,7 @@ namespace MPCPlanner
         int exit_flag;
         {
             PROFILE_SCOPE("Optimization");
-            _benchmarker->start();
+            BENCHMARKERS.getBenchmarker("optimization").start();
             exit_flag = EXIT_CODE_NOT_OPTIMIZED_YET;
             for (auto &module : _modules)
             {
@@ -102,7 +100,7 @@ namespace MPCPlanner
             }
             if (exit_flag == EXIT_CODE_NOT_OPTIMIZED_YET)
                 exit_flag = _solver->solve();
-            _benchmarker->stop();
+            BENCHMARKERS.getBenchmarker("optimization").stop();
         }
 
         if (exit_flag != 1)

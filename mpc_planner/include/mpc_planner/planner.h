@@ -50,8 +50,6 @@ namespace MPCPlanner
         ModuleData _module_data;
 
         std::vector<std::shared_ptr<ControllerModule>> _modules;
-
-        std::unique_ptr<RosTools::Benchmarker> _benchmarker;
     };
 
 }

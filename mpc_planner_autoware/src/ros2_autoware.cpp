@@ -19,6 +19,7 @@ using namespace std::chrono_literals;
 AutowarePlanner::~AutowarePlanner()
 {
   RosTools::Instrumentor::Get().EndSession();
+  BENCHMARKERS.print();
 }
 
 AutowarePlanner::AutowarePlanner()
@@ -46,8 +47,6 @@ AutowarePlanner::AutowarePlanner()
   setRobotRegion();
 
   startEnvironment();
-
-  _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
 
   // Start the control loop
   _timer = create_timer(
@@ -161,7 +160,7 @@ void AutowarePlanner::Loop()
 {
   LOG_DEBUG("============= Loop =============");
 
-  _benchmarker->start();
+  BENCHMARKERS.getBenchmarker("loop").start();
 
   if (CONFIG["debug_output"].as<bool>())
     _state.print();
@@ -169,12 +168,12 @@ void AutowarePlanner::Loop()
   auto output = _planner->solveMPC(_state, _data);
 
   LOG_VALUE_DEBUG("Success", output.success);
-  // geometry_msgs::msg::Twist cmd;
   if (output.success)
   {
     actuate();
   }
-  _benchmarker->stop();
+
+  BENCHMARKERS.getBenchmarker("loop").stop();
 
   _planner->visualize(_state, _data);
   visualize();

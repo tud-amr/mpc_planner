@@ -71,11 +71,10 @@ namespace MPCPlanner
 
         if (!CONFIG["enable_output"].as<bool>())
         {
-            LOG_INFO_THROTTLE(5000, "Not propagating nodes (output is disabled)");
+            LOG_INFO_THROTTLE(15000, "Not propagating nodes (output is disabled)");
             global_guidance_->DoNotPropagateNodes();
         }
         /** @note Reference path */
-        // Temporary
         bool two_way = CONFIG["road"]["two_way"].as<bool>();
         double road_width_left_ = CONFIG["road"]["width"].as<double>() / 2.;
         double road_width_right_ = CONFIG["road"]["width"].as<double>() / 2.;

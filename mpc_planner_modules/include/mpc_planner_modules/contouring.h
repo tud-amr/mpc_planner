@@ -30,6 +30,7 @@ namespace MPCPlanner
     std::unique_ptr<RosTools::Spline2D> _bound_left{nullptr}, _bound_right{nullptr};
 
     int _closest_segment{0};
+    int _n_segments;
 
     void constructRoadConstraints(const RealTimeData &data, ModuleData &module_data);
     void constructRoadConstraintsFromCenterline(const RealTimeData &data, ModuleData &module_data);

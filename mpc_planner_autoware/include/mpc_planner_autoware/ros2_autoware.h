@@ -81,8 +81,6 @@ private:
 
   std::unique_ptr<Reconfigure> _reconfigure;
 
-  std::unique_ptr<RosTools::Benchmarker> _benchmarker;
-
   // Subscribers and publishers
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _state_sub;
   rclcpp::Subscription<PathWithLaneId>::SharedPtr _path_sub;

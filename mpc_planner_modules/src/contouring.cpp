@@ -6,6 +6,7 @@
 #include <mpc_planner_util/data_visualization.h>
 
 #include <ros_tools/visuals.h>
+#include <ros_tools/math.h>
 #include <ros_tools/profiling.h>
 
 #include <algorithm>
@@ -16,6 +17,8 @@ namespace MPCPlanner
       : ControllerModule(ModuleType::OBJECTIVE, solver, "contouring")
   {
     LOG_INITIALIZE("Contouring");
+    _n_segments = CONFIG["contouring"]["num_segments"].as<int>();
+
     LOG_INITIALIZED();
   }
 
@@ -48,7 +51,7 @@ namespace MPCPlanner
       _solver->setParameter(k, "preview", CONFIG["weights"]["preview"].as<double>());
 
     /** @todo: Handling of parameters when the spline parameters go beyond the splines defined */
-    for (int i = 0; i < CONFIG["contouring"]["num_segments"].as<int>(); i++)
+    for (int i = 0; i < _n_segments; i++)
     {
       int index = _closest_segment + i;
       double ax, bx, cx, dx;
@@ -121,6 +124,11 @@ namespace MPCPlanner
             data.right_bound.x,
             data.right_bound.y,
             _spline->getTVector());
+
+        // Update the road width
+        CONFIG["road"]["width"] = RosTools::distance(_bound_left->getPoint(0), _bound_right->getPoint(0));
+        if (CONFIG["road"]["two_way"].as<bool>())
+          CONFIG["road"]["width"] = CONFIG["road"]["width"].as<double>() / 2.;
       }
 
       _closest_segment = -1;
@@ -142,7 +150,7 @@ namespace MPCPlanner
     if (!_spline)
       return false;
 
-    int index = _closest_segment + CONFIG["contouring"]["num_segments"].as<int>() - 1;
+    int index = _closest_segment + _n_segments - 1;
     return index >= _spline->numSegments();
   }
 
@@ -251,42 +259,19 @@ namespace MPCPlanner
   {
     (void)module_data;
     visualizePathPoints(data.reference_path, _name + "/points", true);
-    visualizePathPoints(data.left_bound, _name + "/boundary_points", false);
-    visualizePathPoints(data.right_bound, _name + "/boundary_points", true);
-    // // Visualize the points
-    // auto &publisher_points = VISUALS.getPublisher(_name + "/points");
-    // auto &point = publisher_points.getNewPointMarker("CYLINDER");
-    // point.setColor(0., 0., 0.);
-    // point.setScale(0.15, 0.15, 0.05);
-
-    // for (size_t p = 0; p < data.reference_path.x.size(); p++)
-    //   point.addPointMarker(Eigen::Vector3d(data.reference_path.x[p], data.reference_path.y[p], 0.1));
-    // publisher_points.publish();
-
     visualizeSpline(*_spline, _name + "/path", true);
 
+    if (!data.left_bound.empty())
+    {
+
+      visualizePathPoints(data.left_bound, _name + "/boundary_points", false);
+      visualizePathPoints(data.right_bound, _name + "/boundary_points", true);
+    }
     if (_bound_left != nullptr)
     {
       visualizeSpline(*_bound_left, _name + "/boundary_path", false);
       visualizeSpline(*_bound_right, _name + "/boundary_path", true);
     }
-    // // Visualize the path
-    // auto &publisher_path = VISUALS.getPublisher(_name + "/path");
-    // auto &line = publisher_path.getNewLine();
-    // line.setColorInt(5);
-    // line.setScale(0.1);
-
-    // Eigen::Vector2d p;
-    // for (double s = 0.; s < _spline->parameterLength(); s += 1.)
-    // {
-    //   if (s > 0.)
-    //     line.addLine(p, _spline->getPoint(s));
-
-    //   p = _spline->getPoint(s);
-    // }
-    // line.addLine(p, _spline->getPoint(_spline->parameterLength())); // Connect to the end
-
-    // publisher_path.publish();
   }
 
   void Contouring::visualizeRoadConstraints(const RealTimeData &data, const ModuleData &module_data)
@@ -361,7 +346,7 @@ namespace MPCPlanner
       std::vector<double> lambdas;
       std::vector<double> path_x, path_y;
 
-      for (int i = 0; i < CONFIG["contouring"]["num_segments"].as<int>(); i++)
+      for (int i = 0; i < _n_segments; i++)
       {
         int index = _closest_segment + i;
         double ax, bx, cx, dx;
