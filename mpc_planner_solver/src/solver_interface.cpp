@@ -94,8 +94,8 @@ namespace MPCPlanner
 			{
 				// it->first.as<std::string>() is the variable name
 				setXinit(
-					it->first.as<std::string>(),
-					state.get(it->first.as<std::string>()));
+				    it->first.as<std::string>(),
+				    state.get(it->first.as<std::string>()));
 			}
 		}
 	}
@@ -192,6 +192,29 @@ namespace MPCPlanner
 	double Solver::getOutput(int k, std::string &&state_name)
 	{
 		return getForcesOutput(_output, k, _model_map[state_name][1].as<int>());
+	}
+
+	std::string Solver::explainExitFlag(int exitflag)
+	{
+		switch (exitflag)
+		{
+		case -100:
+			return "Invalid Forces Pro License (is the proxy running?)";
+		case -6:
+			return "Infeasible Optimization Problem";
+		case -7:
+			return "Infeasible Optimization Problem";
+		case 2:
+			return "Computation time exceeded allocated time";
+		case 0:
+			return "Exceeded maximum number of iterations";
+		case 1:
+			return "Successfully solved optimization problem";
+		case -1:
+			return "Guidance planner failed to find a solution";
+		default:
+			return "Unknown exit code";
+		}
 	}
 
 	void Solver::printParameters(int k)

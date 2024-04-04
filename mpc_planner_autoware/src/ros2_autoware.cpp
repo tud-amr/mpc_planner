@@ -79,6 +79,10 @@ void AutowarePlanner::initializeSubscribersAndPublishers()
       "~/input/obstacles", 1,
       std::bind(&AutowarePlanner::obstacleCallback, this, std::placeholders::_1));
 
+  _autoware_status_sub = this->create_subscription<OperationModeState>(
+      "~/input/autoware_status", 1,
+      std::bind(&AutowarePlanner::autowareStatusCallback, this, std::placeholders::_1));
+
   _cmd_pub = this->create_publisher<geometry_msgs::msg::Twist>(
       "~/output/command", 1);
   _trajectory_pub = this->create_publisher<autoware_auto_planning_msgs::msg::Trajectory>(
@@ -302,6 +306,12 @@ bool AutowarePlanner::isPathTheSame(PathWithLaneId::SharedPtr msg)
     }
   }
   return true;
+}
+
+void AutowarePlanner::autowareStatusCallback(OperationModeState::SharedPtr msg)
+{
+  // Ensures that the planner knows whether its outputs will be executed or not
+  CONFIG["enable_output"] = msg->mode == msg->AUTONOMOUS;
 }
 
 void AutowarePlanner::actuate()

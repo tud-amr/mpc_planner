@@ -108,7 +108,7 @@ namespace MPCPlanner
         if (exit_flag != 1)
         {
             _output.success = false;
-            LOG_WARN("MPC did not find a solution. Exit flag: " << exit_flag); /** @todo: Convertion to text */
+            LOG_WARN("MPC failed: " + _solver->explainExitFlag(exit_flag)); /** @todo: Convertion to text */
             return _output;
         }
 
