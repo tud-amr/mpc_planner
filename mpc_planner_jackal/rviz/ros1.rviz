@@ -64,13 +64,13 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /pedestrian_simulator/static_obstacles
       Name: Static Obstacles
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
       Enabled: false
       Marker Topic: /roadmap_node/output_map
@@ -247,7 +247,7 @@ Visualization Manager:
               Marker Topic: /jackal_planner/guidance_planner/trajectories
               Name: Guidance Trajectories
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
               Value: true
             - Class: rviz/MarkerArray
@@ -514,6 +514,22 @@ Visualization Manager:
         "": true
       Queue Size: 100
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /visualize_scene/vicon_util/visuals/dynamic_objects
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /visualize_scene/vicon_util/visuals/static_objects
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 238; 238; 236
@@ -542,7 +558,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 12.094914436340332
+      Distance: 12.820605278015137
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -550,17 +566,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -1.2810101509094238
-        Y: -0.1548386812210083
-        Z: 1.8909178972244263
+        X: 3.1582088470458984
+        Y: -1.705146074295044
+        Z: 3.69154691696167
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.0197972059249878
+      Pitch: 0.6797975301742554
       Target Frame: <Fixed Frame>
-      Yaw: 3.154996156692505
+      Yaw: 3.3750035762786865
     Saved: ~
 Window Geometry:
   Displays:
