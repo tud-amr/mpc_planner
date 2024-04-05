@@ -67,7 +67,7 @@ public:
   // Parameter callbacks
   void resetSimulationCallback(const rclcpp::Parameter &p);
 
-  void actuate();
+  // void actuate();
   void actuateBackup();
 
 private:
@@ -102,10 +102,10 @@ private:
   std::shared_ptr<rclcpp::ParameterEventHandler> _param_subscriber;
   std::vector<std::shared_ptr<rclcpp::ParameterCallbackHandle>> _param_cb_handles;
 
-  Eigen::Vector2d mapToVehicleCenter(const Eigen::Vector2d &autoware_pos, const double angle) const;
-  Eigen::Vector2d mapFromVehicleCenter(const Eigen::Vector2d &center_pos, const double angle) const;
+  // Eigen::Vector2d mapToVehicleCenter(const Eigen::Vector2d &autoware_pos, const double angle) const;
+  // Eigen::Vector2d mapFromVehicleCenter(const Eigen::Vector2d &center_pos, const double angle) const;
 
-  bool isPathTheSame(PathWithLaneId::SharedPtr path);
+  // bool isPathTheSame(PathWithLaneId::SharedPtr path);
 
   void visualize();
 };

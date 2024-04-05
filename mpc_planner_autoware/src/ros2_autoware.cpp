@@ -1,5 +1,7 @@
 #include <mpc_planner_autoware/ros2_autoware.h>
 #include <mpc_planner_autoware/reconfigure.h>
+#include <mpc_planner_autoware/actuation.h>
+#include <mpc_planner_autoware/utils.h>
 
 #include <mpc_planner/planner.h>
 #include <mpc_planner/data_preparation.h>
@@ -25,6 +27,7 @@ AutowarePlanner::~AutowarePlanner()
 AutowarePlanner::AutowarePlanner()
     : Node("autoware_planner")
 {
+  STATIC_NODE_POINTER.init(this);
   STATIC_NODE_POINTER.init(this);
 
   LOG_INFO("Started Autoware Planner");
@@ -176,15 +179,16 @@ void AutowarePlanner::Loop()
   LOG_VALUE_DEBUG("Success", output.success);
   if (output.success)
   {
-    actuate();
+    _trajectory_pub->publish(outputToAutowareTrajectoryMsg(*_planner));
   }
   else
   {
-    actuateBackup();
+    _trajectory_pub->publish(backupTrajectoryToAutowareTrajectoryMsg(_state));
   }
 
   BENCHMARKERS.getBenchmarker("loop").stop();
 
+  _data.past_trajectory.add(_state.getPos());
   _planner->visualize(_state, _data);
   visualize();
 
@@ -271,7 +275,7 @@ void AutowarePlanner::pathCallback(PathWithLaneId::SharedPtr msg)
 {
   LOG_MARK("Path callback");
 
-  if (isPathTheSame(msg))
+  if (isPathTheSame(msg, _data))
     return;
 
   _data.reference_path.clear();
@@ -302,27 +306,27 @@ void AutowarePlanner::pathCallback(PathWithLaneId::SharedPtr msg)
   _planner->onDataReceived(_data, "reference_path");
 }
 
-bool AutowarePlanner::isPathTheSame(PathWithLaneId::SharedPtr msg)
-{
-  // Check if the path is the same
-  if (_data.reference_path.x.size() != msg->points.size())
-  {
-    return false;
-  }
+// bool AutowarePlanner::isPathTheSame(PathWithLaneId::SharedPtr msg)
+// {
+//   // Check if the path is the same
+//   if (_data.reference_path.x.size() != msg->points.size())
+//   {
+//     return false;
+//   }
 
-  // Check up to the first two points
-  int num_points = std::min(2, (int)_data.reference_path.x.size());
-  for (int i = 0; i < num_points; i++)
-  {
-    if (!_data.reference_path.pointInPath(i,
-                                          msg->points[i].point.pose.position.x,
-                                          msg->points[i].point.pose.position.y))
-    {
-      return false;
-    }
-  }
-  return true;
-}
+//   // Check up to the first two points
+//   int num_points = std::min(2, (int)_data.reference_path.x.size());
+//   for (int i = 0; i < num_points; i++)
+//   {
+//     if (!_data.reference_path.pointInPath(i,
+//                                           msg->points[i].point.pose.position.x,
+//                                           msg->points[i].point.pose.position.y))
+//     {
+//       return false;
+//     }
+//   }
+//   return true;
+// }
 
 void AutowarePlanner::autowareStatusCallback(OperationModeState::SharedPtr msg)
 {
@@ -330,115 +334,102 @@ void AutowarePlanner::autowareStatusCallback(OperationModeState::SharedPtr msg)
   CONFIG["enable_output"] = msg->mode == msg->AUTONOMOUS;
 }
 
-void AutowarePlanner::actuate()
-{
-  auto trajectory_msg = std::make_shared<autoware_auto_planning_msgs::msg::Trajectory>();
-  trajectory_msg->points.clear();
-  int N = CONFIG["N"].as<int>();
-  double dt = CONFIG["integrator_step"].as<double>();
+// void AutowarePlanner::actuate()
+// {
+//   auto trajectory_msg = std::make_shared<autoware_auto_planning_msgs::msg::Trajectory>();
+//   trajectory_msg->points.clear();
+//   int N = CONFIG["N"].as<int>();
+//   double dt = CONFIG["integrator_step"].as<double>();
 
-  for (int k = 0; k < N - 1; k++)
-  {
-    trajectory_msg->points.emplace_back();
-    trajectory_msg->points.back().time_from_start = rclcpp::Duration::from_seconds((double)(k + 1) * dt);
+//   for (int k = 0; k < N - 1; k++)
+//   {
+//     trajectory_msg->points.emplace_back();
+//     trajectory_msg->points.back().time_from_start = rclcpp::Duration::from_seconds((double)(k + 1) * dt);
 
-    double angle = _planner->getSolution(k + 1, "psi");
-    Eigen::Vector2d center_pos(_planner->getSolution(k + 1, "x"), _planner->getSolution(k + 1, "y"));
+//     double angle = _planner->getSolution(k + 1, "psi");
+//     Eigen::Vector2d center_pos(_planner->getSolution(k + 1, "x"), _planner->getSolution(k + 1, "y"));
 
-    // We map here the center state (used in our model) to the autoware position in the center of the rear axel
-    Eigen::Vector2d autoware_pos = mapFromVehicleCenter(center_pos, angle);
-    trajectory_msg->points.back().pose.position.x = autoware_pos(0);
-    trajectory_msg->points.back().pose.position.y = autoware_pos(1);
-    trajectory_msg->points.back().pose.orientation = RosTools::angleToQuaternion(angle);
-    trajectory_msg->points.back().longitudinal_velocity_mps = _planner->getSolution(k + 1, "v");
+//     // We map here the center state (used in our model) to the autoware position in the center of the rear axel
+//     Eigen::Vector2d autoware_pos = mapFromVehicleCenter(center_pos, angle);
+//     trajectory_msg->points.back().pose.position.x = autoware_pos(0);
+//     trajectory_msg->points.back().pose.position.y = autoware_pos(1);
+//     trajectory_msg->points.back().pose.orientation = RosTools::angleToQuaternion(angle);
+//     trajectory_msg->points.back().longitudinal_vel ocity_mps = _planner->getSolution(k + 1, "v");
 
-    // Inputs start from each k, i.e., from 0 - (N-1)
-    trajectory_msg->points.back().acceleration_mps2 = _planner->getSolution(k, "a");
-    trajectory_msg->points.back().heading_rate_rps = _planner->getSolution(k, "w");
-  }
+//     // Inputs start from each k, i.e., from 0 - (N-1)
+//     trajectory_msg->points.back().acceleration_mps2 = _planner->getSolution(k, "a");
+//     trajectory_msg->points.back().heading_rate_rps = _planner->getSolution(k, "w");
+//   }
 
-  trajectory_msg->header.frame_id = "map";
-  trajectory_msg->header.stamp = this->now(); // Trajectory is defined from the last state for which we computed the trajectory
+//   trajectory_msg->header.frame_id = "map";
+//   trajectory_msg->header.stamp = this->now(); // Trajectory is defined from the last state for which we computed the trajectory
 
-  _trajectory_pub->publish(*trajectory_msg);
-}
+//   _trajectory_pub->publish(*trajectory_msg);
+// }
 
-void AutowarePlanner::actuateBackup()
-{
-  auto trajectory_msg = std::make_shared<autoware_auto_planning_msgs::msg::Trajectory>();
-  trajectory_msg->points.clear();
-  int N = CONFIG["N"].as<int>();
-  double dt = CONFIG["integrator_step"].as<double>();
+// void AutowarePlanner::actuateBackup()
+// {
+//   auto trajectory_msg = std::make_shared<autoware_auto_planning_msgs::msg::Trajectory>();
+//   trajectory_msg->points.clear();
+//   int N = CONFIG["N"].as<int>();
+//   double dt = CONFIG["integrator_step"].as<double>();
 
-  double x = _state.get("x");
-  double y = _state.get("y");
-  double psi = _state.get("psi");
-  double v = _state.get("v");
+//   double x = _state.get("x");
+//   double y = _state.get("y");
+//   double psi = _state.get("psi");
+//   double v = _state.get("v");
 
-  double deceleration = CONFIG["deceleration_at_infeasible"].as<double>();
+//   double deceleration = CONFIG["deceleration_at_infeasible"].as<double>();
 
-  /** @note: Returning 1e-2 instead of zero prevents Autoware from choking */
-  auto positive_velocity_lambda = [](double v)
-  { return std::max(v, 1e-2); };
+//   /** @note: Returning 1e-2 instead of zero prevents Autoware from choking */
+//   auto positive_velocity_lambda = [](double v)
+//   { return std::max(v, 1e-2); };
 
-  // x = x, y = y, psi = psi
-  v = positive_velocity_lambda(v - deceleration * dt); // Update for the initial state
+//   // x = x, y = y, psi = psi
+//   v = positive_velocity_lambda(v - deceleration * dt); // Update for the initial state
 
-  for (int k = 0; k < N - 1; k++)
-  {
-    trajectory_msg->points.emplace_back();
-    trajectory_msg->points.back().time_from_start = rclcpp::Duration::from_seconds((double)(k + 1) * dt);
+//   for (int k = 0; k < N - 1; k++)
+//   {
+//     trajectory_msg->points.emplace_back();
+//     trajectory_msg->points.back().time_from_start = rclcpp::Duration::from_seconds((double)(k + 1) * dt);
 
-    x += v * std::cos(psi) * dt;
-    y += v * std::sin(psi) * dt;
-    Eigen::Vector2d center_pos(x, y);
+//     x += v * std::cos(psi) * dt;
+//     y += v * std::sin(psi) * dt;
+//     Eigen::Vector2d center_pos(x, y);
 
-    // We map here the center state (used in our model) to the autoware position in the center of the rear axel
-    Eigen::Vector2d autoware_pos = mapFromVehicleCenter(center_pos, psi);
+//     // We map here the center state (used in our model) to the autoware position in the center of the rear axel
+//     Eigen::Vector2d autoware_pos = mapFromVehicleCenter(center_pos, psi);
 
-    trajectory_msg->points.back().pose.position.x = autoware_pos(0);
-    trajectory_msg->points.back().pose.position.y = autoware_pos(1);
-    trajectory_msg->points.back().pose.orientation = RosTools::angleToQuaternion(psi);
-    trajectory_msg->points.back().longitudinal_velocity_mps = v;
+//     trajectory_msg->points.back().pose.position.x = autoware_pos(0);
+//     trajectory_msg->points.back().pose.position.y = autoware_pos(1);
+//     trajectory_msg->points.back().pose.orientation = RosTools::angleToQuaternion(psi);
+//     trajectory_msg->points.back().longitudinal_velocity_mps = v;
 
-    v = positive_velocity_lambda(v - deceleration * dt); // Brake with deceleration
-  }
+//     v = positive_velocity_lambda(v - deceleration * dt); // Brake with deceleration
+//   }
 
-  trajectory_msg->header.frame_id = "map";
-  trajectory_msg->header.stamp = this->now(); // Trajectory is defined from the last state for which we computed the trajectory
+//   trajectory_msg->header.frame_id = "map";
+//   trajectory_msg->header.stamp = this->now(); // Trajectory is defined from the last state for which we computed the trajectory
 
-  _trajectory_pub->publish(*trajectory_msg);
-}
-
-Eigen::Vector2d AutowarePlanner::mapToVehicleCenter(const Eigen::Vector2d &autoware_pos, const double angle) const
-{
-  double length_div_2 = CONFIG["robot"]["length"].as<double>() / 2.;
-  double com_to_back = CONFIG["robot"]["com_to_back"].as<double>();
-  return Eigen::Vector2d(
-      autoware_pos(0) + std::cos(angle) * (length_div_2 - com_to_back),
-      autoware_pos(1) + std::sin(angle) * (length_div_2 - com_to_back));
-}
-
-Eigen::Vector2d AutowarePlanner::mapFromVehicleCenter(const Eigen::Vector2d &center_pos, const double angle) const
-{
-  double length_div_2 = CONFIG["robot"]["length"].as<double>() / 2.;
-  double com_to_back = CONFIG["robot"]["com_to_back"].as<double>();
-  return Eigen::Vector2d(
-      center_pos(0) - std::cos(angle) * (length_div_2 - com_to_back),
-      center_pos(1) - std::sin(angle) * (length_div_2 - com_to_back));
-}
+//   _trajectory_pub->publish(*trajectory_msg);
+// }
 
 void AutowarePlanner::visualize()
 {
-  auto &publisher = VISUALS.getPublisher("angle");
-  auto &line = publisher.getNewLine();
+  auto &traj_publisher = VISUALS.getPublisher("past_trajectory");
+  auto &line = traj_publisher.getNewLine();
+  line.setColorInt(6, 10);
+  line.setScale(0.1, 0.1);
 
-  line.addLine(
-      Eigen::Vector2d(_state.get("x"), _state.get("y")),
-      Eigen::Vector2d(
-          _state.get("x") + 1.0 * std::cos(_state.get("psi")),
-          _state.get("y") + 1.0 * std::sin(_state.get("psi"))));
-  publisher.publish();
+  Eigen::Vector2d prev;
+  for (size_t i = 0; i < _data.past_trajectory.positions.size(); i++)
+  {
+    if (i > 0)
+      line.addLine(prev, _data.past_trajectory.positions[i]);
+
+    prev = _data.past_trajectory.positions[i];
+  }
+  traj_publisher.publish();
 }
 
 void AutowarePlanner::resetSimulationCallback(const rclcpp::Parameter &p)

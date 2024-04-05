@@ -10,6 +10,7 @@ namespace MPCPlanner
     {
 
         std::vector<Disc> robot_area;
+        FixedSizeTrajectory past_trajectory;
 
         std::vector<DynamicObstacle> dynamic_obstacles;
         ReferencePath reference_path;

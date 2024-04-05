@@ -117,6 +117,19 @@ namespace MPCPlanner
         void add(const Eigen::Vector2d &p);
         void add(const double x, const double y);
     };
+
+    struct FixedSizeTrajectory
+    {
+    private:
+        int _size;
+
+    public:
+        std::vector<Eigen::Vector2d> positions;
+
+        FixedSizeTrajectory(int size = 50);
+
+        void add(const Eigen::Vector2d &p);
+    };
 }
 
 #endif

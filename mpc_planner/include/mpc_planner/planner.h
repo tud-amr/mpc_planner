@@ -33,7 +33,7 @@ namespace MPCPlanner
 
     public:
         PlannerOutput solveMPC(State &state, RealTimeData &data);
-        double getSolution(int k, std::string &&var_name);
+        double getSolution(int k, std::string &&var_name) const;
 
         void onDataReceived(RealTimeData &data, std::string &&data_name);
 

@@ -122,7 +122,7 @@ namespace MPCPlanner
         return _output;
     }
 
-    double Planner::getSolution(int k, std::string &&var_name)
+    double Planner::getSolution(int k, std::string &&var_name) const
     {
         return _solver->getOutput(k, std::forward<std::string>(var_name));
     }

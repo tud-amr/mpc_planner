@@ -99,4 +99,23 @@ namespace MPCPlanner
     {
         positions.push_back(Eigen::Vector2d(x, y));
     }
+
+    FixedSizeTrajectory::FixedSizeTrajectory(int size)
+        : _size(size)
+    {
+        positions.reserve(size);
+    }
+
+    void FixedSizeTrajectory::add(const Eigen::Vector2d &p)
+    {
+        if ((int)positions.size() < _size)
+        {
+            positions.push_back(p);
+        }
+        else
+        {
+            positions.erase(positions.begin());
+            positions.push_back(p);
+        }
+    }
 }
