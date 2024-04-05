@@ -75,20 +75,23 @@ namespace MPCPlanner
 		void setParameter(int k, std::string &&parameter, double value);
 		void setParameter(int k, std::string &parameter, double value);
 		double getParameter(int k, std::string &&parameter);
+
 		void setXinit(std::string &&state_name, double value);
 		void setXinit(const State &state);
+
 		void initializeWithState(const State &initial_state);
 		void initializeWarmstart(const State &state, bool shift_previous_solution_forward);
 		void loadWarmstart();
+
 		void setReinitialize(bool reinitialize);
 
 		/** @brief Solve the optimization */
 		int solve();
-		double getOutput(int k, std::string &&state_name);
+		double getOutput(int k, std::string &&state_name) const;
 
+		// Debugging utilities
 		std::string explainExitFlag(int exitflag);
-
-		// Debugging functions
+		void printIfBoundLimited() const;
 		void printParameters(int k);
 	};
 }

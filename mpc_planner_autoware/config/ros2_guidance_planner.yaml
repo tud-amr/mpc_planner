@@ -25,7 +25,7 @@
         longitudinal: 5 # Number of goals in direction of the path
         vertical: 5 # Number of goals in direction orthogonal to the path
       selection_weights: # Selection weights to determine what spline is best
-        consistency: 1.33 # 0.24904675216524505  # How much better should a new trajectory be to be selected [%]
+        consistency: 2.0 # Higher = more consistent #1.33 # 0.24904675216524505  # How much better should a new trajectory be to be selected [%]
         length: 5. #0. #1.
         velocity: 0. #2.
         acceleration: 1. #1.

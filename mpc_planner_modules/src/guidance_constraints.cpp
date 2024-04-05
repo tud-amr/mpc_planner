@@ -209,7 +209,8 @@ namespace MPCPlanner
         best_planner_index_ = FindBestPlanner();
         if (best_planner_index_ == -1)
         {
-            LOG_WARN("Failed to find a feasible trajectory in any of the " << planners_.size() << " optimizations.");
+            LOG_WARN_THROTTLE(500, "Failed to find a feasible trajectory in any of the " +
+                                       std::to_string(planners_.size()) + " optimizations.");
             return planners_[0].result.exit_code;
         }
 

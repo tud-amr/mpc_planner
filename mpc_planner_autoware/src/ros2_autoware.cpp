@@ -208,7 +208,7 @@ void AutowarePlanner::stateCallback(nav_msgs::msg::Odometry::SharedPtr msg)
 void AutowarePlanner::steeringCallback(SteeringReport::SharedPtr msg)
 {
   LOG_MARK("Steering callback");
-  _state.set("delta", msg->steering_tire_angle / 15.06);
+  _state.set("delta", msg->steering_tire_angle /*/ 15.06*/);
 }
 
 void AutowarePlanner::obstacleCallback(mpc_planner_msgs::msg::ObstacleArray::SharedPtr msg)

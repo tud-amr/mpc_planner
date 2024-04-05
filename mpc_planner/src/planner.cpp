@@ -114,6 +114,9 @@ namespace MPCPlanner
         for (int k = 1; k < _solver->N; k++)
             _output.trajectory.add(_solver->getOutput(k, "x"), _solver->getOutput(k, "y"));
 
+        if (_output.success)
+            _solver->printIfBoundLimited();
+
         LOG_MARK("Planner::solveMPC done");
 
         return _output;
