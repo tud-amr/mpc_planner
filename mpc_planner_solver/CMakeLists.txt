@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(mpc_planner_solver)
 
+add_compile_options(-std=c++17)
+
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
 endif()
@@ -9,74 +11,45 @@ set(DEPENDENCIES
   mpc_planner_util
 )
 
-# find dependencies
-find_package(ament_cmake REQUIRED)
-foreach(pkg IN LISTS DEPENDENCIES)
-  find_package(${pkg} REQUIRED)
-endforeach()
+find_package(catkin REQUIRED COMPONENTS
+  ${DEPENDENCIES}
+)
+
+catkin_package(
+  CATKIN_DEPENDS ${DEPENDENCIES}
+  INCLUDE_DIRS include include/${PROJECT_NAME} Solver/include
+  LIBRARIES ${PROJECT_NAME}
+)
 
 include_directories(
   include
   Solver/include
+  ${catkin_INCLUDE_DIRS}
 )
 
-set(SOLVER_LIBRARY ${PROJECT_SOURCE_DIR}/Solver/lib/libSolver.so)
 add_library(${PROJECT_NAME} SHARED
-  Solver/Solver_interface.c
-  Solver/Solver_model.c
   src/solver_interface.cpp
   src/state.cpp
+  Solver/Solver_interface.c
+  Solver/Solver_model.c
   Solver/include/mpc_planner_generated.cpp
 )
-target_include_directories(${PROJECT_NAME} PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-)
-ament_target_dependencies(${PROJECT_NAME} ${DEPENDENCIES})
-target_link_libraries(${PROJECT_NAME} ${SOLVER_LIBRARY})
+add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-if(BUILD_TESTING)
-  # find_package(ament_lint_auto REQUIRED)
-  # # the following line skips the linter which checks for copyrights
-  # # comment the line when a copyright and license is added to all source files
-  # set(ament_cmake_copyright_FOUND TRUE)
-  # # the following line skips cpplint (only works in a git repo)
-  # # comment the line when this package is in a git repo and when
-  # # a copyright and license is added to all source files
-  # set(ament_cmake_cpplint_FOUND TRUE)
-  # ament_lint_auto_find_test_dependencies()
-  find_package(ament_cmake_gtest REQUIRED)
-  ament_add_gtest(${PROJECT_NAME}_test test/test_solver.cpp)
-  target_include_directories(${PROJECT_NAME}_test PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-  )
-  ament_target_dependencies(${PROJECT_NAME}_test
-    ${DEPENDENCIES}
-  )
-  target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME})
-endif()
-
-install(
-  TARGETS 
-  ${PROJECT_NAME}
-  EXPORT export_${PROJECT_NAME}
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
+target_link_libraries(${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${PROJECT_SOURCE_DIR}/Solver/lib/libSolver.so
 )
 
-install(DIRECTORY include/${PROJECT_NAME}
-  DESTINATION include/)
+add_definitions(-DMPC_PLANNER_ROS)
 
-install(DIRECTORY Solver/include/
-  DESTINATION include/${PROJECT_NAME}/)
-
-install(
-  DIRECTORY Solver/lib/
-  DESTINATION lib
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
 
-ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(${DEPENDENCIES})
-ament_package()
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  PATTERN ".svn" EXCLUDE
+)
