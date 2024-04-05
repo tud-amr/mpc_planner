@@ -33,7 +33,7 @@ namespace MPCPlanner
 
     public:
         PlannerOutput solveMPC(State &state, RealTimeData &data);
-        double getSolution(int k, std::string &&var_name);
+        double getSolution(int k, std::string &&var_name) const;
 
         void onDataReceived(RealTimeData &data, std::string &&data_name);
 
@@ -41,7 +41,7 @@ namespace MPCPlanner
 
         void reset(State &state, RealTimeData &data);
 
-        bool isObjectiveReached(const RealTimeData &data) const;
+        bool isObjectiveReached(const State &state, const RealTimeData &data) const;
 
     private:
         std::shared_ptr<Solver> _solver;
@@ -50,8 +50,6 @@ namespace MPCPlanner
         ModuleData _module_data;
 
         std::vector<std::shared_ptr<ControllerModule>> _modules;
-
-        std::unique_ptr<RosTools::Benchmarker> _benchmarker;
     };
 
 }

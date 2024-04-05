@@ -84,10 +84,10 @@ class DynamicsModel:
 
         map = dict()
         for idx, state in enumerate(self.states):
-            map[state] = ["x", idx + self.nu]
+            map[state] = ["x", idx + self.nu, self.get_bounds(state)[0], self.get_bounds(state)[1]]
 
         for idx, input in enumerate(self.inputs):
-            map[input] = ["u", idx]
+            map[input] = ["u", idx, self.get_bounds(input)[0], self.get_bounds(input)[1]]
 
         write_to_yaml(file_path, map)
 

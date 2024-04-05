@@ -18,6 +18,7 @@
 #include <autoware_auto_planning_msgs/msg/trajectory.hpp>
 #include <autoware_auto_planning_msgs/msg/path_with_lane_id.hpp>
 #include <autoware_auto_vehicle_msgs/msg/steering_report.hpp>
+#include <autoware_adapi_v1_msgs/msg/operation_mode_state.hpp>
 
 // #include <autoware_auto_perception_msgs/msg/predicted_objects.hpp>
 
@@ -37,6 +38,7 @@ using namespace MPCPlanner;
 class Reconfigure;
 
 // using autoware_auto_perception_msgs::msg::PredictedObjects;
+using autoware_adapi_v1_msgs::msg::OperationModeState;
 using autoware_auto_planning_msgs::msg::PathWithLaneId;
 using autoware_auto_planning_msgs::msg::Trajectory;
 using autoware_auto_planning_msgs::msg::TrajectoryPoint;
@@ -60,11 +62,12 @@ public:
   void steeringCallback(SteeringReport::SharedPtr msg);
   void pathCallback(PathWithLaneId::SharedPtr msg);
   void obstacleCallback(mpc_planner_msgs::msg::ObstacleArray::SharedPtr msg);
+  void autowareStatusCallback(OperationModeState::SharedPtr msg);
 
   // Parameter callbacks
   void resetSimulationCallback(const rclcpp::Parameter &p);
 
-  void actuate();
+  // void actuate();
   void actuateBackup();
 
 private:
@@ -78,13 +81,12 @@ private:
 
   std::unique_ptr<Reconfigure> _reconfigure;
 
-  std::unique_ptr<RosTools::Benchmarker> _benchmarker;
-
   // Subscribers and publishers
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _state_sub;
   rclcpp::Subscription<PathWithLaneId>::SharedPtr _path_sub;
   rclcpp::Subscription<mpc_planner_msgs::msg::ObstacleArray>::SharedPtr _obstacle_sim_sub;
   rclcpp::Subscription<SteeringReport>::SharedPtr _steering_sub;
+  rclcpp::Subscription<OperationModeState>::SharedPtr _autoware_status_sub;
 
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr _cmd_pub;
   rclcpp::Publisher<autoware_auto_planning_msgs::msg::Trajectory>::SharedPtr _trajectory_pub;
@@ -100,10 +102,10 @@ private:
   std::shared_ptr<rclcpp::ParameterEventHandler> _param_subscriber;
   std::vector<std::shared_ptr<rclcpp::ParameterCallbackHandle>> _param_cb_handles;
 
-  Eigen::Vector2d mapToVehicleCenter(const Eigen::Vector2d &autoware_pos, const double angle) const;
-  Eigen::Vector2d mapFromVehicleCenter(const Eigen::Vector2d &center_pos, const double angle) const;
+  // Eigen::Vector2d mapToVehicleCenter(const Eigen::Vector2d &autoware_pos, const double angle) const;
+  // Eigen::Vector2d mapFromVehicleCenter(const Eigen::Vector2d &center_pos, const double angle) const;
 
-  bool isPathTheSame(PathWithLaneId::SharedPtr path);
+  // bool isPathTheSame(PathWithLaneId::SharedPtr path);
 
   void visualize();
 };

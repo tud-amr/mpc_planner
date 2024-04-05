@@ -19,6 +19,7 @@ from contouring import ContouringModule
 from path_reference_velocity import PathReferenceVelocityModule
 
 from ellipsoid_constraints import EllipsoidConstraintModule
+from gaussian_constraints import GaussianConstraintModule
 from guidance_constraints import GuidanceConstraintModule
 from linearized_constraints import LinearizedConstraintModule
 from scenario_constraints import ScenarioConstraintModule
@@ -65,7 +66,8 @@ def configuration_tmpc(settings):
         preview=settings["contouring"]["preview"]))
     # modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
 
-    modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
+    # modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
+    modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=GaussianConstraintModule))
 
     return model, modules
 

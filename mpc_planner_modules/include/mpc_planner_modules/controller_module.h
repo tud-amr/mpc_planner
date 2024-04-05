@@ -79,7 +79,7 @@ namespace MPCPlanner
          * @brief Check if the objective of this module was reached
          * @return true If the objective was reached
          */
-        virtual bool isObjectiveReached(const RealTimeData &data)
+        virtual bool isObjectiveReached(const State &state, const RealTimeData &data)
         {
             (void)data;
             return true;

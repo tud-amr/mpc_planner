@@ -23,8 +23,6 @@ namespace MPCPlanner
         _solver->reset();
 
         initializeModules(_modules, _solver);
-
-        _benchmarker = std::make_unique<RosTools::Benchmarker>("optimization");
     }
 
     // Given real-time data, solve the MPC problem
@@ -92,7 +90,7 @@ namespace MPCPlanner
         int exit_flag;
         {
             PROFILE_SCOPE("Optimization");
-            _benchmarker->start();
+            BENCHMARKERS.getBenchmarker("optimization").start();
             exit_flag = EXIT_CODE_NOT_OPTIMIZED_YET;
             for (auto &module : _modules)
             {
@@ -102,13 +100,13 @@ namespace MPCPlanner
             }
             if (exit_flag == EXIT_CODE_NOT_OPTIMIZED_YET)
                 exit_flag = _solver->solve();
-            _benchmarker->stop();
+            BENCHMARKERS.getBenchmarker("optimization").stop();
         }
 
         if (exit_flag != 1)
         {
             _output.success = false;
-            LOG_WARN("MPC did not find a solution. Exit flag: " << exit_flag); /** @todo: Convertion to text */
+            LOG_WARN_THROTTLE(500, "MPC failed: " + _solver->explainExitFlag(exit_flag));
             return _output;
         }
 
@@ -116,12 +114,15 @@ namespace MPCPlanner
         for (int k = 1; k < _solver->N; k++)
             _output.trajectory.add(_solver->getOutput(k, "x"), _solver->getOutput(k, "y"));
 
+        if (_output.success)
+            _solver->printIfBoundLimited();
+
         LOG_MARK("Planner::solveMPC done");
 
         return _output;
     }
 
-    double Planner::getSolution(int k, std::string &&var_name)
+    double Planner::getSolution(int k, std::string &&var_name) const
     {
         return _solver->getOutput(k, std::forward<std::string>(var_name));
     }
@@ -134,7 +135,7 @@ namespace MPCPlanner
 
     void Planner::visualize(const State &state, const RealTimeData &data)
     {
-        PROFILE_FUNCTION();
+        PROFILE_SCOPE("Planner::Visualize");
         LOG_MARK("Planner::visualize");
         (void)state;
 
@@ -170,11 +171,11 @@ namespace MPCPlanner
         data.reset();    // Reset the data
     }
 
-    bool Planner::isObjectiveReached(const RealTimeData &data) const
+    bool Planner::isObjectiveReached(const State &state, const RealTimeData &data) const
     {
         bool objective_reached = true;
         for (auto &module : _modules)
-            objective_reached = objective_reached && module->isObjectiveReached(data);
+            objective_reached = objective_reached && module->isObjectiveReached(state, data);
         return objective_reached;
     }
 }

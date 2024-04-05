@@ -70,7 +70,7 @@ namespace MPCPlanner
         line.setScale(0.1);
 
         Eigen::Vector2d p;
-        for (double s = 0.; s < spline.parameterLength(); s += 1.)
+        for (double s = 0.; s < spline.parameterLength(); s += 2.)
         {
             if (s > 0.)
                 line.addLine(p, spline.getPoint(s));

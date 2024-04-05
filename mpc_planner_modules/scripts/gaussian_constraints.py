@@ -4,6 +4,8 @@ import sys
 import casadi as cd
 import numpy as np
 
+from util.math import rotation_matrix
+
 from control_modules import ConstraintModule
 
 sys.path.append(os.path.join(sys.path[0], "..", "..", "solver_generator"))
@@ -65,12 +67,14 @@ class GaussianConstraint:
 
     def get_constraints(self, model, params, settings, stage_idx):
         constraints = []
-        pos_x = model.get("x")
-        pos_y = model.get("y")
-        pos = np.array([pos_x, pos_y])
+        x = model.get("x")
+        y = model.get("y")
+        psi = model.get("psi")
+        pos = np.array([x, y])
 
         # area = model.system.area
         r_vehicle = params.get("ego_disc_radius")
+        rotation_car = rotation_matrix(psi)
 
         for obs_id in range(self.max_obstacles):
 
@@ -88,20 +92,26 @@ class GaussianConstraint:
             r_obstacle = params.get(f"gaussian_obst_{obs_id}_r")
             combined_radius = r_vehicle + r_obstacle
 
-            diff_pos = pos - obs_pos
+            for disc_it in range(self.n_discs):
+                # Get and compute the disc position
+                disc_x = params.get(f"ego_disc_{disc_it}_offset")
+                disc_relative_pos = np.array([disc_x, 0])
+                disc_pos = pos + rotation_car.dot(disc_relative_pos)
 
-            a_ij = diff_pos / cd.sqrt(diff_pos.dot(diff_pos))
-            b_ij = combined_radius
+                diff_pos = disc_pos - obs_pos
 
-            x_erfinv = 1.0 - 2.0 * risk
+                a_ij = diff_pos / cd.sqrt(diff_pos.dot(diff_pos))
+                b_ij = combined_radius
 
-            # Manual inverse erf, because somehow lacking from casadi...
-            # From here: http://casadi.sourceforge.net/v1.9.0/api/internal/d4/d99/casadi_calculus_8hpp_source.html
-            z = cd.sqrt(-cd.log((1.0 - x_erfinv) / 2.0))
-            y_erfinv = (((1.641345311 * z + 3.429567803) * z - 1.624906493) * z - 1.970840454) / ((1.637067800 * z + 3.543889200) * z + 1.0)
+                x_erfinv = 1.0 - 2.0 * risk
 
-            y_erfinv = y_erfinv - (cd.erf(y_erfinv) - x_erfinv) / (2.0 / cd.sqrt(cd.pi) * cd.exp(-y_erfinv * y_erfinv))
-            y_erfinv = y_erfinv - (cd.erf(y_erfinv) - x_erfinv) / (2.0 / cd.sqrt(cd.pi) * cd.exp(-y_erfinv * y_erfinv))
+                # Manual inverse erf, because somehow lacking from casadi...
+                # From here: http://casadi.sourceforge.net/v1.9.0/api/internal/d4/d99/casadi_calculus_8hpp_source.html
+                z = cd.sqrt(-cd.log((1.0 - x_erfinv) / 2.0))
+                y_erfinv = (((1.641345311 * z + 3.429567803) * z - 1.624906493) * z - 1.970840454) / ((1.637067800 * z + 3.543889200) * z + 1.0)
 
-            constraints.append(a_ij.T @ cd.SX(diff_pos) - b_ij - y_erfinv * cd.sqrt(2.0 * a_ij.T @ Sigma @ a_ij))
+                y_erfinv = y_erfinv - (cd.erf(y_erfinv) - x_erfinv) / (2.0 / cd.sqrt(cd.pi) * cd.exp(-y_erfinv * y_erfinv))
+                y_erfinv = y_erfinv - (cd.erf(y_erfinv) - x_erfinv) / (2.0 / cd.sqrt(cd.pi) * cd.exp(-y_erfinv * y_erfinv))
+
+                constraints.append(a_ij.T @ cd.SX(diff_pos) - b_ij - y_erfinv * cd.sqrt(2.0 * a_ij.T @ Sigma @ a_ij))
         return constraints

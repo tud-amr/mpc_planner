@@ -54,7 +54,7 @@ weights:
   goal: 10.
   velocity: 0.05 #0.5
   acceleration: 0.2
-  angular_velocity: 0.25 #0.05
+  angular_velocity: 5.0 # Note: Large increase to improve smoothness of steering #0.25 #0.05
   reference_velocity: 3.0 #1.5
   contour: 0.05 #0.01
   lag: 0.02 #0.2

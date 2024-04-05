@@ -56,9 +56,9 @@ namespace MPCPlanner
       {
         double chi = RosTools::ExponentialQuantile(0.5, 1.0 - CONFIG["probabilistic"]["risk"].as<double>());
 
-        setForcesParameterEllipsoidObstMajor(k, i, _solver->_params, mode[k - 1].major_radius);
-        setForcesParameterEllipsoidObstMinor(k, i, _solver->_params, mode[k - 1].minor_radius);
-        setForcesParameterEllipsoidObstChi(k, i, _solver->_params, chi);
+        setForcesParameterEllipsoidObstMajor(k, _solver->_params, mode[k - 1].major_radius, i);
+        setForcesParameterEllipsoidObstMinor(k, _solver->_params, mode[k - 1].minor_radius, i);
+        setForcesParameterEllipsoidObstChi(k, _solver->_params, chi, i);
       }
     }
 

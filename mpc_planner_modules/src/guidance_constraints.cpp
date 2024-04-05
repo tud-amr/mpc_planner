@@ -71,11 +71,10 @@ namespace MPCPlanner
 
         if (!CONFIG["enable_output"].as<bool>())
         {
-            LOG_INFO_THROTTLE(5000, "Not propagating nodes (output is disabled)");
+            LOG_INFO_THROTTLE(15000, "Not propagating nodes (output is disabled)");
             global_guidance_->DoNotPropagateNodes();
         }
         /** @note Reference path */
-        // Temporary
         bool two_way = CONFIG["road"]["two_way"].as<bool>();
         double road_width_left_ = CONFIG["road"]["width"].as<double>() / 2.;
         double road_width_right_ = CONFIG["road"]["width"].as<double>() / 2.;
@@ -210,7 +209,8 @@ namespace MPCPlanner
         best_planner_index_ = FindBestPlanner();
         if (best_planner_index_ == -1)
         {
-            LOG_WARN("Failed to find a feasible trajectory in any of the " << planners_.size() << " optimizations.");
+            LOG_WARN_THROTTLE(500, "Failed to find a feasible trajectory in any of the " +
+                                       std::to_string(planners_.size()) + " optimizations.");
             return planners_[0].result.exit_code;
         }
 
@@ -283,6 +283,7 @@ namespace MPCPlanner
     {
         (void)data;
         (void)module_data;
+        PROFILE_SCOPE("GuidanceConstraints::Visualize");
         LOG_MARK("Guidance Constraints: Visualize()");
 
         // global_guidance_->Visualize(highlight_selected_guidance_, visualized_guidance_trajectory_nr_);
@@ -293,8 +294,11 @@ namespace MPCPlanner
             if (planner.disabled)
                 continue;
 
-            planner.guidance_constraints->visualize(data, module_data);
-            planner.safety_constraints->visualize(data, module_data);
+            if (i == 0)
+            {
+                planner.guidance_constraints->visualize(data, module_data);
+                planner.safety_constraints->visualize(data, module_data);
+            }
 
             // Visualize the warmstart
             Trajectory initial_trajectory;
@@ -315,8 +319,11 @@ namespace MPCPlanner
             }
         }
 
-        VISUALS.getPublisher(_name + "/optimized_trajectories").publish();
-        VISUALS.getPublisher(_name + "/warmstart_trajectories").publish();
+        {
+            PROFILE_SCOPE("TEST");
+            VISUALS.getPublisher(_name + "/optimized_trajectories").publish();
+            VISUALS.getPublisher(_name + "/warmstart_trajectories").publish();
+        }
     }
 
     bool GuidanceConstraints::isDataReady(const RealTimeData &data, std::string &missing_data)

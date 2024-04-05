@@ -19,7 +19,7 @@ namespace MPCPlanner
     void onDataReceived(RealTimeData &data, std::string &&data_name) override;
     bool isDataReady(const RealTimeData &data, std::string &missing_data) override;
 
-    bool isObjectiveReached(const RealTimeData &data) override;
+    bool isObjectiveReached(const State &state, const RealTimeData &data) override;
 
     void visualize(const RealTimeData &data, const ModuleData &module_data) override;
 
@@ -30,6 +30,7 @@ namespace MPCPlanner
     std::unique_ptr<RosTools::Spline2D> _bound_left{nullptr}, _bound_right{nullptr};
 
     int _closest_segment{0};
+    int _n_segments;
 
     void constructRoadConstraints(const RealTimeData &data, ModuleData &module_data);
     void constructRoadConstraintsFromCenterline(const RealTimeData &data, ModuleData &module_data);
