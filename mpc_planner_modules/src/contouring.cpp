@@ -35,7 +35,8 @@ namespace MPCPlanner
 
     state.set("spline", closest_s); // We need to initialize the spline state here
 
-    constructRoadConstraints(data, module_data);
+    if (CONFIG["contouring"]["add_road_constraints"].as<bool>())
+      constructRoadConstraints(data, module_data);
   }
 
   void Contouring::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)

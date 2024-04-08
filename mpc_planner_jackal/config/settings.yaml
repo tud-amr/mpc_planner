@@ -39,6 +39,7 @@ shift_previous_solution_forward: false
 contouring:
   num_segments: 3
   preview: 0.0
+  add_road_constraints: false
 
 t-mpc:
   use_t-mpc++: true

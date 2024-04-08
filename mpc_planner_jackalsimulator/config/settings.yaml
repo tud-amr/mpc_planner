@@ -16,7 +16,7 @@ debug_output: false
 enable_output: true
 control_frequency: 20
 deceleration_at_infeasible: 3.0
-max_obstacles: 8
+max_obstacles: 8 # (solver)
 robot_radius: 0.325
 robot:
   length: 0.65
@@ -25,7 +25,7 @@ robot:
 obstacle_radius: 0.4
 
 linearized_constraints:
-  add_halfspaces: 2  # For road constraints
+  add_halfspaces: 2  # (solver)
 
 scenario_constraints:
   parallel_solvers: 1
@@ -39,6 +39,7 @@ shift_previous_solution_forward: false
 contouring:
   num_segments: 3
   preview: 0.0
+  add_road_constraints: true
 
 t-mpc:
   use_t-mpc++: true
