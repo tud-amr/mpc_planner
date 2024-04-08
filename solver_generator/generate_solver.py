@@ -29,7 +29,7 @@ def generate_solver(modules, model, settings=None):
     if settings["solver_settings"]["solver"] == "acados":
         from generate_acados_solver import generate_acados_solver
 
-        solver, simulator = generate_acados_solver(settings, model)
+        solver, simulator = generate_acados_solver(modules, settings, model, skip_solver_generation)
 
     settings["params"].save_map()
     model.save_map()
@@ -52,7 +52,7 @@ def generate_solver(modules, model, settings=None):
     generate_module_packagexml(modules)
     generate_rqtreconfigure(settings)
     generate_ros2_rqtreconfigure(settings)
-    
+
     print_path("Solver", solver_path(settings), tab=True, end="")
     print_success(" -> generated")
 

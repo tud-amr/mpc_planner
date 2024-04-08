@@ -20,19 +20,19 @@
     <remap from="/output/command" to="/cmd_vel"/>
   </node>
 
-  <include file="$(find vicon_util)/launch/spoof_vicon.launch">
+  <!-- <include file="$(find vicon_util)/launch/spoof_vicon.launch">
       <arg name="topics" default="[jackal3, dynamic_object1, dynamic_object2, dynamic_object3, dynamic_object4, dynamic_object5, rectangle2x1_1]"/>
       <arg name="message_types" default="[geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped]"/>
-  </include>
+  </include> -->
 
   <!-- Start the vicon bridge -->
-<!-- <include file="$(find vicon_bridge)/launch/vicon.launch">
+<include file="$(find vicon_bridge)/launch/vicon.launch">
       <arg name="object_names" value="[jackal3, dynamic_object1, dynamic_object2, dynamic_object3, dynamic_object4, dynamic_object5, rectangle2x1_1]"/>
       <arg name="object_msg_types" default="[geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseStamped]"/>
       <arg name="object_frame_ids" default="[map, map, map, map, map, map, map]"/>
       <arg name="object_publish_topics" default="[/vicon/jackal3, /vicon/dynamic_object1, /vicon/dynamic_object2, /vicon/dynamic_object3, /vicon/dynamic_object4, /vicon/dynamic_object5, /vicon/rectangle2x1_1]"/>
       <arg name="object_frequency_divider" default="[2, 2, 2, 2, 2, 2, 2]"/>
-  </include> -->
+  </include>
 
   <!-- Bundle dynamic obstacles in one convenient message -->
   <include file="$(find vicon_util)/launch/bundle_obstacles.launch">

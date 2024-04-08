@@ -40,6 +40,7 @@ shift_previous_solution_forward: false # Was true
 contouring:
   num_segments: 6
   preview: 2.0 # [s], use 0.0 to disable preview
+  add_road_constraints: true
 
 t-mpc:
   use_t-mpc++: true
