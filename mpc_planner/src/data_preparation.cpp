@@ -114,11 +114,27 @@ namespace MPCPlanner
                         distances.clear();
                         for (auto &obstacle : obstacles)
                         {
+                                double dist;
+                                double min_dist = 1e5;
 
                                 //   if (reject_function != nullptr && reject_function(vehicle_pos, obstacle.position)) // If we should reject this                                                                                    // obstacle, push a high distance
                                 // distances.push_back(1e8);
                                 //   else
-                                distances.push_back(RosTools::distance(vehicle_pos, obstacle.position));
+                                // Eigen::Vector2d obstacle_pos = obstacle.position;
+                                // Eigen::Vector2d obstacle_pos = obstacle.position;
+                                Eigen::Vector2d direction(std::cos(state.get("psi")), std::sin(state.get("psi")));
+                                for (int k = 0; k < CONFIG["N"].as<int>(); k++)
+                                {
+
+                                        dist = std::pow(1.01, (double)k) *
+                                               RosTools::distance(
+                                                   obstacle.prediction.modes[0][k].position,
+                                                   state.getPos() + state.get("v") * (double)k * direction);
+
+                                        if (dist < min_dist)
+                                                min_dist = dist;
+                                }
+                                distances.push_back(min_dist); // RosTools::distance(vehicle_pos, obstacle.position));
                         }
 
                         // Sort obstacles on distance
@@ -179,5 +195,4 @@ namespace MPCPlanner
                 for (auto &obstacle : obstacles)
                         propagatePredictionUncertainty(obstacle.prediction);
         }
-
 }
