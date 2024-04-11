@@ -4,7 +4,11 @@
 
   <arg name="gui" default="false" />
   <arg name="project_name" default="" />
-  <arg name="pedestrian_scenario" default="random_social/18_corridor.xml" />
+  <!-- <arg name="pedestrian_scenario" default="random_social/18_corridor.xml" /> -->
+  <!-- <arg name="roadmap_map" value="maps/straight.xml"/> -->
+  <arg name="pedestrian_scenario" default="open_space/24.xml" />
+  <arg name="roadmap_map" value="maps/open_space/24.xml"/>
+
   <!-- <arg name="pedestrian_scenario" default="new_safe_horizon/8_gaussian.xml" /> -->
 
   <rosparam command="load" file="$(find mpc_planner_jackalsimulator)/config/guidance_planner.yaml"/>
@@ -15,6 +19,7 @@
         <remap from="/input/reference_path" to="roadmap/reference"/>
         <remap from="/input/obstacles" to="/pedestrian_simulator/trajectory_predictions"/>
         <remap from="/output/command" to="/cmd_vel"/>
+        <remap from="/output/pose" to="/pedestrian_simulator/robot_state"/>
   </node>
 
   <include file="$(find pedestrian_simulator)/launch/ros1_simulation.launch">
@@ -27,12 +32,13 @@
   <include file="$(find mobile_robot_state_publisher)/launch/mobile_robot_publisher.launch"/>
 
   <include file="$(find roadmap)/launch/roadmap.launch">
-    <arg name="map_file_name" value="maps/straight.xml"/>
+    <arg name="map_file_name" value="$(arg roadmap_map)"/>
   </include>
 
   <!-- <node pkg="tf2_ros" exec="static_transform_publisher" name="static_map" output="log" args="0 0 0 0 0 0 odom map"/> -->
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_planner_jackalsimulator)/rviz/ros1.rviz" output="screen"/>
+  <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_planner_jackalsimulator)/rviz/ros1_3d.rviz" output="screen"/> -->
 
   <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" output="log"/>
 

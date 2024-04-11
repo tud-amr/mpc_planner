@@ -1,12 +1,12 @@
 prm:
   debug_output: false
   seed: 1                               # Seed of the visibility-PRM. Set to -1 for random!
-  T: 4.0 #6.0
-  N: 20 #30
+  T: 6.0 #4.0 #6.0
+  N: 30 #20 #30
   topology_comparison: Homology         # Homology (default) or UVD
   sampling_function: Uniform # Uniform (default)
   use_learning: false
-  predictions_are_constant_velocity: false
+  predictions_are_constant_velocity: true
   track_selected_homology_only: false
   sample_margin: 0. #0. # Was 0.
   min_path_improvement: 0.

@@ -22,6 +22,8 @@
 #include <std_srvs/Empty.h>
 #include <robot_localization/SetPose.h>
 
+#include <tf2_ros/transform_broadcaster.h>
+
 #include <memory>
 
 using namespace MPCPlanner;
@@ -51,6 +53,9 @@ public:
 
     void reset();
 
+    void publishPose();
+    void publishCamera();
+
 private:
     std::unique_ptr<Planner> _planner;
 
@@ -75,6 +80,9 @@ private:
     ros::ServiceClient _ped_start_client;
 
     ros::Publisher _cmd_pub;
+    ros::Publisher _pose_pub;
+
+    tf2_ros::TransformBroadcaster _camera_pub;
 
     std_srvs::Empty _reset_msg;
     robot_localization::SetPose _reset_pose_msg;

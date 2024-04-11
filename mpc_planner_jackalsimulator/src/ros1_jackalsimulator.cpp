@@ -10,6 +10,7 @@
 #include <ros_tools/visuals.h>
 #include <ros_tools/logging.h>
 #include <ros_tools/convertions.h>
+#include <ros_tools/math.h>
 
 #include <std_msgs/Empty.h>
 #include <ros_tools/profiling.h>
@@ -81,6 +82,9 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
     _cmd_pub = nh.advertise<geometry_msgs::Twist>(
         "/output/command", 1);
 
+    _pose_pub = nh.advertise<geometry_msgs::PoseStamped>(
+        "/output/pose", 1);
+
     // Environment Reset
     _reset_simulation_pub = nh.advertise<std_msgs::Empty>("/lmpcc/reset_environment", 1);
     _reset_simulation_client = nh.serviceClient<std_srvs::Empty>("/gazebo/reset_world");
@@ -125,7 +129,9 @@ void JackalPlanner::startEnvironment()
 
 bool JackalPlanner::objectiveReached()
 {
-    return _state.get("x") > 25.;
+    // return _state.get("x") > 25.; Straight
+    return RosTools::distance(_state.getPos(), Eigen::Vector2d(24., 24.)) < 4.0; // Diagonal
+    // return RosTools::distance(_state.getPos(), Eigen::Vector2d(_data.reference_path.x.back(), _data.reference_path.y.back())) < 4.0; // Diagonal
 }
 
 void JackalPlanner::loop(const ros::TimerEvent &event)
@@ -168,6 +174,8 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
         cmd.angular.z = 0.0;
     }
     _cmd_pub.publish(cmd);
+    publishPose();
+    publishCamera();
     _benchmarker->stop();
 
     if (output.success)
@@ -312,6 +320,38 @@ void JackalPlanner::reset()
     _reset_simulation_pub.publish(std_msgs::Empty());
 
     _planner->reset(_state, _data);
+}
+
+void JackalPlanner::publishPose()
+{
+    geometry_msgs::PoseStamped pose;
+    pose.pose.position.x = _state.get("x");
+    pose.pose.position.y = _state.get("y");
+    pose.pose.orientation = RosTools::angleToQuaternion(_state.get("psi"));
+
+    pose.header.stamp = ros::Time::now();
+    pose.header.frame_id = "map";
+
+    _pose_pub.publish(pose);
+}
+
+void JackalPlanner::publishCamera()
+{
+
+    geometry_msgs::TransformStamped msg;
+    msg.header.stamp = ros::Time::now();
+    msg.header.frame_id = "map";
+    msg.child_frame_id = "camera";
+
+    msg.transform.translation.x = _state.get("x");
+    msg.transform.translation.y = _state.get("y"); // solver_interface_ptr_->State().y();
+    msg.transform.translation.z = 0.0;
+    msg.transform.rotation.x = 0;
+    msg.transform.rotation.y = 0;
+    msg.transform.rotation.z = 0;
+    msg.transform.rotation.w = 1;
+
+    _camera_pub.sendTransform(msg);
 }
 
 int main(int argc, char **argv)

@@ -108,7 +108,7 @@ namespace MPCPlanner
   {
     if (data_name == "reference_path")
     {
-      LOG_INFO("Received Reference Path");
+      LOG_MARK("Received Reference Path");
 
       // Construct a spline from the given points
       _spline = std::make_unique<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y);
