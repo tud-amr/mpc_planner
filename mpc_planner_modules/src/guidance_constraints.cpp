@@ -287,7 +287,7 @@ namespace MPCPlanner
         LOG_MARK("Guidance Constraints: Visualize()");
 
         // global_guidance_->Visualize(highlight_selected_guidance_, visualized_guidance_trajectory_nr_);
-        global_guidance_->Visualize(false, -1);
+        global_guidance_->Visualize(true, -1);
         for (size_t i = 0; i < planners_.size(); i++)
         {
             auto &planner = planners_[i];
@@ -312,7 +312,10 @@ namespace MPCPlanner
                 Trajectory trajectory;
                 for (int k = 1; k < _solver->N; k++)
                     trajectory.add(planner.local_solver->getOutput(k, "x"), planner.local_solver->getOutput(k, "y"));
-                if (planner.is_original_planner)
+
+                if ((int)i == best_planner_index_)
+                    visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 1.0, -1, 12, true, false);
+                else if (planner.is_original_planner)
                     visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 1.0, 11, 12, true, false);
                 else
                     visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 0.2, planner.result.color, global_guidance_->GetConfig()->n_paths_);

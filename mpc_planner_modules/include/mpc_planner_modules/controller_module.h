@@ -81,6 +81,7 @@ namespace MPCPlanner
          */
         virtual bool isObjectiveReached(const State &state, const RealTimeData &data)
         {
+            (void)state;
             (void)data;
             return true;
         }; // Default: true

@@ -17,20 +17,31 @@ namespace MPCPlanner
 
         auto &cylinder = publisher.getNewPointMarker("CYLINDER");
         cylinder.setScale(2. * CONFIG["robot_radius"].as<double>(), 2. * CONFIG["robot_radius"].as<double>(), 0.01);
-        cylinder.setColorInt(color_index, color_max, alpha);
 
         auto &line = publisher.getNewLine();
         line.setScale(0.15, 0.15);
-        line.setColorInt(color_index, color_max);
+
+        double z = 0.;
+        if (color_index == -1) // Plot a red trajectory above other trajectories
+        {
+            cylinder.setColor(131. / 255., 10. / 255., 72. / 255., alpha);
+            line.setColor(131. / 255., 10. / 255., 72. / 255., alpha);
+            z = 0.05;
+        }
+        else
+        {
+            cylinder.setColorInt(color_index, color_max, alpha);
+            line.setColorInt(color_index, color_max);
+        }
 
         Eigen::Vector2d prev;
         for (size_t k = 0; k < trajectory.positions.size(); k++)
         {
             if (publish_regions)
-                cylinder.addPointMarker(trajectory.positions[k], 0.0);
+                cylinder.addPointMarker(trajectory.positions[k], z);
 
             if (k > 0 && publish_trace)
-                line.addLine(prev, trajectory.positions[k]);
+                line.addLine(prev, trajectory.positions[k], z);
 
             prev = trajectory.positions[k];
         }

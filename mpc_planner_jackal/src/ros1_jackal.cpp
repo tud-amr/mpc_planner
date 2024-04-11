@@ -89,8 +89,8 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
 
 bool JackalPlanner::objectiveReached()
 {
-    bool reset_condition_forward_x = (_forward_x_experiment) && (_state.get("x") > 3.5 || _state.get("y") > 2.6);
-    bool reset_condition_backward_x = (!_forward_x_experiment) && (_state.get("x") < -3.5 || _state.get("y") < -2.6);
+    bool reset_condition_forward_x = (_forward_x_experiment) && (_state.get("x") > x_max || _state.get("y") > y_max);
+    bool reset_condition_backward_x = (!_forward_x_experiment) && (_state.get("x") < x_min || _state.get("y") < y_min);
     bool reset_condition = reset_condition_forward_x || reset_condition_backward_x;
     if (reset_condition)
     {
@@ -167,7 +167,7 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
 
 void JackalPlanner::rotateToGoal()
 {
-    LOG_INFO_THROTTLE(500, "Rotating to the goal");
+    LOG_INFO_THROTTLE(1500, "Rotating to the goal");
     if (!_data.goal_received)
     {
         LOG_INFO("Waiting for the goal");
@@ -279,6 +279,8 @@ void JackalPlanner::obstacleCallback(const derived_object_msgs::ObjectArray::Con
 
     for (auto &object : msg->objects)
     {
+        if (object.id == 0)
+            continue;
         double object_angle = RosTools::quaternionToAngle(object.pose.orientation) +
                               std::atan2(object.twist.linear.y, object.twist.linear.x) +
                               M_PI_2;
@@ -332,6 +334,7 @@ void JackalPlanner::obstacleCallback(const derived_object_msgs::ObjectArray::Con
     // Eigen::Vector2d velocity = Eigen::Vector2d(object.twist.linear.x, object.twist.linear.y);
 
     ensureObstacleSize(_data.dynamic_obstacles, _state);
+    propagatePredictionUncertainty(_data.dynamic_obstacles);
 
     _planner->onDataReceived(_data, "dynamic obstacles");
 }
@@ -386,11 +389,17 @@ void JackalPlanner::bluetoothCallback(const sensor_msgs::Joy::ConstPtr &msg)
 
 void JackalPlanner::visualize()
 {
-    auto &publisher = VISUALS.getPublisher("angle");
+    auto &publisher = VISUALS.getPublisher("limits");
     auto &line = publisher.getNewLine();
+    line.setColor(0., 0., 0.);
+    line.setScale(0.1, 0.1);
 
-    line.addLine(Eigen::Vector2d(_state.get("x"), _state.get("y")),
-                 Eigen::Vector2d(_state.get("x") + 1.0 * std::cos(_state.get("psi")), _state.get("y") + 1.0 * std::sin(_state.get("psi"))));
+    // Publish lab limits
+    line.addLine(Eigen::Vector2d(x_min, y_min), Eigen::Vector2d(x_max, y_min));
+    line.addLine(Eigen::Vector2d(x_max, y_min), Eigen::Vector2d(x_max, y_max));
+    line.addLine(Eigen::Vector2d(x_max, y_max), Eigen::Vector2d(x_min, y_max));
+    line.addLine(Eigen::Vector2d(x_min, y_max), Eigen::Vector2d(x_min, y_min));
+
     publisher.publish();
 
     auto &goal_publisher = VISUALS.getPublisher("goal");

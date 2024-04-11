@@ -132,6 +132,11 @@ namespace MPCPlanner
                         for (size_t v = 0; v < max_obstacles; v++)
                                 processed_obstacles.push_back(obstacles[indices[v]]);
 
+                        for (size_t i = 0; i < processed_obstacles.size(); i++) // Sequential IDs
+                        {
+                                processed_obstacles[i].index = i;
+                        }
+
                         obstacles = processed_obstacles;
                 }
                 else if (obstacles.size() < max_obstacles)

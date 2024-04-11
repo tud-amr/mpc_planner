@@ -279,6 +279,10 @@ void JackalPlanner::obstacleCallback(const mpc_planner_msgs::ObstacleArray::Cons
         }
     }
     ensureObstacleSize(_data.dynamic_obstacles, _state);
+
+    if (CONFIG["probabilistic"]["propagate_uncertainty"].as<bool>())
+        propagatePredictionUncertainty(_data.dynamic_obstacles);
+
     _planner->onDataReceived(_data, "dynamic obstacles");
 }
 

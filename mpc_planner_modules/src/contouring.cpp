@@ -239,8 +239,11 @@ namespace MPCPlanner
 
     visualizeRoadConstraints(data, module_data);
 
-    visualizeDebugRoadBoundary(data, module_data);
-    visualizeDebugGluedSplines(data, module_data);
+    if (CONFIG["debug_output"].as<bool>())
+    {
+      visualizeDebugRoadBoundary(data, module_data);
+      visualizeDebugGluedSplines(data, module_data);
+    }
   }
 
   void Contouring::visualizeCurrentSegment(const RealTimeData &data, const ModuleData &module_data)
@@ -280,7 +283,7 @@ namespace MPCPlanner
   void Contouring::visualizeRoadConstraints(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)data;
-    if (module_data.static_obstacles.empty())
+    if (module_data.static_obstacles.empty() || (!CONFIG["contouring"]["add_road_constraints"].as<bool>()))
       return;
 
     for (int k = 1; k < _solver->N; k++)
@@ -299,7 +302,6 @@ namespace MPCPlanner
   void Contouring::visualizeDebugRoadBoundary(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)module_data;
-    LOG_MARK("Constructing road constraints.");
     auto &publisher = VISUALS.getPublisher(_name + "/road_boundary_points");
     auto &points = publisher.getNewPointMarker("CUBE");
     points.setScale(0.15, 0.15, 0.15);
