@@ -224,11 +224,11 @@ void AutowarePlanner::obstacleCallback(TrackedObjects::SharedPtr msg)
 {
   LOG_MARK("Obstacle callback");
 
-  if (msg->objects.size() > 0)
-    _disable_pedestrian_simulator = true;
-  else
+  if(CONFIG["use_simulated_obstacles"].as<bool>())
+  {
+    LOG_WARN_THROTTLE(10000, "Ignoring real obstacles because use_simulated_obstacles is true");
     return;
-
+  }
   _data.dynamic_obstacles.clear();
 
   for (auto &obstacle : msg->objects)
@@ -266,7 +266,7 @@ void AutowarePlanner::obstacleCallback(TrackedObjects::SharedPtr msg)
 
 void AutowarePlanner::simulatedObstacleCallback(mpc_planner_msgs::msg::ObstacleArray::SharedPtr msg)
 {
-  if (_disable_pedestrian_simulator) // Real objects take precedence
+  if (!CONFIG["use_simulated_obstacles"].as<bool>()) // Real objects take precedence
     return;
 
   LOG_MARK("Obstacle callback");

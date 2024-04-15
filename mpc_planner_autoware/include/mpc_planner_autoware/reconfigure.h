@@ -23,6 +23,8 @@ public:
         (void)node;
 
         node->declare_parameter<double>("road_width", CONFIG["road"]["width"].as<double>());
+        node->declare_parameter<bool>("use_simulated_obstacles", CONFIG["use_simulated_obstacles"].as<bool>());
+
     }
 
     rcl_interfaces::msg::SetParametersResult updateROSParameters(const std::vector<rclcpp::Parameter> &parameters)
@@ -30,6 +32,7 @@ public:
         AutowareReconfigure::updateROSParameters(parameters);
 
         updateParam<double>(parameters, "road_width", CONFIG["road"]["width"]);
+        updateParam<bool>(parameters, "use_simulated_obstacles", CONFIG["use_simulated_obstacles"]);
 
         auto result = rcl_interfaces::msg::SetParametersResult();
         result.successful = true;
