@@ -13,6 +13,7 @@
 #include <ros_tools/logging.h>
 #include <ros_tools/convertions.h>
 #include <ros_tools/profiling.h>
+#include <ros_tools/math.h>
 
 using namespace MPCPlanner;
 using namespace rclcpp;
@@ -78,6 +79,10 @@ void AutowarePlanner::initializeSubscribersAndPublishers()
       std::bind(&AutowarePlanner::pathCallback, this, std::placeholders::_1));
 
   _obstacle_sim_sub = this->create_subscription<mpc_planner_msgs::msg::ObstacleArray>(
+      "~/input/simulated_obstacles", 1,
+      std::bind(&AutowarePlanner::simulatedObstacleCallback, this, std::placeholders::_1));
+
+  _obstacle_sub = this->create_subscription<TrackedObjects>(
       "~/input/obstacles", 1,
       std::bind(&AutowarePlanner::obstacleCallback, this, std::placeholders::_1));
 
@@ -215,8 +220,55 @@ void AutowarePlanner::steeringCallback(SteeringReport::SharedPtr msg)
   _state.set("delta", msg->steering_tire_angle /*/ 15.06*/);
 }
 
-void AutowarePlanner::obstacleCallback(mpc_planner_msgs::msg::ObstacleArray::SharedPtr msg)
+void AutowarePlanner::obstacleCallback(TrackedObjects::SharedPtr msg)
 {
+  LOG_MARK("Obstacle callback");
+
+  if (msg->objects.size() > 0)
+    _disable_pedestrian_simulator = true;
+  else
+    return;
+
+  _data.dynamic_obstacles.clear();
+
+  for (auto &obstacle : msg->objects)
+  {
+    // Save the obstacle
+    double angle = RosTools::quaternionToAngle(obstacle.kinematics.pose_with_covariance.pose);
+    _data.dynamic_obstacles.emplace_back(
+        obstacle.object_id.uuid[0],
+        Eigen::Vector2d(obstacle.kinematics.pose_with_covariance.pose.position.x,
+                        obstacle.kinematics.pose_with_covariance.pose.position.y),
+        angle,
+        CONFIG["obstacle_radius"].as<double>(),
+        ObstacleType::DYNAMIC);
+
+    auto &dynamic_obstacle = _data.dynamic_obstacles.back();
+
+    // Rotate the velocity from the body frame to the global frame
+    Eigen::Vector2d vel = Eigen::Vector2d(obstacle.kinematics.twist_with_covariance.twist.linear.x, 0.);
+    vel = RosTools::rotationMatrixFromHeading(-angle) * vel;
+
+    dynamic_obstacle.prediction = getConstantVelocityPrediction(
+        dynamic_obstacle.position,
+        vel,
+        CONFIG["integrator_step"].as<double>(),
+        CONFIG["N"].as<int>());
+  }
+  removeDistantObstacles(_data.dynamic_obstacles, _state);
+  ensureObstacleSize(_data.dynamic_obstacles, _state);
+
+  if (CONFIG["probabilistic"]["propagate_uncertainty"].as<bool>())
+    propagatePredictionUncertainty(_data.dynamic_obstacles);
+
+  _planner->onDataReceived(_data, "dynamic obstacles");
+}
+
+void AutowarePlanner::simulatedObstacleCallback(mpc_planner_msgs::msg::ObstacleArray::SharedPtr msg)
+{
+  if (_disable_pedestrian_simulator) // Real objects take precedence
+    return;
+
   LOG_MARK("Obstacle callback");
 
   _data.dynamic_obstacles.clear();

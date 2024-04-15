@@ -8,14 +8,14 @@
     <remap from="~/input/steering" to="/vehicle/status/steering_status"/>
     <remap from="~/input/goal" to="/goal_pose"/>
     <remap from="~/input/reference_path" to="roadmap/path_with_lane_id"/>
-    <remap from="~/input/obstacles" to="/pedestrian_simulator/trajectory_predictions"/>
+    <remap from="~/input/simulated_obstacles" to="/pedestrian_simulator/trajectory_predictions"/>
+    <remap from="~/input/obstacles" to="/perception/object_recognition/tracking/objects"/>
     <remap from="~/input/autoware_status" to="/api/operation_mode/state"/>
     <remap from="~/output/trajectory" to="/planning/scenario_planning/motion_velocity_smoother/trajectory"/>
   </node>
 
   <include file="$(find-pkg-share pedestrian_simulator)/launch/ros2_simulation.launch">
     <arg name="pedestrian_scenario" value="autoware/me_many2.xml"/>
-    <!-- <arg name="pedestrian_scenario" value="autoware/crossing_spree.xml"/> -->
   </include>
   <!-- several_crossing.xml | crossing_spree.xml | me_4crossing.xml -->
 
