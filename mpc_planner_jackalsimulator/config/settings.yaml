@@ -11,6 +11,12 @@ solver_settings:
   init: 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
   use_sqp: false
 
+recording:
+  enable: true
+  folder: "/home/r2c1/Documents/publications/multi-mpc-2023/results/data"
+  file: "noninteractive_open_space_GMPCC"
+  num_experiments: 105
+
 debug_output: false
 debug_limits: false
 
@@ -26,14 +32,14 @@ robot:
 obstacle_radius: 0.4
 
 linearized_constraints:
-  add_halfspaces: 2  # (solver)
+  add_halfspaces: 0  # (solver)
 
 scenario_constraints:
   parallel_solvers: 1
 
 road:
   two_way: false
-  width: 6.0
+  width: 9.0 #6.0
 
 shift_previous_solution_forward: false
 

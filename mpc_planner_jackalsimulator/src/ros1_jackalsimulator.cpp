@@ -85,6 +85,10 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
     _pose_pub = nh.advertise<geometry_msgs::PoseStamped>(
         "/output/pose", 1);
 
+    _collisions_sub = nh.subscribe<std_msgs::Float64>(
+        "/feedback/collisions", 1,
+        boost::bind(&JackalPlanner::collisionCallback, this, _1));
+
     // Environment Reset
     _reset_simulation_pub = nh.advertise<std_msgs::Empty>("/lmpcc/reset_environment", 1);
     _reset_simulation_client = nh.serviceClient<std_srvs::Empty>("/gazebo/reset_world");
@@ -139,14 +143,14 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
     (void)event;
     LOG_DEBUG("============= Loop =============");
 
-    _benchmarker->start();
-
     if (objectiveReached())
         reset();
 
     // Print the state
     if (CONFIG["debug_output"].as<bool>())
         _state.print();
+
+    _benchmarker->start();
 
     auto output = _planner->solveMPC(_state, _data);
 
@@ -174,9 +178,14 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
         cmd.angular.z = 0.0;
     }
     _cmd_pub.publish(cmd);
+
     publishPose();
     publishCamera();
+
     _benchmarker->stop();
+
+    if (CONFIG["recording"]["enable"].as<bool>())
+        _planner->saveData(_state, _data);
 
     if (output.success)
     {
@@ -308,18 +317,21 @@ void JackalPlanner::reset()
 {
     LOG_MARK("Resetting");
 
-    // Reset the environment
-    for (int j = 0; j < 1; j++)
-    {
-        // ActuateBrake(5.0);
-        ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()).sleep();
-    }
-
     _reset_simulation_client.call(_reset_msg);
     _reset_ekf_client.call(_reset_pose_msg);
     _reset_simulation_pub.publish(std_msgs::Empty());
 
+    ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()).sleep();
+
     _planner->reset(_state, _data);
+}
+
+void JackalPlanner::collisionCallback(const std_msgs::Float64::ConstPtr &msg)
+{
+    _data.intrusion = (float)(msg->data);
+
+    if (_data.intrusion > 0.)
+        LOG_INFO_THROTTLE(500., "Collision detected (Intrusion: " << _data.intrusion << ")");
 }
 
 void JackalPlanner::publishPose()

@@ -4,8 +4,6 @@
 #include <mpc_planner_types/data_types.h>
 #include <mpc_planner_types/module_data.h>
 
-#include <ros_tools/profiling.h>
-
 #include <memory>
 #include <vector>
 
@@ -15,6 +13,7 @@ namespace MPCPlanner
     class State;
     class ControllerModule;
     class Solver;
+    class ExperimentUtil;
 
     struct PlannerOutput
     {
@@ -37,6 +36,7 @@ namespace MPCPlanner
 
         void onDataReceived(RealTimeData &data, std::string &&data_name);
 
+        void saveData(State &state, RealTimeData &data);
         void visualize(const State &state, const RealTimeData &data);
 
         void reset(State &state, RealTimeData &data);
@@ -44,7 +44,10 @@ namespace MPCPlanner
         bool isObjectiveReached(const State &state, const RealTimeData &data) const;
 
     private:
+        bool _is_data_ready{false};
+
         std::shared_ptr<Solver> _solver;
+        std::shared_ptr<ExperimentUtil> _experiment_util;
         PlannerOutput _output;
 
         ModuleData _module_data;

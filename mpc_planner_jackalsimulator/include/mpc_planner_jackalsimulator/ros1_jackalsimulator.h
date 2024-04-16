@@ -13,6 +13,7 @@
 
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/Float64.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
@@ -51,6 +52,8 @@ public:
     void pathCallback(const nav_msgs::Path::ConstPtr &msg);
     void obstacleCallback(const mpc_planner_msgs::ObstacleArray::ConstPtr &msg);
 
+    void collisionCallback(const std_msgs::Float64::ConstPtr &msg);
+
     void reset();
 
     void publishPose();
@@ -75,6 +78,7 @@ private:
     ros::Subscriber _goal_sub;
     ros::Subscriber _path_sub;
     ros::Subscriber _obstacle_sub, _obstacle_sim_sub;
+    ros::Subscriber _collisions_sub;
 
     ros::Publisher _ped_horizon_pub, _ped_integrator_step_pub, _ped_clock_frequency_pub;
     ros::ServiceClient _ped_start_client;

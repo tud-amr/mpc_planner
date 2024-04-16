@@ -34,7 +34,11 @@ class GuidanceConstraintModule(ConstraintModule):
 
         self.dependencies.append("guidance_planner")
 
-        self.constraints.append(LinearConstraints(max_obstacles=settings["max_obstacles"], other_halfspaces=2))
+        self.constraints.append(
+            LinearConstraints(
+                max_obstacles=settings["max_obstacles"], other_halfspaces=settings["linearized_constraints"]["add_halfspaces"]
+            )
+        )
         self.sources.append("linearized_constraints.h")
 
         # Initialize the underlying constraints
