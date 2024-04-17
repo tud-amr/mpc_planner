@@ -102,14 +102,12 @@ namespace MPCPlanner
                              (radius + CONFIG["robot_radius"].as<double>());
         }
 
-        LOG_HOOK();
         if ((int)module_data.static_obstacles[k].size() < _n_other_halfspaces)
         {
           LOG_WARN(_n_other_halfspaces << " halfspaces expected, but "
                                        << (int)module_data.static_obstacles[k].size() << " are present");
         }
 
-        LOG_HOOK();
         int num_halfspaces = std::min((int)module_data.static_obstacles[k].size(), _n_other_halfspaces);
         for (int h = 0; h < num_halfspaces; h++)
         {
@@ -118,7 +116,6 @@ namespace MPCPlanner
           _a2[d][k](obs_id) = module_data.static_obstacles[k][h].A(1);
           _b[d][k](obs_id) = module_data.static_obstacles[k][h].b;
         }
-        LOG_HOOK();
       }
     }
     LOG_MARK("LinearizedConstraints::update done");

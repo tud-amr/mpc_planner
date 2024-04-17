@@ -104,8 +104,6 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
     (void)event;
     LOG_MARK("============= Loop =============");
 
-    _benchmarker->start();
-
     if (objectiveReached())
         reset();
 
@@ -118,6 +116,8 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
         rotateToGoal();
         return;
     }
+
+    _benchmarker->start();
 
     auto output = _planner->solveMPC(_state, _data);
 
@@ -159,6 +159,9 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
     _cmd_pub.publish(cmd);
     _benchmarker->stop();
 
+    if (CONFIG["recording"]["enable"].as<bool>())
+        _planner->saveData(_state, _data);
+
     _planner->visualize(_state, _data);
     visualize();
 
@@ -174,18 +177,12 @@ void JackalPlanner::rotateToGoal()
         return;
     }
 
-    // LOG_VALUE("goal x", _data.goal(0));
-    // LOG_VALUE("goal y", _data.goal(1));
-
     double goal_angle = std::atan2(_data.goal(1) - _state.get("y"), _data.goal(0) - _state.get("x"));
-    double angle_diff = goal_angle - _state.get("psi"); // RosTools::angleDifference(_state.get("psi"), goal_angle);
-
-    // LOG_VALUE("goal angle", goal_angle);
+    double angle_diff = goal_angle - _state.get("psi");
 
     if (angle_diff > M_PI)
         angle_diff -= 2 * M_PI;
 
-    // LOG_VALUE("diff", angle_diff);
     geometry_msgs::Twist cmd;
     if (std::abs(angle_diff) > 0.1)
     {
@@ -330,8 +327,6 @@ void JackalPlanner::obstacleCallback(const derived_object_msgs::ObjectArray::Con
             CONFIG["integrator_step"].as<double>(),
             CONFIG["N"].as<int>());
     }
-
-    // Eigen::Vector2d velocity = Eigen::Vector2d(object.twist.linear.x, object.twist.linear.y);
 
     ensureObstacleSize(_data.dynamic_obstacles, _state);
     propagatePredictionUncertainty(_data.dynamic_obstacles);

@@ -13,9 +13,12 @@ solver_settings:
 
 recording:
   enable: true
-  folder: "/home/r2c1/Documents/publications/multi-mpc-2023/results/data"
-  file: "noninteractive_open_space_GMPCC"
-  num_experiments: 105
+  # folder: "/home/r2c1/Documents/publications/multi-mpc-2023/results/data"
+  folder: "/home/r2c1/tmpc_revision/experiments/data"
+  file: "experiment_GMPCC"
+  # file: "experiment_GMPCCNO"
+  timestamp: true
+  num_experiments: 3
 
 debug_output: false
 debug_limits: false

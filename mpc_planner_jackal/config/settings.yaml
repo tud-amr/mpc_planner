@@ -11,6 +11,16 @@ solver_settings:
   init: 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
   use_sqp: false
 
+recording:
+  enable: false
+  # folder: "/home/r2c1/Documents/publications/multi-mpc-2023/results/data"
+  folder: "/home/r2c1/tmpc_revision/experiments/data"
+  file: "GMPCC"
+  # file: "LMPCC"
+  timestamp: true
+  num_experiments: 105
+
+debug_limits: false
 debug_output: false
 
 enable_output: true
@@ -25,7 +35,7 @@ robot:
 obstacle_radius: 0.35
 
 linearized_constraints:
-  add_halfspaces: 2  # For road constraints
+  add_halfspaces: 0 #2  # For road constraints
 
 scenario_constraints:
   parallel_solvers: 1

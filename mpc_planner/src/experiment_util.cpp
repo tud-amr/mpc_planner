@@ -16,9 +16,12 @@ namespace MPCPlanner
     {
         _save_folder = CONFIG["recording"]["folder"].as<std::string>();
         _save_file = CONFIG["recording"]["file"].as<std::string>();
-        LOG_VALUE("Planner Save File", _save_folder + "/" + _save_file + ".txt");
 
         _data_saver = std::make_unique<RosTools::DataSaver>();
+        _data_saver->SetAddTimestamp(CONFIG["recording"]["timestamp"].as<bool>());
+
+        if (CONFIG["recording"]["enable"].as<bool>())
+            LOG_VALUE("Planner Save File", _data_saver->getFilePath(_save_folder, _save_file, false));
     }
 
     void ExperimentUtil::update(const State &state, std::shared_ptr<Solver> solver, const RealTimeData &data)
