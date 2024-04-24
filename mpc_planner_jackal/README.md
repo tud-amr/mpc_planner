@@ -10,6 +10,9 @@ To visualize the jackal robot:
 
 ```bash
 git clone https://github.com/jackal/jackal.git
+git clone https://github.com/oscardegroot/roadmap
+git clone https://github.com/asr-ros/asr_rapidxml.git
+
 ```
 
 Then launch it add the following in your main launch file:

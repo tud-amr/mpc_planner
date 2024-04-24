@@ -158,6 +158,8 @@ Note:
 - The system level packages, e.g., `mpc_planner_jackal` still do need different control files for `ROS1` and `ROS2`, but both versions can be available in one repository.
 
 ## Selecting a single system
+You can disable requirements for other packages by running:
+
 ```
 python3 select_system.py mpc_planner_jackal
 ```
