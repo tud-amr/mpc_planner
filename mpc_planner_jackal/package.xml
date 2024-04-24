@@ -23,7 +23,7 @@
 
   <exec_depend>roadmap</exec_depend>
   <exec_depend>vicon_bridge</exec_depend>
-  <exec_depend>obstacle_bundle_util</exec_depend>
+  <exec_depend>vicon_util</exec_depend>
 
   <export>
     <build_type>catkin</build_type>
