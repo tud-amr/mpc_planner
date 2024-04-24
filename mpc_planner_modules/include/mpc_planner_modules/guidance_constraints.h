@@ -75,7 +75,7 @@ namespace MPCPlanner
         void onDataReceived(RealTimeData &data, std::string &&data_name) override;
 
         void reset() override;
-        // void ExportData(RosTools::DataSaver &data_saver) override;
+        void saveData(RosTools::DataSaver &data_saver) override;
         // void GetMethodName(std::string &name) override;
 
     private: // Private functions

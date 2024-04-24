@@ -125,7 +125,9 @@ namespace MPCPlanner
                                 for (int k = 0; k < CONFIG["N"].as<int>(); k++)
                                 {
 
-                                        dist = std::pow(1.25, (double)k) *
+                                        // dist = (std::pow(1.25, (double)k)) *
+                                        // Linearly scaled
+                                        dist = (double)(k + 1) * 0.6 *
                                                RosTools::distance(
                                                    obstacle.prediction.modes[0][k].position,
                                                    state.getPos() + state.get("v") * (double)k * direction);

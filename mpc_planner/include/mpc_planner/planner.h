@@ -39,12 +39,13 @@ namespace MPCPlanner
         void saveData(State &state, RealTimeData &data);
         void visualize(const State &state, const RealTimeData &data);
 
-        void reset(State &state, RealTimeData &data);
+        void reset(State &state, RealTimeData &data, bool success = true);
 
         bool isObjectiveReached(const State &state, const RealTimeData &data) const;
 
     private:
         bool _is_data_ready{false};
+        bool _is_first_run{true};
 
         std::shared_ptr<Solver> _solver;
         std::shared_ptr<ExperimentUtil> _experiment_util;

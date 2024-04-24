@@ -141,6 +141,9 @@ bool JackalPlanner::objectiveReached()
 void JackalPlanner::loop(const ros::TimerEvent &event)
 {
     (void)event;
+
+    _data.planning_start_time = std::chrono::system_clock::now();
+
     LOG_DEBUG("============= Loop =============");
 
     if (objectiveReached())
@@ -201,6 +204,12 @@ void JackalPlanner::stateCallback(const nav_msgs::Odometry::ConstPtr &msg)
     _state.set("y", msg->pose.pose.position.y);
     _state.set("psi", RosTools::quaternionToAngle(msg->pose.pose.orientation));
     _state.set("v", std::sqrt(std::pow(msg->twist.twist.linear.x, 2.) + std::pow(msg->twist.twist.linear.y, 2.)));
+
+    if (std::abs(msg->pose.pose.orientation.x) > (M_PI / 8.) || std::abs(msg->pose.pose.orientation.y) > (M_PI / 8.))
+    {
+        LOG_WARN("Detected flipped robot. Resetting.");
+        reset(false); // Reset without success
+    }
 }
 
 void JackalPlanner::statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -209,6 +218,12 @@ void JackalPlanner::statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr
     _state.set("y", msg->pose.position.y);
     _state.set("psi", msg->pose.orientation.z);
     _state.set("v", msg->pose.position.z);
+
+    if (std::abs(msg->pose.orientation.x) > (M_PI / 8.) || std::abs(msg->pose.orientation.y) > (M_PI / 8.))
+    {
+        LOG_ERROR("Detected flipped robot. Resetting.");
+        reset(false); // Reset without success
+    }
 }
 
 void JackalPlanner::goalCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -313,7 +328,7 @@ void JackalPlanner::visualize()
     publisher.publish();
 }
 
-void JackalPlanner::reset()
+void JackalPlanner::reset(bool success)
 {
     LOG_MARK("Resetting");
 
@@ -323,7 +338,7 @@ void JackalPlanner::reset()
 
     ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()).sleep();
 
-    _planner->reset(_state, _data);
+    _planner->reset(_state, _data, success);
 }
 
 void JackalPlanner::collisionCallback(const std_msgs::Float64::ConstPtr &msg)

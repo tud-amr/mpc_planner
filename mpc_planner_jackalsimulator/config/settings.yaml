@@ -12,13 +12,13 @@ solver_settings:
   use_sqp: false
 
 recording:
-  enable: true
-  # folder: "/home/r2c1/Documents/publications/multi-mpc-2023/results/data"
-  folder: "/home/r2c1/tmpc_revision/experiments/data"
-  file: "experiment_GMPCC"
-  # file: "experiment_GMPCCNO"
-  timestamp: true
-  num_experiments: 3
+  enable: false
+  folder: "/home/r2c1/Documents/publications/multi-mpc-2023/results/data"
+  # folder: "/home/r2c1/tmpc_revision/experiments/data"
+  # file: homotopy_comparison_uvd
+  file: ablation_open_space_GMPCCNO
+  timestamp: false
+  num_experiments: 15
 
 debug_output: false
 debug_limits: false
@@ -42,7 +42,7 @@ scenario_constraints:
 
 road:
   two_way: false
-  width: 9.0 #6.0
+  width: 6.0 #6.0
 
 shift_previous_solution_forward: false
 
@@ -52,8 +52,9 @@ contouring:
   add_road_constraints: true
 
 t-mpc:
-  use_t-mpc++: true
+  use_t-mpc++: false
   enable_constraints: true
+  highlight_selected: true
 
 probabilistic:
   enable: true
@@ -76,7 +77,7 @@ weights:
   velocity: 0.55
   acceleration: 0.34
   angular_velocity: 0.85
-  reference_velocity: 2.0
+  reference_velocity: 1.5 #2.0
   contour: 0.05
   preview: 0.0
   lag: 0.75

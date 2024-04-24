@@ -28,6 +28,8 @@ namespace MPCPlanner
         initializeModules(_modules, _solver);
 
         _experiment_util = std::make_shared<ExperimentUtil>();
+
+        _is_first_run = true;
     }
 
     // Given real-time data, solve the MPC problem
@@ -47,7 +49,11 @@ namespace MPCPlanner
 
         if (!_is_data_ready)
         {
-            LOG_WARN_THROTTLE(3000, "Data is not ready, missing " + missing_data + "\b");
+            if (!_is_first_run)
+                LOG_WARN_THROTTLE(3000, "Data is not ready, missing " + missing_data + "\b");
+            else
+                _is_first_run = false;
+
             _output.success = false;
             return _output;
         }
@@ -114,7 +120,9 @@ namespace MPCPlanner
         {
             _output.success = false;
             LOG_WARN_THROTTLE(500, "MPC failed: " + _solver->explainExitFlag(exit_flag));
+
             BENCHMARKERS.getBenchmarker("planning").stop();
+            _is_first_run = false;
             return _output;
         }
 
@@ -126,6 +134,7 @@ namespace MPCPlanner
             _solver->printIfBoundLimited();
 
         BENCHMARKERS.getBenchmarker("planning").stop();
+        _is_first_run = false;
 
         LOG_MARK("Planner::solveMPC done");
 
@@ -154,7 +163,7 @@ namespace MPCPlanner
 
         visualizeTrajectory(_output.trajectory, "planned_trajectory", true, 0.2);
 
-        visualizeObstacles(data.dynamic_obstacles, "obstacles", true);
+        visualizeObstacles(data.dynamic_obstacles, "obstacles", true, 1.0);
         visualizeObstaclePredictions(data.dynamic_obstacles, "obstacle_predictions", true);
         visualizeRobotArea(state.getPos(), state.get("psi"), data.robot_area, "robot_area", true);
 
@@ -174,7 +183,7 @@ namespace MPCPlanner
     {
         if (!_is_data_ready)
             return;
-            
+
         auto &data_saver = _experiment_util->getDataSaver();
 
         // Save planning data
@@ -185,13 +194,16 @@ namespace MPCPlanner
         else
             data_saver->AddData("status", 2.);
 
+        for (auto &module : _modules)
+            module->saveData(*data_saver);
+
         _experiment_util->update(state, _solver, data);
     }
 
-    void Planner::reset(State &state, RealTimeData &data)
+    void Planner::reset(State &state, RealTimeData &data, bool success)
     {
         if (CONFIG["recording"]["enable"].as<bool>())
-            _experiment_util->onTaskComplete(true); // Save data
+            _experiment_util->onTaskComplete(success); // Save data
 
         _solver->reset(); // Reset the solver
 
@@ -200,6 +212,7 @@ namespace MPCPlanner
 
         state = State(); // Reset the state
         data.reset();    // Reset the data
+        _is_first_run = true;
     }
 
     bool Planner::isObjectiveReached(const State &state, const RealTimeData &data) const

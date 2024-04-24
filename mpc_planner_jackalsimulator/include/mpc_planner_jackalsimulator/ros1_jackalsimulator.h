@@ -54,7 +54,7 @@ public:
 
     void collisionCallback(const std_msgs::Float64::ConstPtr &msg);
 
-    void reset();
+    void reset(bool success = true);
 
     void publishPose();
     void publishCamera();

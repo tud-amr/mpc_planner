@@ -156,3 +156,8 @@ Note:
 
 - Changes to `CMakelists.txt` and `package.xml` are saved first to the respective files ending with `1` or `2`.
 - The system level packages, e.g., `mpc_planner_jackal` still do need different control files for `ROS1` and `ROS2`, but both versions can be available in one repository.
+
+## Selecting a single system
+```
+python3 select_system.py mpc_planner_jackal
+```

@@ -71,7 +71,7 @@ private:
     double _measured_velocity{0.};
 
     double y_max{2.2}; // 2.6 when the blocks are not at the wall
-    double y_min{-1.8};
+    double y_min{-2.2};
     double x_max{3.5};
     double x_min{-3.5};
 

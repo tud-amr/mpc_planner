@@ -5,6 +5,7 @@
 
 #include <ros_tools/visuals.h>
 #include <ros_tools/profiling.h>
+#include <ros_tools/data_saver.h>
 
 #include <omp.h>
 
@@ -30,6 +31,7 @@ namespace MPCPlanner
 
         // Initialize the constraint modules
         int n_solvers = global_guidance_->GetConfig()->n_paths_; // + 1 for the main lmpcc solver?
+
         LOG_VALUE("Solvers", n_solvers);
         for (int i = 0; i < n_solvers; i++)
         {
@@ -171,9 +173,12 @@ namespace MPCPlanner
                 planner.safety_constraints->setParameters(data, module_data, k);
             }
 
-            /** @todo Set timeout */
-            // planner.local_solver->_params.solver_timeout(1. / (config_->clock_frequency_) - (ros::Time::now() - data.control_loop_time_).seconds() - 0.005);
-            planner.local_solver->_params.solver_timeout = 1. / CONFIG["control_frequency"].as<double>() - 20. / 1000.;
+            // Set timeout (Planning time - used time - time necessary afterwards)
+            double planning_time = 1. / CONFIG["control_frequency"].as<double>();
+            planner.local_solver->_params.solver_timeout =
+                planning_time -
+                ((std::chrono::system_clock::now() - data.planning_start_time).count() / 1.0e9) -
+                0.005;
 
             // SOLVE OPTIMIZATION
             // if (enable_guidance_warmstart_)
@@ -209,8 +214,7 @@ namespace MPCPlanner
         best_planner_index_ = FindBestPlanner();
         if (best_planner_index_ == -1)
         {
-            LOG_WARN_THROTTLE(500, "Failed to find a feasible trajectory in any of the " +
-                                       std::to_string(planners_.size()) + " optimizations.");
+            LOG_MARK("Failed to find a feasible trajectory in any of the " << std::to_string(planners_.size()) << " optimizations.");
             return planners_[0].result.exit_code;
         }
 
@@ -287,7 +291,7 @@ namespace MPCPlanner
         LOG_MARK("Guidance Constraints: Visualize()");
 
         // global_guidance_->Visualize(highlight_selected_guidance_, visualized_guidance_trajectory_nr_);
-        global_guidance_->Visualize(true, -1);
+        global_guidance_->Visualize(CONFIG["t-mpc"]["highlight_selected"].as<bool>(), -1);
         for (size_t i = 0; i < planners_.size(); i++)
         {
             auto &planner = planners_[i];
@@ -360,8 +364,6 @@ namespace MPCPlanner
         }
         else if (data_name == "goal") // New
         {
-            LOG_WARN("Received Goal");
-
             std::vector<double> x = {data.goal(0), data.goal(0) + 1., data.goal(0) + 1., data.goal(0)};
             std::vector<double> y = {data.goal(1), data.goal(1), data.goal(1) + 1., data.goal(1) + 1.};
 
@@ -404,52 +406,49 @@ namespace MPCPlanner
             planner.local_solver->reset();
     }
 
-    //     // void GuidanceConstraints::ReconfigureCallback(SolverInterface *solver_interface, lmpcc::PredictiveControllerConfig &config,
-    //     //                                               uint32_t level, bool first_callback)
-    //     // {
-    //     //   if (first_callback)
-    //     //   {
-    //     //     config.spline_consistency = global_guidance_->GetConfig()->selection_weight_consistency_;
-    //     //   }
-    //     //   else
-    //     //   {
-    //     //     global_guidance_->GetConfig()->selection_weight_consistency_ = config.spline_consistency;
-    //     //   }
+    void GuidanceConstraints::saveData(RosTools::DataSaver &data_saver)
+    {
+        data_saver.AddData("runtime_guidance", global_guidance_->GetLastRuntime());
+        for (size_t i = 0; i < planners_.size(); i++) // auto &solver : solvers_)
+        {
+            auto &planner = planners_[i];
+            double objective = planner.result.success ? planner.result.objective : -1.;
+            data_saver.AddData("objective_" + std::to_string(i), objective);
 
-    //     //   global_guidance_->SetReferenceVelocity(config.velocity_reference);
-    //     //   config_->visualized_guidance_trajectory_nr_ = config.visualize_trajectory_nr;
-    //     //   config_->highlight_selected_guidance_ = config.highlight_selected;
-    //     // }
+            if (planner.is_original_planner)
+            {
+                data_saver.AddData("lmpcc_objective", objective);
+                data_saver.AddData("original_planner_id", planner.id); // To identify which one is the original planner
+            }
 
-    //     void GuidanceConstraints::ExportData(RosTools::DataSaver &data_saver)
-    //     {
-    //         data_saver.AddData("runtime_guidance", global_guidance_->GetLastRuntime());
-    //         for (size_t i = 0; i < planners_.size(); i++) // auto &solver : solvers_)
-    //         {
-    //             auto &planner = planners_[i];
-    //             if (planner.result.success)
-    //                 data_saver.AddData("objective_" + std::to_string(i), planner.local_solver->forces_info_.pobj);
-    //             else
-    //                 data_saver.AddData("objective_" + std::to_string(i), -1.);
+            // auto &vehicle_regions = planner.local_solver->OptimizedVehiclePredictions(); // Get the ego-vehicle predictions
+            // for (size_t k = 0; k < vehicle_regions.size(); k++)
+            //     data_saver.AddData("solver" + std::to_string(i) + "_plan" + std::to_string(k), vehicle_regions[k].discs_[0].AsVector2d());
 
-    //             if (planner.is_original_planner)
-    //             {
-    //                 data_saver.AddData("original_planner_id", planner.id); // To identify which one is the original planner
-    //             }
-    //             auto &vehicle_regions = planner.local_solver->OptimizedVehiclePredictions(); // Get the ego-vehicle predictions
-    //             for (size_t k = 0; k < vehicle_regions.size(); k++)
-    //                 data_saver.AddData("solver" + std::to_string(i) + "_plan" + std::to_string(k), vehicle_regions[k].discs_[0].AsVector2d());
+            // data_saver.AddData("active_constraints_" + std::to_string(planner.id), planner.guidance_constraints->NumActiveConstraints(planner.local_solver.get()));
+        }
 
-    //             data_saver.AddData("active_constraints_" + std::to_string(planner.id), planner.guidance_constraints->NumActiveConstraints(planner.local_solver.get()));
-    //         }
+        data_saver.AddData("best_planner_idx", best_planner_index_);
+        double best_objective = best_planner_index_ != -1 ? planners_[best_planner_index_].local_solver->_info.pobj : -1.;
+        data_saver.AddData("gmpcc_objective", best_objective);
 
-    //         data_saver.AddData("best_planner_idx", best_planner_index_);
-    //         if (best_planner_index_ != -1)
-    //             data_saver.AddData("gmpcc_objective", planners_[best_planner_index_].local_solver->forces_info_.pobj);
-    //         else
-    //             data_saver.AddData("gmpcc_objective", -1);
+        global_guidance_->saveData(data_saver); // Save data from the guidance planner
+    }
+} // namespace MPCPlanner
 
-    //         global_guidance_->ExportData(data_saver);
-    //     }
-    // }
-}
+//     // void GuidanceConstraints::ReconfigureCallback(SolverInterface *solver_interface, lmpcc::PredictiveControllerConfig &config,
+//     //                                               uint32_t level, bool first_callback)
+//     // {
+//     //   if (first_callback)
+//     //   {
+//     //     config.spline_consistency = global_guidance_->GetConfig()->selection_weight_consistency_;
+//     //   }
+//     //   else
+//     //   {
+//     //     global_guidance_->GetConfig()->selection_weight_consistency_ = config.spline_consistency;
+//     //   }
+
+//     //   global_guidance_->SetReferenceVelocity(config.velocity_reference);
+//     //   config_->visualized_guidance_trajectory_nr_ = config.visualize_trajectory_nr;
+//     //   config_->highlight_selected_guidance_ = config.highlight_selected;
+//     // }

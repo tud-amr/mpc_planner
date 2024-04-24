@@ -13,7 +13,7 @@ prm:
   min_path_improvement: 0.
   view_angle_times_pi: 0.606  # View angle when sampling in a conus (disabled by default)
   n_samples: 30 # Number of samples for PRM
-  timeout: 10 # Timeout for PRM sampling [ms]
+  timeout: 5 # Timeout for PRM sampling [ms]
   n_paths: 4       # Number of guidance trajectories
   max_velocity:     3.0       # Maximum velocity of connections between nodes
   max_acceleration: 3.0       # Maximum velocity of connections between nodes
@@ -21,8 +21,8 @@ prm:
     forward:      true
     acceleration: true
   goals:  # Only used when `LoadReferencePath` is used to set the goals
-    longitudinal: 5   # Number of goals in direction of the path
-    vertical: 5       # Number of goals in direction orthogonal to the path
+    longitudinal: 3 #5   # Number of goals in direction of the path
+    vertical: 3       # Number of goals in direction orthogonal to the path
   selection_weights:  # Selection weights to determine what spline is best
     consistency: 1.33 # 0.24904675216524505  # How much better should a new trajectory be to be selected [%]
     length: 5. #0. #1.
@@ -36,7 +36,9 @@ prm:
     collision: 0.5
     velocity_tracking: 0.01
   visuals:
-    transparency: 0.9 #0.5 #0.9               # The least transparent the obstacle visualization is (0-1)
+    # transparency: 0.8               # The least transparent the obstacle visualization is (0-1)
+    # transparency: 0.5               # The least transparent the obstacle visualization is (0-1)
+    transparency: 0.9               # The least transparent the obstacle visualization is (0-1)
     visualize_all_samples: false    # Visualizes all PRM samples
     visualize_homology: false
     show_indices: false
