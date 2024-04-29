@@ -16,7 +16,7 @@
       n_samples: 30 # Number of samples for PRM
       timeout: 10.0 # Timeout for PRM sampling [ms]
       n_paths: 4 # Number of guidance trajectories
-      max_velocity: 8.0 #3.0       # Maximum velocity of connections between nodes
+      max_velocity: 4.0 #3.0       # Maximum velocity of connections between nodes
       max_acceleration: 5.0 # 3.0 # Maximum velocity of connections between nodes
       connection_filters:
         forward: true

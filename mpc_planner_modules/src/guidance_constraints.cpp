@@ -82,6 +82,7 @@ namespace MPCPlanner
         /** @todo Find where we are on the spline */
         int current_segment;
         double current_s;
+
         _spline->findClosestPoint(state.getPos(), current_segment, current_s);
 
         double road_width_left = two_way ? road_width_left_ * 3. : road_width_left_;

@@ -224,7 +224,7 @@ void AutowarePlanner::obstacleCallback(TrackedObjects::SharedPtr msg)
 {
   LOG_MARK("Obstacle callback");
 
-  if(CONFIG["use_simulated_obstacles"].as<bool>())
+  if (CONFIG["use_simulated_obstacles"].as<bool>())
   {
     LOG_WARN_THROTTLE(10000, "Ignoring real obstacles because use_simulated_obstacles is true");
     return;
@@ -341,17 +341,20 @@ void AutowarePlanner::pathCallback(PathWithLaneId::SharedPtr msg)
     _data.reference_path.psi.push_back(0.0);
   }
 
-  if (!msg->left_bound.empty())
+  if (CONFIG["contouring"]["use_map_bounds"].as<bool>())
   {
-    for (auto &point : msg->left_bound) // Left
+    if (!msg->left_bound.empty())
     {
-      _data.left_bound.x.push_back(point.x);
-      _data.left_bound.y.push_back(point.y);
-    }
-    for (auto &point : msg->right_bound) // Right
-    {
-      _data.right_bound.x.push_back(point.x);
-      _data.right_bound.y.push_back(point.y);
+      for (auto &point : msg->left_bound) // Left
+      {
+        _data.left_bound.x.push_back(point.x);
+        _data.left_bound.y.push_back(point.y);
+      }
+      for (auto &point : msg->right_bound) // Right
+      {
+        _data.right_bound.x.push_back(point.x);
+        _data.right_bound.y.push_back(point.y);
+      }
     }
   }
 
