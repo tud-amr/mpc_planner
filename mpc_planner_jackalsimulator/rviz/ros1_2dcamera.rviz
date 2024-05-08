@@ -10,6 +10,7 @@ Panels:
         - /Planner1/SH-MPC1
         - /Lab1
         - /Lab1/Robot1/Shape1
+        - /Odometry1/Shape1
       Splitter Ratio: 0.6411764621734619
     Tree Height: 1106
   - Class: rviz/Selection
@@ -201,21 +202,21 @@ Visualization Manager:
         - Class: rviz/Group
           Displays:
             - Class: rviz/MarkerArray
-              Enabled: false
+              Enabled: true
               Marker Topic: /jackalsimulator_planner/guidance_planner/start_and_goals
               Name: Start and Goals
               Namespaces:
-                {}
+                "": true
               Queue Size: 100
-              Value: false
+              Value: true
             - Class: rviz/MarkerArray
-              Enabled: false
+              Enabled: true
               Marker Topic: /jackalsimulator_planner/guidance_planner/graph
               Name: Graph
               Namespaces:
-                {}
+                "": true
               Queue Size: 100
-              Value: false
+              Value: true
             - Class: rviz/MarkerArray
               Enabled: false
               Marker Topic: /jackalsimulator_planner/guidance_planner/geometric_paths
@@ -410,6 +411,41 @@ Visualization Manager:
         {}
       Queue Size: 100
       Value: true
+    - Angle Tolerance: 0.10000000149011612
+      Class: rviz/Odometry
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: false
+      Enabled: true
+      Keep: 100
+      Name: Odometry
+      Position Tolerance: 0.10000000149011612
+      Queue Size: 10
+      Shape:
+        Alpha: 0.5
+        Axes Length: 1
+        Axes Radius: 0.10000000149011612
+        Color: 32; 74; 135
+        Head Length: 0
+        Head Radius: 0
+        Shaft Length: 0.20000000298023224
+        Shaft Radius: 0.20000000298023224
+        Value: Arrow
+      Topic: /odometry/filtered
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 238; 238; 236
@@ -437,26 +473,20 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz/Orbit
-      Distance: 16.439119338989258
+      Angle: -0.8199993968009949
+      Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Field of View: 0.7853981852531433
-      Focal Point:
-        X: 1.951063871383667
-        Y: 2.245734691619873
-        Z: 3.5217113494873047
-      Focal Shape Fixed Size: false
-      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4603978991508484
+      Scale: 59.93458557128906
       Target Frame: camera
-      Yaw: 3.945399045944214
+      X: 3.5841684341430664
+      Y: 3.960484504699707
     Saved: ~
 Window Geometry:
   Displays:

@@ -41,6 +41,11 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
 
     _timeout_timer.setDuration(60.);
     _timeout_timer.start();
+    for (int i = 0; i < CAMERA_BUFFER; i++)
+    {
+        _x_buffer[i] = 0.;
+        _y_buffer[i] = 0.;
+    }
 
     RosTools::Instrumentor::Get().BeginSession("mpc_planner_jackalsimulator");
 
@@ -137,8 +142,8 @@ void JackalPlanner::startEnvironment()
 
 bool JackalPlanner::objectiveReached()
 {
-    return _state.get("x") > 25.; //    Straight
-    // return RosTools::distance(_state.getPos(), Eigen::Vector2d(24., 24.)) < 4.0; // Diagonal
+    // return _state.get("x") > 25.; //    Straight
+    return RosTools::distance(_state.getPos(), Eigen::Vector2d(24., 24.)) < 4.0; // Diagonal
     // return RosTools::distance(_state.getPos(), Eigen::Vector2d(_data.reference_path.x.back(), _data.reference_path.y.back())) < 4.0; // Diagonal
 }
 
@@ -354,6 +359,12 @@ void JackalPlanner::reset(bool success)
     _reset_ekf_client.call(_reset_pose_msg);
     _reset_simulation_pub.publish(std_msgs::Empty());
 
+    for (int i = 0; i < CAMERA_BUFFER; i++)
+    {
+        _x_buffer[i] = 0.;
+        _y_buffer[i] = 0.;
+    }
+
     ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()).sleep();
 
     _planner->reset(_state, _data, success);
@@ -387,7 +398,7 @@ void JackalPlanner::publishCamera()
     geometry_msgs::TransformStamped msg;
     msg.header.stamp = ros::Time::now();
 
-    if ((msg.header.stamp - _prev_stamp) < ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()))
+    if ((msg.header.stamp - _prev_stamp) < ros::Duration(0.5 / CONFIG["control_frequency"].as<double>()))
         return;
 
     _prev_stamp = msg.header.stamp;
@@ -395,8 +406,22 @@ void JackalPlanner::publishCamera()
     msg.header.frame_id = "map";
     msg.child_frame_id = "camera";
 
-    msg.transform.translation.x = _state.get("x");
-    msg.transform.translation.y = _state.get("y");
+    // Smoothen the camera
+    for (int i = 0; i < CAMERA_BUFFER - 1; i++)
+    {
+        _x_buffer[i] = _x_buffer[i + 1];
+        _y_buffer[i] = _y_buffer[i + 1];
+    }
+    _x_buffer[CAMERA_BUFFER - 1] = _state.get("x");
+    _y_buffer[CAMERA_BUFFER - 1] = _state.get("y");
+    double camera_x = 0., camera_y = 0.;
+    for (int i = 0; i < CAMERA_BUFFER; i++)
+    {
+        camera_x += _x_buffer[i];
+        camera_y += _y_buffer[i];
+    }
+    msg.transform.translation.x = camera_x / (double)CAMERA_BUFFER; //_state.get("x");
+    msg.transform.translation.y = camera_y / (double)CAMERA_BUFFER; //_state.get("y");
     msg.transform.translation.z = 0.0;
     msg.transform.rotation.x = 0;
     msg.transform.rotation.y = 0;

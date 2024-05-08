@@ -1,5 +1,5 @@
 name: "jackal"
-N: 15
+N: 30
 integrator_step: 0.2
 n_discs: 1
 
@@ -12,11 +12,9 @@ solver_settings:
   use_sqp: false
 
 recording:
-  enable: true
+  enable: false
   folder: "/home/r2c1/Documents/publications/multi-mpc-2023/results/data"
-  # folder: "/home/r2c1/tmpc_revision/experiments/data"
-  # file: homotopy_comparison_uvd
-  file: horizon_N15
+  file: none #experiment_method
   timestamp: false
   num_experiments: 26
 
@@ -61,17 +59,6 @@ probabilistic:
   enable: true
   risk: 0.05
   propagate_uncertainty: true
-
-# weights:
-#   goal: 10.
-#   velocity: 0.5 #0.5
-#   acceleration: 0.15
-#   angular_velocity: 0.25 #0.05
-#   reference_velocity: 2.0 #1.5
-#   contour: 0.5 #0.01
-#   preview: 0.0
-#   lag: 0.1
-#   slack: 10000.
 
 weights:
   goal: 10.

@@ -27,6 +27,8 @@
 
 #include <memory>
 
+#define CAMERA_BUFFER 10
+
 using namespace MPCPlanner;
 
 namespace MPCPlanner
@@ -96,6 +98,9 @@ private:
     ros::Publisher _reset_simulation_pub;
     ros::ServiceClient _reset_simulation_client;
     ros::ServiceClient _reset_ekf_client;
+
+    double _x_buffer[CAMERA_BUFFER];
+    double _y_buffer[CAMERA_BUFFER];
 
     bool isPathTheSame(const nav_msgs::Path::ConstPtr &path);
 
