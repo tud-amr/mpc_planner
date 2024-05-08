@@ -94,8 +94,8 @@ namespace MPCPlanner
 			{
 				// it->first.as<std::string>() is the variable name
 				setXinit(
-				    it->first.as<std::string>(),
-				    state.get(it->first.as<std::string>()));
+					it->first.as<std::string>(),
+					state.get(it->first.as<std::string>()));
 			}
 		}
 	}
@@ -109,6 +109,37 @@ namespace MPCPlanner
 			{
 				setEgoPrediction(k, it->first.as<std::string>(), initial_state.get(it->first.as<std::string>()));
 			}
+		}
+	}
+
+	void Solver::initializeWithBraking(const State &initial_state)
+	{
+		initializeWithState(initial_state); // Initialize all variables
+
+		double x, y, psi, v, a;
+		double deceleration = CONFIG["deceleration_at_infeasible"].as<double>();
+
+		x = initial_state.get("x");
+		y = initial_state.get("y");
+		psi = initial_state.get("psi");
+		v = initial_state.get("v");
+		a = 0.;
+
+		for (int k = 1; k < N; k++) // For all timesteps
+		{
+			a = -deceleration;
+			v = getEgoPrediction(k, "v") + a * k * dt;
+			v = std::max(v, 0.);
+			a = (v - getEgoPrediction(k, "v")) / (k * dt);
+
+			x = initial_state.get("x") + v * k * dt * std::cos(initial_state.get("psi"));
+			y = initial_state.get("y") + v * k * dt * std::sin(initial_state.get("psi"));
+
+			setEgoPrediction(k, "x", x);
+			setEgoPrediction(k, "y", y);
+			setEgoPrediction(k, "psi", psi);
+			setEgoPrediction(k, "v", v);
+			setEgoPrediction(k, "a", a);
 		}
 	}
 

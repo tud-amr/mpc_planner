@@ -71,6 +71,8 @@ private:
 
     bool _enable_output{false};
 
+    RosTools::Timer _timeout_timer;
+
     std::unique_ptr<RosTools::Benchmarker> _benchmarker;
 
     // Subscribers and publishers
@@ -87,6 +89,7 @@ private:
     ros::Publisher _pose_pub;
 
     tf2_ros::TransformBroadcaster _camera_pub;
+    ros::Time _prev_stamp;
 
     std_srvs::Empty _reset_msg;
     robot_localization::SetPose _reset_pose_msg;

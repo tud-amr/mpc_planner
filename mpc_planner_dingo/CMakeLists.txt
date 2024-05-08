@@ -16,6 +16,7 @@ set(DEPENDENCIES
   mpc_planner_msgs
   ros_tools
   nav_msgs
+  dynamic_reconfigure
 )
 
 # find dependencies
@@ -24,6 +25,8 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 find_package(yaml-cpp REQUIRED)
+
+generate_dynamic_reconfigure_options(cfg/settings.cfg)
 
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}
@@ -41,6 +44,9 @@ target_link_libraries(dingo_planner
   ${catkin_LIBRARIES}
   yaml-cpp
 )
+
+add_definitions(-DMPC_PLANNER_ROS)
+
 install(
   TARGETS dingo_planner
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

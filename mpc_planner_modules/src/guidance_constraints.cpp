@@ -27,10 +27,17 @@ namespace MPCPlanner
         LOG_INITIALIZE("Guidance Constraints");
 
         global_guidance_ = std::make_unique<GuidancePlanner::GlobalGuidance>();
+        GuidancePlanner::Config::debug_visuals_ = CONFIG["debug_visuals"].as<bool>();
         // config_->N_pedestrians_ = GuidancePlanner::Config::N; // Increase the horizon expected for pedestrians to the PRM horizon
+
+        _use_tmpcpp = CONFIG["t-mpc"]["use_t-mpc++"].as<bool>();
+        _enable_constraints = CONFIG["t-mpc"]["enable_constraints"].as<bool>();
+        _control_frequency = CONFIG["control_frequency"].as<double>();
 
         // Initialize the constraint modules
         int n_solvers = global_guidance_->GetConfig()->n_paths_; // + 1 for the main lmpcc solver?
+
+        ROSTOOLS_ASSERT(n_solvers > 0 || _use_tmpcpp, "Guidance constraints cannot run with 0 paths and T-MPC++ disabled!");
 
         LOG_VALUE("Solvers", n_solvers);
         for (int i = 0; i < n_solvers; i++)
@@ -38,7 +45,7 @@ namespace MPCPlanner
             planners_.emplace_back(i);
         }
 
-        if (CONFIG["t-mpc"]["use_t-mpc++"].as<bool>()) // ADD IT AS FIRST PLAN
+        if (_use_tmpcpp) // ADD IT AS FIRST PLAN
         {
             LOG_INFO("Using T-MPC++ (Adding the non-guided planner in parallel)");
             planners_.emplace_back(n_solvers, true);
@@ -64,11 +71,12 @@ namespace MPCPlanner
             global_guidance_->LoadStaticObstacles(halfspaces); // Load static obstacles represented by halfspaces
         }
 
-        if (CONFIG["t-mpc"]["use_t-mpc++"].as<bool>() && global_guidance_->GetConfig()->n_paths_ == 0) // No global guidance
+        if (_use_tmpcpp && global_guidance_->GetConfig()->n_paths_ == 0) // No global guidance
             return;
 
         // Set the goals of the global guidance planner
         global_guidance_->SetStart(state.getPos(), state.get("psi"), state.get("v"));
+        // global_guidance_->SetStart(state.getPos(), 0., std::sqrt(std::pow(state.get("vx"), 2.) + std::pow(state.get("vy"), 2.)));
         global_guidance_->SetReferenceVelocity(CONFIG["weights"]["reference_velocity"].as<double>());
 
         if (!CONFIG["enable_output"].as<bool>())
@@ -87,10 +95,11 @@ namespace MPCPlanner
         _spline->findClosestPoint(state.getPos(), current_segment, current_s);
 
         double road_width_left = two_way ? road_width_left_ * 3. : road_width_left_;
+        double robot_radius = CONFIG["robot_radius"].as<double>();
 
         global_guidance_->LoadReferencePath(std::max(0., current_s), _spline,
-                                            road_width_left - CONFIG["robot_radius"].as<double>() - 0.1,
-                                            road_width_right_ - CONFIG["robot_radius"].as<double>() - 0.1);
+                                            road_width_left - robot_radius - 0.1,
+                                            road_width_right_ - robot_radius - 0.1);
 
         // global_guidance_->SetGoals({GuidancePlanner::Goal(state.getPos() + Eigen::Vector2d(4., 0.), 0.),
         //                             GuidancePlanner::Goal(state.getPos() + Eigen::Vector2d(4., 3.), 1.),
@@ -108,20 +117,22 @@ namespace MPCPlanner
         (void)data;
         if (k == 0)
         {
-            // _solver->setTimeout(config_->solver_timeout_ / 1000.); // Limit the solver to 40 ms
+            _solver->_params.solver_timeout = 0.02; // Should not do anything
+
             LOG_MARK("Guidance Constraints does not need to set parameters");
         }
     }
 
     int GuidanceConstraints::optimize(State &state, const RealTimeData &data, ModuleData &module_data)
     {
+        PROFILE_FUNCTION();
         // Required for parallel call to the solvers when using Forces
         omp_set_nested(1);
         omp_set_max_active_levels(2);
         omp_set_dynamic(0);
         LOG_MARK("Guidance Constraints: optimize");
 
-        if (!CONFIG["t-mpc"]["use_t-mpc++"].as<bool>() && !global_guidance_->Succeeded())
+        if (!_use_tmpcpp && !global_guidance_->Succeeded())
             return 0;
 
 #pragma omp parallel for num_threads(8)
@@ -146,7 +157,7 @@ namespace MPCPlanner
             *solver = *_solver; // Copy the main solver
 
             // CONSTRUCT CONSTRAINTS
-            if (planner.is_original_planner || (!CONFIG["t-mpc"]["enable_constraints"].as<bool>()))
+            if (planner.is_original_planner || (!_enable_constraints))
             {
                 planner.guidance_constraints->update(state, empty_data_, module_data);
                 planner.safety_constraints->update(state, data, module_data); // Updates collision avoidance constraints
@@ -174,11 +185,10 @@ namespace MPCPlanner
             }
 
             // Set timeout (Planning time - used time - time necessary afterwards)
-            double planning_time = 1. / CONFIG["control_frequency"].as<double>();
-            planner.local_solver->_params.solver_timeout =
-                planning_time -
-                ((std::chrono::system_clock::now() - data.planning_start_time).count() / 1.0e9) -
-                0.005;
+            double planning_time = 1. / _control_frequency;
+            std::chrono::duration<double> used_time = std::chrono::system_clock::now() - data.planning_start_time;
+
+            planner.local_solver->_params.solver_timeout = planning_time - used_time.count() - 0.006;
 
             // SOLVE OPTIMIZATION
             // if (enable_guidance_warmstart_)
@@ -210,30 +220,29 @@ namespace MPCPlanner
 
         omp_set_dynamic(1);
 
-        // DECISION MAKING
-        best_planner_index_ = FindBestPlanner();
-        if (best_planner_index_ == -1)
         {
-            LOG_MARK("Failed to find a feasible trajectory in any of the " << std::to_string(planners_.size()) << " optimizations.");
-            return planners_[0].result.exit_code;
+            PROFILE_SCOPE("Decision");
+            // DECISION MAKING
+            best_planner_index_ = FindBestPlanner();
+            if (best_planner_index_ == -1)
+            {
+                LOG_MARK("Failed to find a feasible trajectory in any of the " << std::to_string(planners_.size()) << " optimizations.");
+                return planners_[0].result.exit_code;
+            }
+
+            auto &best_planner = planners_[best_planner_index_];
+            auto &best_solver = best_planner.local_solver;
+            // LOG_INFO("Best Planner ID: " << best_planner.id);
+
+            // Communicate to the guidance which topology class we follow (none if it was the original planner)
+            global_guidance_->OverrideSelectedTrajectory(best_planner.result.guidance_ID, best_planner.is_original_planner);
+
+            _solver->_output = best_solver->_output; // Load the solution into the main lmpcc solver
+            _solver->_info = best_solver->_info;
+            _solver->_params = best_solver->_params;
+
+            return best_planner.result.exit_code; // Return its exit code
         }
-
-        auto &best_planner = planners_[best_planner_index_];
-        auto &best_solver = best_planner.local_solver;
-        // LOG_INFO("Best Planner ID: " << best_planner.id);
-
-        // VISUALIZATION
-        best_planner.guidance_constraints->visualize(data, module_data);
-        best_planner.safety_constraints->visualize(data, module_data);
-
-        // Communicate to the guidance which topology class we follow (none if it was the original planner)
-        global_guidance_->OverrideSelectedTrajectory(best_planner.result.guidance_ID, best_planner.is_original_planner);
-
-        _solver->_output = best_solver->_output; // Load the solution into the main lmpcc solver
-        _solver->_info = best_solver->_info;
-        _solver->_params = best_solver->_params;
-
-        return best_planner.result.exit_code; // Return its exit code
     }
 
     void GuidanceConstraints::initializeSolverWithGuidance(LocalPlanner &planner)
@@ -305,10 +314,13 @@ namespace MPCPlanner
             }
 
             // Visualize the warmstart
-            Trajectory initial_trajectory;
-            for (int k = 1; k < planner.local_solver->N; k++)
-                initial_trajectory.add(planner.local_solver->getEgoPrediction(k, "x"), planner.local_solver->getEgoPrediction(k, "y"));
-            visualizeTrajectory(initial_trajectory, _name + "/warmstart_trajectories", false, 0.2, 20, 20);
+            if (CONFIG["debug_visuals"].as<bool>())
+            {
+                Trajectory initial_trajectory;
+                for (int k = 1; k < planner.local_solver->N; k++)
+                    initial_trajectory.add(planner.local_solver->getEgoPrediction(k, "x"), planner.local_solver->getEgoPrediction(k, "y"));
+                visualizeTrajectory(initial_trajectory, _name + "/warmstart_trajectories", false, 0.2, 20, 20);
+            }
 
             // Visualize the optimized trajectory
             if (planner.result.success)
@@ -327,20 +339,21 @@ namespace MPCPlanner
         }
 
         {
-            PROFILE_SCOPE("TEST");
             VISUALS.getPublisher(_name + "/optimized_trajectories").publish();
-            VISUALS.getPublisher(_name + "/warmstart_trajectories").publish();
+            if (CONFIG["debug_visuals"].as<bool>())
+                VISUALS.getPublisher(_name + "/warmstart_trajectories").publish();
         }
     }
 
     bool GuidanceConstraints::isDataReady(const RealTimeData &data, std::string &missing_data)
     {
         (void)data;
-        (void)missing_data;
 
         bool ready = true;
+
         ready = ready && planners_[0].guidance_constraints->isDataReady(data, missing_data);
         ready = ready && planners_[0].safety_constraints->isDataReady(data, missing_data);
+
         if (!ready)
             return false;
 
@@ -364,10 +377,13 @@ namespace MPCPlanner
         }
         else if (data_name == "goal") // New
         {
-            std::vector<double> x = {data.goal(0), data.goal(0) + 1., data.goal(0) + 1., data.goal(0)};
-            std::vector<double> y = {data.goal(1), data.goal(1), data.goal(1) + 1., data.goal(1) + 1.};
+            LOG_MARK("Received goal");
 
-            _spline = std::make_unique<RosTools::Spline2D>(x, y); // Construct a spline from the given points
+            // Eigen::Vector2d start = global_guidance_->GetStart();
+            // std::vector<double> x = {start(0), data.goal(0)};
+            // std::vector<double> y = {start(1), data.goal(1)};
+
+            // _spline = std::make_unique<RosTools::Spline2D>(x, y); // Construct a spline from the given points
         }
 
         // We wait for both the obstacles and state to arrive before we compute here
@@ -420,16 +436,22 @@ namespace MPCPlanner
                 data_saver.AddData("lmpcc_objective", objective);
                 data_saver.AddData("original_planner_id", planner.id); // To identify which one is the original planner
             }
+            else
+            {
 
-            // auto &vehicle_regions = planner.local_solver->OptimizedVehiclePredictions(); // Get the ego-vehicle predictions
-            // for (size_t k = 0; k < vehicle_regions.size(); k++)
-            //     data_saver.AddData("solver" + std::to_string(i) + "_plan" + std::to_string(k), vehicle_regions[k].discs_[0].AsVector2d());
-
+                // for (int k = 1; k < _solver->N; k++)
+                // {
+                //     data_saver.AddData(
+                //         "solver" + std::to_string(i) + "_plan" + std::to_string(k),
+                //         Eigen::Vector2d(_solver->getOutput(k, "x"), _solver->getOutput(k, "y")));
+                // }
+            }
             // data_saver.AddData("active_constraints_" + std::to_string(planner.id), planner.guidance_constraints->NumActiveConstraints(planner.local_solver.get()));
         }
 
         data_saver.AddData("best_planner_idx", best_planner_index_);
         double best_objective = best_planner_index_ != -1 ? planners_[best_planner_index_].local_solver->_info.pobj : -1.;
+
         data_saver.AddData("gmpcc_objective", best_objective);
 
         global_guidance_->saveData(data_saver); // Save data from the guidance planner

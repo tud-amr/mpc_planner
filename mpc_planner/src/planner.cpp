@@ -15,6 +15,7 @@
 #include <ros_tools/profiling.h>
 #include <ros_tools/logging.h>
 #include <ros_tools/visuals.h>
+#include <ros_tools/data_saver.h>
 
 namespace MPCPlanner
 {
@@ -29,7 +30,7 @@ namespace MPCPlanner
 
         _experiment_util = std::make_shared<ExperimentUtil>();
 
-        _is_first_run = true;
+        _startup_timer = std::make_unique<RosTools::Timer>(1.0); // Give some time to receive data
     }
 
     // Given real-time data, solve the MPC problem
@@ -49,71 +50,85 @@ namespace MPCPlanner
 
         if (!_is_data_ready)
         {
-            if (!_is_first_run)
+            if (_startup_timer->hasFinished())
                 LOG_WARN_THROTTLE(3000, "Data is not ready, missing " + missing_data + "\b");
-            else
-                _is_first_run = false;
 
             _output.success = false;
             return _output;
         }
+        else if (_was_reset)
+        {
+            _experiment_util->setStartExperiment();
+            _was_reset = false;
+        }
+
         LOG_MARK("Data checked");
 
-        BENCHMARKERS.getBenchmarker("planning").start();
-
-        // Set the initial guess
-        if (was_feasible)
-            _solver->initializeWarmstart(state, CONFIG["shift_previous_solution_forward"].as<bool>());
-        else
-        {
-            _solver->initializeWithState(state);
-        }
-        // Set the initial state
-        _solver->setXinit(state);
-
-        LOG_MARK("Updating modules");
-
-        // Update all modules
-        {
-            PROFILE_SCOPE("Update");
-
-            for (auto &module : _modules)
-                module->update(state, data, _module_data);
-        }
-
-        LOG_MARK("Setting parameters");
-        {
-            PROFILE_SCOPE("SetParameters");
-            for (int k = 0; k < _solver->N; k++)
-            {
-                for (auto &module : _modules)
-                {
-                    if (k == 0 && module->type == ModuleType::CONSTRAINT)
-                        continue;
-
-                    module->setParameters(data, _module_data, k);
-                }
-            }
-        }
-
-        _solver->loadWarmstart();
-
-        // Solve MPC
-        LOG_MARK("Solve optimization");
         int exit_flag;
         {
-            PROFILE_SCOPE("Optimization");
-            BENCHMARKERS.getBenchmarker("optimization").start();
-            exit_flag = EXIT_CODE_NOT_OPTIMIZED_YET;
-            for (auto &module : _modules)
+            PROFILE_SCOPE("Planning");
+
+            auto &planning_benchmarker = BENCHMARKERS.getBenchmarker("planning");
+            if (planning_benchmarker.isRunning())
+                planning_benchmarker.cancel();
+
+            planning_benchmarker.start();
+
+            // Set the initial guess
+            if (was_feasible)
+                _solver->initializeWarmstart(state, CONFIG["shift_previous_solution_forward"].as<bool>());
+            else
             {
-                exit_flag = module->optimize(state, data, _module_data);
-                if (exit_flag != EXIT_CODE_NOT_OPTIMIZED_YET)
-                    break;
+                // _solver->initializeWithState(state);
+                _solver->initializeWithBraking(state);
             }
-            if (exit_flag == EXIT_CODE_NOT_OPTIMIZED_YET)
-                exit_flag = _solver->solve();
-            BENCHMARKERS.getBenchmarker("optimization").stop();
+            // Set the initial state
+            _solver->setXinit(state);
+
+            // Update all modules
+            {
+                LOG_MARK("Updating modules");
+                PROFILE_SCOPE("Update");
+
+                for (auto &module : _modules)
+                    module->update(state, data, _module_data);
+            }
+
+            {
+                LOG_MARK("Setting parameters");
+                PROFILE_SCOPE("SetParameters");
+                for (int k = 0; k < _solver->N; k++)
+                {
+                    for (auto &module : _modules)
+                    {
+                        if (k == 0 && module->type == ModuleType::CONSTRAINT)
+                            continue;
+
+                        module->setParameters(data, _module_data, k);
+                    }
+                }
+            }
+
+            _solver->loadWarmstart();
+
+            // Solve MPC
+            LOG_MARK("Solve optimization");
+            {
+                PROFILE_SCOPE("Optimization");
+                BENCHMARKERS.getBenchmarker("optimization").start();
+                exit_flag = EXIT_CODE_NOT_OPTIMIZED_YET;
+                for (auto &module : _modules)
+                {
+                    exit_flag = module->optimize(state, data, _module_data);
+                    if (exit_flag != EXIT_CODE_NOT_OPTIMIZED_YET)
+                        break;
+                }
+                if (exit_flag == EXIT_CODE_NOT_OPTIMIZED_YET)
+                    exit_flag = _solver->solve();
+                BENCHMARKERS.getBenchmarker("optimization").stop();
+            }
+
+            planning_benchmarker.stop();
         }
 
         if (exit_flag != 1)
@@ -121,8 +136,6 @@ namespace MPCPlanner
             _output.success = false;
             LOG_WARN_THROTTLE(500, "MPC failed: " + _solver->explainExitFlag(exit_flag));
 
-            BENCHMARKERS.getBenchmarker("planning").stop();
-            _is_first_run = false;
             return _output;
         }
 
@@ -133,9 +146,6 @@ namespace MPCPlanner
         if (_output.success && CONFIG["debug_limits"].as<bool>())
             _solver->printIfBoundLimited();
 
-        BENCHMARKERS.getBenchmarker("planning").stop();
-        _is_first_run = false;
-
         LOG_MARK("Planner::solveMPC done");
 
         return _output;
@@ -144,6 +154,11 @@ namespace MPCPlanner
     double Planner::getSolution(int k, std::string &&var_name) const
     {
         return _solver->getOutput(k, std::forward<std::string>(var_name));
+    }
+
+    RosTools::DataSaver &Planner::getDataSaver() const
+    {
+        return _experiment_util->getDataSaver();
     }
 
     void Planner::onDataReceived(RealTimeData &data, std::string &&data_name)
@@ -187,15 +202,19 @@ namespace MPCPlanner
         auto &data_saver = _experiment_util->getDataSaver();
 
         // Save planning data
-        data_saver->AddData("runtime_control_loop", BENCHMARKERS.getBenchmarker("planning").getLast());
-        data_saver->AddData("runtime_optimization", BENCHMARKERS.getBenchmarker("optimization").getLast());
+        double planning_time = BENCHMARKERS.getBenchmarker("planning").getLast();
+        data_saver.AddData("runtime_control_loop", planning_time);
+        if (planning_time > 0.05)
+            LOG_WARN("Planning took too long: " << planning_time << " ms");
+        data_saver.AddData("runtime_optimization", BENCHMARKERS.getBenchmarker("optimization").getLast());
+
         if (!_output.success)
-            data_saver->AddData("status", 3.); // 3 and 2 for backward compatilibity
+            data_saver.AddData("status", 3.); // 3 and 2 for backward compatilibity
         else
-            data_saver->AddData("status", 2.);
+            data_saver.AddData("status", 2.);
 
         for (auto &module : _modules)
-            module->saveData(*data_saver);
+            module->saveData(data_saver);
 
         _experiment_util->update(state, _solver, data);
     }
@@ -212,7 +231,8 @@ namespace MPCPlanner
 
         state = State(); // Reset the state
         data.reset();    // Reset the data
-        _is_first_run = true;
+        _was_reset = true;
+        _startup_timer->start();
     }
 
     bool Planner::isObjectiveReached(const State &state, const RealTimeData &data) const

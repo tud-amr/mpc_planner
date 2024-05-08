@@ -18,7 +18,8 @@ namespace MPCPlanner
     _n_discs = CONFIG["n_discs"].as<int>(); // Is overwritten to 1 for topology constraints
 
     _n_other_halfspaces = CONFIG["linearized_constraints"]["add_halfspaces"].as<int>();
-    int n_constraints = CONFIG["max_obstacles"].as<int>() + _n_other_halfspaces;
+    _max_obstacles = CONFIG["max_obstacles"].as<int>();
+    int n_constraints = _max_obstacles + _n_other_halfspaces;
     _a1.resize(CONFIG["n_discs"].as<int>());
     _a2.resize(CONFIG["n_discs"].as<int>());
     _b.resize(CONFIG["n_discs"].as<int>());
@@ -69,6 +70,7 @@ namespace MPCPlanner
 
           Eigen::Vector2d disc_pos = disc.getPosition(pos, _solver->getEgoPrediction(k, "psi"));
           projectToSafety(copied_obstacles, k, disc_pos); // Ensure that the vehicle position is collision-free
+
           /** @todo Set projected disc position */
 
           pos = disc_pos;
@@ -102,7 +104,7 @@ namespace MPCPlanner
                              (radius + CONFIG["robot_radius"].as<double>());
         }
 
-        if ((int)module_data.static_obstacles[k].size() < _n_other_halfspaces)
+        if (!module_data.static_obstacles.empty() && (int)module_data.static_obstacles[k].size() < _n_other_halfspaces)
         {
           LOG_WARN(_n_other_halfspaces << " halfspaces expected, but "
                                        << (int)module_data.static_obstacles[k].size() << " are present");
@@ -158,7 +160,7 @@ namespace MPCPlanner
         constraint_counter++;
       }
 
-      for (int i = data.dynamic_obstacles.size() + _n_other_halfspaces; i < CONFIG["max_obstacles"].as<int>() + _n_other_halfspaces; i++)
+      for (int i = data.dynamic_obstacles.size() + _n_other_halfspaces; i < _max_obstacles + _n_other_halfspaces; i++)
       {
         setForcesParameterLinConstraintA1(k, _solver->_params, _dummy_a1, constraint_counter);
         setForcesParameterLinConstraintA2(k, _solver->_params, _dummy_a2, constraint_counter);
@@ -170,7 +172,7 @@ namespace MPCPlanner
 
   bool LinearizedConstraints::isDataReady(const RealTimeData &data, std::string &missing_data)
   {
-    if (data.dynamic_obstacles.size() != CONFIG["max_obstacles"].as<unsigned int>())
+    if ((int)data.dynamic_obstacles.size() != _max_obstacles)
     {
       missing_data += "Obstacles ";
       return false;
@@ -198,6 +200,9 @@ namespace MPCPlanner
   void LinearizedConstraints::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)module_data;
+    if (!CONFIG["debug_visuals"].as<bool>())
+      return;
+
     PROFILE_FUNCTION();
 
     for (int k = 1; k < _solver->N; k++)

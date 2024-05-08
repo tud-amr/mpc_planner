@@ -18,6 +18,8 @@ namespace MPCPlanner
   {
     LOG_INITIALIZE("Contouring");
     _n_segments = CONFIG["contouring"]["num_segments"].as<int>();
+    _add_road_constraints = CONFIG["contouring"]["add_road_constraints"].as<bool>();
+    _two_way_road = CONFIG["road"]["two_way"].as<bool>();
 
     LOG_INITIALIZED();
   }
@@ -35,7 +37,7 @@ namespace MPCPlanner
 
     state.set("spline", closest_s); // We need to initialize the spline state here
 
-    if (CONFIG["contouring"]["add_road_constraints"].as<bool>())
+    if (_add_road_constraints)
       constructRoadConstraints(data, module_data);
   }
 
@@ -44,13 +46,22 @@ namespace MPCPlanner
     (void)data;
     (void)module_data;
 
-    _solver->setParameter(k, "contour", CONFIG["weights"]["contour"].as<double>());
-    _solver->setParameter(k, "lag", CONFIG["weights"]["lag"].as<double>());
+    // Retrieve weights once
+    static double contouring_weight, lag_weight, preview_weight;
+    if (k == 0)
+    {
+      contouring_weight = CONFIG["weights"]["contour"].as<double>();
+      lag_weight = CONFIG["weights"]["lag"].as<double>();
+      preview_weight = CONFIG["weights"]["preview"].as<double>();
+    }
 
-    // Add condition
-    if (_solver->hasParameter("preview"))
-      _solver->setParameter(k, "preview", CONFIG["weights"]["preview"].as<double>());
+    {
+      setForcesParameterContour(k, _solver->_params, contouring_weight);
+      setForcesParameterLag(k, _solver->_params, lag_weight);
 
+      if (preview_weight > 0.)
+        _solver->setParameter(k, "preview", preview_weight);
+    }
     /** @todo: Handling of parameters when the spline parameters go beyond the splines defined */
     for (int i = 0; i < _n_segments; i++)
     {
@@ -127,7 +138,7 @@ namespace MPCPlanner
 
         // Update the road width
         CONFIG["road"]["width"] = RosTools::distance(_bound_left->getPoint(0), _bound_right->getPoint(0));
-        if (CONFIG["road"]["two_way"].as<bool>())
+        if (_two_way_road)
           CONFIG["road"]["width"] = CONFIG["road"]["width"].as<double>() / 2.;
       }
 
@@ -170,13 +181,20 @@ namespace MPCPlanner
   void Contouring::constructRoadConstraintsFromCenterline(const RealTimeData &data, ModuleData &module_data)
   {
     /** @brief If bounds are not supplied construct road constraints based on a set width*/
-    module_data.static_obstacles.resize(_solver->N);
+    if (module_data.static_obstacles.empty())
+    {
+      module_data.static_obstacles.resize(_solver->N);
+      for (size_t k = 0; k < module_data.static_obstacles.size(); k++)
+        module_data.static_obstacles[k].reserve(2);
+    }
 
     // OLD VERSION:
-    bool two_way = CONFIG["road"]["two_way"].as<bool>();
+    bool two_way = _two_way_road;
     double road_width_half = CONFIG["road"]["width"].as<double>() / 2.;
     for (int k = 1; k < _solver->N; k++)
     {
+      module_data.static_obstacles[k].clear();
+
       double cur_s = _solver->getEgoPrediction(k, "spline");
 
       // This is the final point and the normal vector of the path
@@ -209,10 +227,16 @@ namespace MPCPlanner
   void Contouring::constructRoadConstraintsFromBounds(const RealTimeData &data, ModuleData &module_data)
   {
     /** @todo */
-    module_data.static_obstacles.resize(_solver->N);
+    if (module_data.static_obstacles.empty())
+    {
+      module_data.static_obstacles.resize(_solver->N);
+      for (size_t k = 0; k < module_data.static_obstacles.size(); k++)
+        module_data.static_obstacles[k].reserve(2);
+    }
 
     for (int k = 1; k < _solver->N; k++)
     {
+      module_data.static_obstacles[k].clear();
       double cur_s = _solver->getEgoPrediction(k, "spline");
 
       // Left
@@ -235,12 +259,12 @@ namespace MPCPlanner
     PROFILE_SCOPE("Contouring::Visualize");
 
     visualizeReferencePath(data, module_data);
-    visualizeCurrentSegment(data, module_data);
 
     visualizeRoadConstraints(data, module_data);
 
-    if (CONFIG["debug_output"].as<bool>())
+    if (CONFIG["debug_visuals"].as<bool>())
     {
+      visualizeCurrentSegment(data, module_data);
       visualizeDebugRoadBoundary(data, module_data);
       visualizeDebugGluedSplines(data, module_data);
     }
@@ -283,7 +307,7 @@ namespace MPCPlanner
   void Contouring::visualizeRoadConstraints(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)data;
-    if (module_data.static_obstacles.empty() || (!CONFIG["contouring"]["add_road_constraints"].as<bool>()))
+    if (module_data.static_obstacles.empty() || (!_add_road_constraints))
       return;
 
     for (int k = 1; k < _solver->N; k++)
@@ -307,7 +331,7 @@ namespace MPCPlanner
     points.setScale(0.15, 0.15, 0.15);
 
     // OLD VERSION:
-    bool two_way = CONFIG["road"]["two_way"].as<bool>();
+    bool two_way = _two_way_road;
     double road_width_half = CONFIG["road"]["width"].as<double>() / 2.;
     for (int k = 1; k < _solver->N; k++)
     {

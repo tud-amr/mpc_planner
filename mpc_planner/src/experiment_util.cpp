@@ -108,4 +108,9 @@ namespace MPCPlanner
         }
         ROSTOOLS_ASSERT(_experiment_counter < num_experiments, "Stopping the planner.");
     }
+
+    void ExperimentUtil::setStartExperiment()
+    {
+        _iteration_at_last_reset = _control_iteration;
+    }
 }

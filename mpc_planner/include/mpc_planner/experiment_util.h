@@ -28,10 +28,9 @@ namespace MPCPlanner
 
         void exportData();
 
-        std::shared_ptr<RosTools::DataSaver> &getDataSaver()
-        {
-            return _data_saver;
-        };
+        void setStartExperiment();
+
+        RosTools::DataSaver &getDataSaver() const { return *_data_saver; };
 
     private:
         // Data is saved in this object

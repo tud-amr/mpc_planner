@@ -32,6 +32,8 @@ namespace MPCPlanner
     int _closest_segment{0};
     int _n_segments;
 
+    bool _add_road_constraints{false}, _two_way_road{false};
+
     void constructRoadConstraints(const RealTimeData &data, ModuleData &module_data);
     void constructRoadConstraintsFromCenterline(const RealTimeData &data, ModuleData &module_data);
     void constructRoadConstraintsFromBounds(const RealTimeData &data, ModuleData &module_data);

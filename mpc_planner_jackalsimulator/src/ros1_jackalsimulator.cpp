@@ -11,6 +11,7 @@
 #include <ros_tools/logging.h>
 #include <ros_tools/convertions.h>
 #include <ros_tools/math.h>
+#include <ros_tools/data_saver.h>
 
 #include <std_msgs/Empty.h>
 #include <ros_tools/profiling.h>
@@ -37,6 +38,9 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
     _reconfigure = std::make_unique<JackalsimulatorReconfigure>();
 
     _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
+
+    _timeout_timer.setDuration(60.);
+    _timeout_timer.start();
 
     RosTools::Instrumentor::Get().BeginSession("mpc_planner_jackalsimulator");
 
@@ -133,8 +137,8 @@ void JackalPlanner::startEnvironment()
 
 bool JackalPlanner::objectiveReached()
 {
-    // return _state.get("x") > 25.; Straight
-    return RosTools::distance(_state.getPos(), Eigen::Vector2d(24., 24.)) < 4.0; // Diagonal
+    return _state.get("x") > 25.; //    Straight
+    // return RosTools::distance(_state.getPos(), Eigen::Vector2d(24., 24.)) < 4.0; // Diagonal
     // return RosTools::distance(_state.getPos(), Eigen::Vector2d(_data.reference_path.x.back(), _data.reference_path.y.back())) < 4.0; // Diagonal
 }
 
@@ -145,6 +149,9 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
     _data.planning_start_time = std::chrono::system_clock::now();
 
     LOG_DEBUG("============= Loop =============");
+
+    if (_timeout_timer.hasFinished())
+        reset(false);
 
     if (objectiveReached())
         reset();
@@ -188,8 +195,19 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
     _benchmarker->stop();
 
     if (CONFIG["recording"]["enable"].as<bool>())
-        _planner->saveData(_state, _data);
+    {
 
+        // Save control inputs
+        if (output.success)
+        {
+            auto &data_saver = _planner->getDataSaver();
+            data_saver.AddData("input_a", _state.get("a"));
+            data_saver.AddData("input_v", _planner->getSolution(1, "v"));
+            data_saver.AddData("input_w", _planner->getSolution(0, "w"));
+        }
+
+        _planner->saveData(_state, _data);
+    }
     if (output.success)
     {
         _planner->visualize(_state, _data);
@@ -339,6 +357,8 @@ void JackalPlanner::reset(bool success)
     ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()).sleep();
 
     _planner->reset(_state, _data, success);
+
+    _timeout_timer.start();
 }
 
 void JackalPlanner::collisionCallback(const std_msgs::Float64::ConstPtr &msg)
@@ -364,14 +384,19 @@ void JackalPlanner::publishPose()
 
 void JackalPlanner::publishCamera()
 {
-
     geometry_msgs::TransformStamped msg;
     msg.header.stamp = ros::Time::now();
+
+    if ((msg.header.stamp - _prev_stamp) < ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()))
+        return;
+
+    _prev_stamp = msg.header.stamp;
+
     msg.header.frame_id = "map";
     msg.child_frame_id = "camera";
 
     msg.transform.translation.x = _state.get("x");
-    msg.transform.translation.y = _state.get("y"); // solver_interface_ptr_->State().y();
+    msg.transform.translation.y = _state.get("y");
     msg.transform.translation.z = 0.0;
     msg.transform.rotation.x = 0;
     msg.transform.rotation.y = 0;

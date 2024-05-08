@@ -68,7 +68,10 @@ class EllipsoidConstraint:
         pos_y = model.get("y")
         pos = np.array([pos_x, pos_y])
 
-        psi = model.get("psi")
+        try:
+            psi = model.get("psi")
+        except:
+            psi = 0.0
         # slack = model.get('slack')
 
         rotation_car = rotation_matrix(psi)

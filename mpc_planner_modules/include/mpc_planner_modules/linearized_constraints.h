@@ -33,7 +33,7 @@ namespace MPCPlanner
 
     DouglasRachford dr_projection_;
 
-    int _num_obstacles;
+    int _num_obstacles, _max_obstacles;
 
     void projectToSafety(const std::vector<DynamicObstacle> &copied_obstacles, int k, Eigen::Vector2d &pos);
   };

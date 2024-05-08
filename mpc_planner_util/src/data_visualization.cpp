@@ -63,7 +63,7 @@ namespace MPCPlanner
         point.setScale(0.15, 0.15, 0.05);
 
         for (size_t p = 0; p < path.x.size(); p++)
-            point.addPointMarker(Eigen::Vector3d(path.x[p], path.y[p], 0.1));
+            point.addPointMarker(Eigen::Vector3d(path.x[p], path.y[p], 0.05));
 
         if (publish)
             publisher.publish();

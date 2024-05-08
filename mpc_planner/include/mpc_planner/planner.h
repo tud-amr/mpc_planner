@@ -7,6 +7,12 @@
 #include <memory>
 #include <vector>
 
+namespace RosTools
+{
+    class DataSaver;
+    class Timer;
+}
+
 namespace MPCPlanner
 {
     class RealTimeData;
@@ -43,15 +49,18 @@ namespace MPCPlanner
 
         bool isObjectiveReached(const State &state, const RealTimeData &data) const;
 
+        RosTools::DataSaver &getDataSaver() const;
+
     private:
-        bool _is_data_ready{false};
-        bool _is_first_run{true};
+        bool _is_data_ready{false}, _was_reset{true};
 
         std::shared_ptr<Solver> _solver;
         std::shared_ptr<ExperimentUtil> _experiment_util;
         PlannerOutput _output;
 
         ModuleData _module_data;
+
+        std::unique_ptr<RosTools::Timer> _startup_timer;
 
         std::vector<std::shared_ptr<ControllerModule>> _modules;
     };
