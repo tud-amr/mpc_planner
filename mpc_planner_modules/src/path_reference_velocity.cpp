@@ -1,6 +1,7 @@
 
 #include <mpc_planner_modules/path_reference_velocity.h>
 
+#include <mpc_planner_generated.h>
 #include <mpc_planner_util/parameters.h>
 
 namespace MPCPlanner
@@ -23,8 +24,17 @@ namespace MPCPlanner
     (void)module_data;
     (void)data;
 
+    static double velocity_weight, reference_velocity;
+
+    // Retrieve once
+    if (k == 0)
+    {
+      velocity_weight = CONFIG["weights"]["velocity"].as<double>();
+      reference_velocity = CONFIG["weights"]["reference_velocity"].as<double>();
+    }
+
     // Set the parameters for velocity tracking
-    _solver->setParameter(k, "velocity", CONFIG["weights"]["velocity"].as<double>());
-    _solver->setParameter(k, "reference_velocity", CONFIG["weights"]["reference_velocity"].as<double>());
+    setForcesParameterVelocity(k, _solver->_params, velocity_weight);
+    setForcesParameterReferenceVelocity(k, _solver->_params, reference_velocity);
   }
 } // namespace MPCPlanner

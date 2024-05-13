@@ -89,7 +89,8 @@ def configuration_tmpc(settings):
     modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
     modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
 
-    modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=GaussianConstraintModule))
+    modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
+    # modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=GaussianConstraintModule))
 
     return model, modules
 

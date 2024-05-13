@@ -25,7 +25,6 @@ set(DEPENDENCIES
   autoware_auto_planning_msgs
   autoware_auto_vehicle_msgs
   autoware_auto_perception_msgs
-  autoware_adapi_v1_msgs
 )
 
 # find dependencies
@@ -38,31 +37,12 @@ include_directories(
   include
 )
 
-add_library(${PROJECT_NAME} SHARED
-  src/actuation.cpp
-  src/utils.cpp
-)
-target_include_directories(${PROJECT_NAME} PUBLIC
-    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
-)
-ament_target_dependencies(${PROJECT_NAME} ${DEPENDENCIES})
-
 add_executable(autoware_planner src/ros2_autoware.cpp)
 target_include_directories(autoware_planner PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
-target_link_libraries(autoware_planner ${PROJECT_NAME})
-# ament_target_dependencies(autoware_planner ${DEPENDENCIES})
-
-install(
-  TARGETS ${PROJECT_NAME}
-  EXPORT export_${PROJECT_NAME}
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION bin
-)
+ament_target_dependencies(autoware_planner ${DEPENDENCIES})
 
 install(TARGETS autoware_planner
   DESTINATION lib/${PROJECT_NAME})
@@ -76,6 +56,5 @@ install(DIRECTORY config
 install(DIRECTORY rviz
   DESTINATION share/${PROJECT_NAME})
 
-ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(${DEPENDENCIES})
 ament_package()

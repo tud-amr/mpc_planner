@@ -4,7 +4,9 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Status1
+        - /Global Options1
+        - /Grid1
+        - /Grid1/Offset1
         - /Planner1
         - /Planner1/T-MPC1
         - /Planner1/SH-MPC1
@@ -12,7 +14,7 @@ Panels:
         - /Lab1/Robot1/Shape1
         - /Odometry1/Shape1
       Splitter Ratio: 0.6411764621734619
-    Tree Height: 363
+    Tree Height: 719
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -39,24 +41,24 @@ Toolbars:
 Visualization Manager:
   Class: ""
   Displays:
-    - Alpha: 0.5
+    - Alpha: 1
       Cell Size: 1
       Class: rviz/Grid
-      Color: 160; 160; 164
-      Enabled: false
+      Color: 0; 0; 0
+      Enabled: true
       Line Style:
         Line Width: 0.029999999329447746
         Value: Lines
       Name: Grid
       Normal Cell Count: 0
       Offset:
-        X: 0
+        X: 4
         Y: 0
         Z: 0
       Plane: XY
-      Plane Cell Count: 10
+      Plane Cell Count: 8
       Reference Frame: <Fixed Frame>
-      Value: false
+      Value: true
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /pedestrian_simulator/visualization
@@ -66,13 +68,13 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /pedestrian_simulator/static_obstacles
       Name: Static Obstacles
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
       Enabled: false
       Marker Topic: /roadmap_node/output_map
@@ -160,29 +162,29 @@ Visualization Manager:
     - Class: rviz/Group
       Displays:
         - Class: rviz/MarkerArray
-          Enabled: true
+          Enabled: false
           Marker Topic: /jackalsimulator_planner/planned_trajectory
           Name: Planned Trajectory
           Namespaces:
-            "": true
+            {}
           Queue Size: 100
-          Value: true
+          Value: false
         - Class: rviz/MarkerArray
-          Enabled: true
+          Enabled: false
           Marker Topic: /jackalsimulator_planner/contouring/path
           Name: Reference Path
           Namespaces:
-            "": true
+            {}
           Queue Size: 100
-          Value: true
+          Value: false
         - Class: rviz/MarkerArray
-          Enabled: true
+          Enabled: false
           Marker Topic: /jackalsimulator_planner/contouring/points
           Name: Reference Path Points
           Namespaces:
-            "": true
+            {}
           Queue Size: 100
-          Value: true
+          Value: false
         - Class: rviz/MarkerArray
           Enabled: false
           Marker Topic: /jackalsimulator_planner/obstacles
@@ -202,21 +204,21 @@ Visualization Manager:
         - Class: rviz/Group
           Displays:
             - Class: rviz/MarkerArray
-              Enabled: true
+              Enabled: false
               Marker Topic: /jackalsimulator_planner/guidance_planner/start_and_goals
               Name: Start and Goals
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
-              Value: true
+              Value: false
             - Class: rviz/MarkerArray
-              Enabled: true
+              Enabled: false
               Marker Topic: /jackalsimulator_planner/guidance_planner/graph
               Name: Graph
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
-              Value: true
+              Value: false
             - Class: rviz/MarkerArray
               Enabled: false
               Marker Topic: /jackalsimulator_planner/guidance_planner/geometric_paths
@@ -234,13 +236,13 @@ Visualization Manager:
               Queue Size: 100
               Value: true
             - Class: rviz/MarkerArray
-              Enabled: false
+              Enabled: true
               Marker Topic: /jackalsimulator_planner/guidance_planner/obstacles_3d
               Name: 3D Obstacles
               Namespaces:
-                {}
+                "": true
               Queue Size: 100
-              Value: false
+              Value: true
             - Class: rviz/MarkerArray
               Enabled: false
               Marker Topic: /jackalsimulator_planner/guidance_constraints/warmstart_trajectories
@@ -250,13 +252,13 @@ Visualization Manager:
               Queue Size: 100
               Value: false
             - Class: rviz/MarkerArray
-              Enabled: true
+              Enabled: false
               Marker Topic: /jackalsimulator_planner/guidance_constraints/optimized_trajectories
               Name: Optimized Trajectories
               Namespaces:
-                "": true
+                {}
               Queue Size: 100
-              Value: true
+              Value: false
             - Class: rviz/MarkerArray
               Enabled: false
               Marker Topic: /jackalsimulator_planner/guidance_planner/homology
@@ -380,29 +382,13 @@ Visualization Manager:
       Enabled: false
       Name: Lab
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /jackalsimulator_planner/visuals_0
       Name: MarkerArray
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /jackalsimulator_planner/contouring/path
-      Name: MarkerArray
-      Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /jackalsimulator_planner/contouring/points
-      Name: MarkerArray
-      Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /jackalsimulator_planner/gaussian_constraints
@@ -428,7 +414,7 @@ Visualization Manager:
           Scale: 1
           Value: true
         Value: false
-      Enabled: true
+      Enabled: false
       Keep: 100
       Name: Odometry
       Position Tolerance: 0.10000000149011612
@@ -445,10 +431,18 @@ Visualization Manager:
         Value: Arrow
       Topic: /odometry/filtered
       Unreliable: false
+      Value: false
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /jackalsimulator_planner/guidance_planner/homology
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
-    Background Color: 238; 238; 236
+    Background Color: 255; 255; 255
     Default Light: true
     Fixed Frame: map
     Frame Rate: 30
@@ -473,20 +467,26 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 0
-      Class: rviz/TopDownOrtho
+      Class: rviz/Orbit
+      Distance: 13.448856353759766
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
+      Field of View: 0.7853981852531433
+      Focal Point:
+        X: 2.366176128387451
+        Y: 0.17652472853660583
+        Z: 1.6244033575057983
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 29.977872848510742
+      Pitch: 0.4747968912124634
       Target Frame: <Fixed Frame>
-      X: 11.041421890258789
-      Y: 12.398346900939941
+      Yaw: 1.8881133794784546
     Saved: ~
 Window Geometry:
   Displays:

@@ -25,14 +25,13 @@ namespace MPCPlanner
     {
         (void)module_data;
         if (k == 0)
-            LOG_INFO("Goal Module::setParameters()");
+            LOG_MARK("Goal Module::setParameters()");
 
         // Set the parameters for the solver
         _solver->setParameter(k, "goal_x", data.goal(0));
         _solver->setParameter(k, "goal_y", data.goal(1));
 
-        LOG_VALUE("goal_weight", CONFIG["weights"]["goal_weight"].as<double>());
-        _solver->setParameter(k, "goal_weight", CONFIG["weights"]["goal_weight"].as<double>());
+        _solver->setParameter(k, "goal_weight", CONFIG["weights"]["goal"].as<double>());
     }
 
     bool GoalModule::isDataReady(const RealTimeData &data, std::string &missing_data)

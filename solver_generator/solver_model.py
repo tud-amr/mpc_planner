@@ -201,23 +201,6 @@ class ContouringSecondOrderUnicycleModelWithSlack(DynamicsModel):
         return range(self.nu, self.get_nvar() - 1)
 
 
-class ContouringPointMassModel(DynamicsModel):
-
-    def __init__(self):
-        super().__init__()
-        self.nu = 2
-        self.nx = 4
-
-        self.states = ["x", "y", "vx", "vy"]
-        self.inputs = ["ax", "ay"]
-
-        self.lower_bound = [-1.0, -1.0, -200.0, -200.0, -1.0, -1.0]
-        self.upper_bound = [1.0, 1.0, 200.0, 200.0, 1.0, 1.0]
-
-    def continuous_model(self, x, u):
-        return np.array([x[2], x[3], u[0], u[1]])
-
-
 # Bicycle model with dynamic steering
 class BicycleModel2ndOrder(DynamicsModel):
 

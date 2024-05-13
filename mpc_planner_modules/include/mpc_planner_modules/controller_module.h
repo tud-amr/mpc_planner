@@ -12,6 +12,11 @@
 // To distinguish custom from regular optimization loops.
 #define EXIT_CODE_NOT_OPTIMIZED_YET -999
 
+namespace RosTools
+{
+    class DataSaver;
+}
+
 namespace MPCPlanner
 {
 
@@ -81,6 +86,7 @@ namespace MPCPlanner
          */
         virtual bool isObjectiveReached(const State &state, const RealTimeData &data)
         {
+            (void)state;
             (void)data;
             return true;
         }; // Default: true
@@ -111,7 +117,7 @@ namespace MPCPlanner
         /** @todo: Add reconfigurable parameters! */
 
         /** @brief Export runtime data */
-        // virtual void ExportData(RosTools::DataSaver &data_saver){};
+        virtual void saveData(RosTools::DataSaver &data_saver){(void)data_saver;};
 
         /**
          * @brief Assign a name for this controller

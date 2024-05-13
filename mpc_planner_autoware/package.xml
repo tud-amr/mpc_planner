@@ -25,8 +25,8 @@
   <exec_depend>pedestrian_simulator</exec_depend>
   <exec_depend>lanelets_to_path</exec_depend>
 
-  <!-- <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend> -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

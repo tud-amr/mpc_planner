@@ -3,6 +3,8 @@
 
 #include <mpc_planner_types/data_types.h>
 
+#include <chrono>
+
 namespace MPCPlanner
 {
 
@@ -18,6 +20,11 @@ namespace MPCPlanner
 
         Eigen::Vector2d goal;
         bool goal_received{false};
+
+        // Feedback data
+        double intrusion;
+
+        std::chrono::system_clock::time_point planning_start_time;
 
         RealTimeData() = default;
 

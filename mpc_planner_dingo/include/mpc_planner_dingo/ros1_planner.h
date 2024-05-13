@@ -1,21 +1,25 @@
 #ifndef __ROS1_DINGO_PLANNER_H__
 #define __ROS1_DINGO_PLANNER_H__
 
+#include <mpc_planner_dingo/dingo_reconfigure.h>
+
 #include <mpc_planner/planner.h>
 
 #include <mpc_planner_solver/solver_interface.h>
 
 #include <mpc_planner_types/realtime_data.h>
 
-#include <mpc_planner_msgs/obstacle_array.h> /** @Todo: Replace! */
-
-#include <ros_tools/helpers.h>
+#include <mpc_planner_msgs/ObstacleArray.h> /** @Todo: Replace! */
 
 #include <ros/ros.h>
 
+#include <std_msgs/Int32.h>
+#include <std_msgs/Float32.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
+#include <derived_object_msgs/ObjectArray.h>
+#include <sensor_msgs/Joy.h>
 
 #include <std_srvs/Empty.h>
 #include <robot_localization/SetPose.h>
@@ -24,54 +28,73 @@
 
 using namespace MPCPlanner;
 
-class dingoPlanner
+namespace RosTools
+{
+    class Benchmarker;
+}
+
+class DingoPlanner
 {
 public:
-    dingoPlanner(ros::NodeHandle &nh);
+    DingoPlanner(ros::NodeHandle &nh);
+    ~DingoPlanner();
 
     void initializeSubscribersAndPublishers(ros::NodeHandle &nh);
 
-    void startEnvironment();
+    bool objectiveReached();
 
     void loop(const ros::TimerEvent &event);
 
     void stateCallback(const nav_msgs::Odometry::ConstPtr &msg);
-    void statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg); /** @note: Connects to the dingoSimulator */
+    void statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg); /** @note: Connects to the DingoSimulator */
     void goalCallback(const geometry_msgs::PoseStamped::ConstPtr &msg);
     void pathCallback(const nav_msgs::Path::ConstPtr &msg);
-    void obstacleCallback(const mpc_planner_msgs::obstacle_array::ConstPtr &msg);
+    void obstacleCallback(const derived_object_msgs::ObjectArray::ConstPtr &msg);
+    void bluetoothCallback(const sensor_msgs::Joy::ConstPtr &msg);
 
     void reset();
 
 private:
     std::unique_ptr<Planner> _planner;
+    std::unique_ptr<DingoReconfigure> _reconfigure;
 
     RealTimeData _data;
     State _state;
 
     ros::Timer _timer;
 
+    bool _enable_output{false};
+    bool _rotate_to_goal{false};
+    bool _forward_x_experiment{true};
+
+    double _measured_psi{0.};
+
+    double _measured_velocity{0.};
+
+    double y_max{2.2}; // 2.6 when the blocks are not at the wall
+    double y_min{-2.2};
+    double x_max{3.5};
+    double x_min{-3.5};
+
     std::unique_ptr<RosTools::Benchmarker> _benchmarker;
 
     // Subscribers and publishers
-    ros::Subscriber _state_sub;
+    ros::Subscriber _state_sub, _state_pose_sub;
     ros::Subscriber _goal_sub;
     ros::Subscriber _path_sub;
-    ros::Subscriber _obstacle_sub;
+    ros::Subscriber _obstacle_sub, _obstacle_sim_sub;
+    ros::Subscriber _bluetooth_sub;
+
+    ros::Publisher _reverse_roadmap_pub;
 
     ros::Publisher _cmd_pub;
-    ros::Publisher _ped_horizon_pub, _ped_integrator_step_pub, _ped_clock_frequency_pub;
-    ros::ServiceClient _ped_start_client;
 
-    std_srvs::Empty _reset_msg;
-    robot_localization::SetPose _reset_pose_msg;
-    ros::Publisher _reset_simulation_pub;
-    ros::ServiceClient _reset_simulation_client;
-    ros::ServiceClient _reset_ekf_client;
+    void parseObstacle(const derived_object_msgs::Object &object, double object_angle,
+                       std::vector<Eigen::Vector2d> &positions_out, std::vector<double> &radii_out);
 
     bool isPathTheSame(const nav_msgs::Path::ConstPtr &path);
 
     void visualize();
 };
 
-#endif // __ROS1_dingo_PLANNER_H__
+#endif // __ROS1_DINGO_PLANNER_H__

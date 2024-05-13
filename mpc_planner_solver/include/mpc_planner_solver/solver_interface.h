@@ -14,20 +14,20 @@
 
 extern "C"
 {
-	extern solver_int32_default Solver_adtool2forces(Solver_float *x,		 /* primal vars                                         */
-							 Solver_float *y,		 /* eq. constraint multiplers                           */
-							 Solver_float *l,		 /* ineq. constraint multipliers                        */
-							 Solver_float *p,		 /* parameters                                          */
-							 Solver_float *f,		 /* objective function (scalar)                         */
-							 Solver_float *nabla_f,		 /* gradient of objective function                      */
-							 Solver_float *c,		 /* dynamics                                            */
-							 Solver_float *nabla_c,		 /* Jacobian of the dynamics (column major)             */
-							 Solver_float *h,		 /* inequality constraints                              */
-							 Solver_float *nabla_h,		 /* Jacobian of inequality constraints (column major)   */
-							 Solver_float *hess,		 /* Hessian (column major)                              */
-							 solver_int32_default stage,	 /* stage number (0 indexed)                            */
-							 solver_int32_default iteration, /* iteration number of solver                          */
-							 solver_int32_default threadID /* Id of caller thread 								   */);
+	extern solver_int32_default Solver_adtool2forces(Solver_float *x,				 /* primal vars                                         */
+													 Solver_float *y,				 /* eq. constraint multiplers                           */
+													 Solver_float *l,				 /* ineq. constraint multipliers                        */
+													 Solver_float *p,				 /* parameters                                          */
+													 Solver_float *f,				 /* objective function (scalar)                         */
+													 Solver_float *nabla_f,			 /* gradient of objective function                      */
+													 Solver_float *c,				 /* dynamics                                            */
+													 Solver_float *nabla_c,			 /* Jacobian of the dynamics (column major)             */
+													 Solver_float *h,				 /* inequality constraints                              */
+													 Solver_float *nabla_h,			 /* Jacobian of inequality constraints (column major)   */
+													 Solver_float *hess,			 /* Hessian (column major)                              */
+													 solver_int32_default stage,	 /* stage number (0 indexed)                            */
+													 solver_int32_default iteration, /* iteration number of solver                          */
+													 solver_int32_default threadID /* Id of caller thread 								   */);
 }
 
 namespace MPCPlanner
@@ -46,7 +46,7 @@ namespace MPCPlanner
 		Solver_output _output;
 		Solver_info _info;
 
-		int N;		   // Horizon length
+		int N;			   // Horizon length
 		unsigned int nu;   // Number of control variables
 		unsigned int nx;   // Differentiable variables
 		unsigned int nvar; // Total variable count
@@ -80,6 +80,7 @@ namespace MPCPlanner
 		void setXinit(const State &state);
 
 		void initializeWithState(const State &initial_state);
+		void initializeWithBraking(const State &initial_state);
 		void initializeWarmstart(const State &state, bool shift_previous_solution_forward);
 		void loadWarmstart();
 

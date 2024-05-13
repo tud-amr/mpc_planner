@@ -109,7 +109,6 @@ namespace MPCPlanner
                         LOG_MARK("Received " << obstacles.size() << " > " << max_obstacles << " obstacles. Keeping the closest.");
 
                         Eigen::Vector2d obstacle_pos;
-                        Eigen::Vector2d vehicle_pos = state.getPos();
 
                         distances.clear();
                         for (auto &obstacle : obstacles)
@@ -126,7 +125,13 @@ namespace MPCPlanner
                                 for (int k = 0; k < CONFIG["N"].as<int>(); k++)
                                 {
 
+<<<<<<< HEAD
                                         dist = std::pow(1.01, (double)k) *
+=======
+                                        // dist = (std::pow(1.25, (double)k)) *
+                                        // Linearly scaled
+                                        dist = (double)(k + 1) * 0.6 *
+>>>>>>> 101b48199be5ff27f871d50dc8a7648934272613
                                                RosTools::distance(
                                                    obstacle.prediction.modes[0][k].position,
                                                    state.getPos() + state.get("v") * (double)k * direction);
@@ -147,6 +152,11 @@ namespace MPCPlanner
 
                         for (size_t v = 0; v < max_obstacles; v++)
                                 processed_obstacles.push_back(obstacles[indices[v]]);
+
+                        for (size_t i = 0; i < processed_obstacles.size(); i++) // Sequential IDs
+                        {
+                                processed_obstacles[i].index = i;
+                        }
 
                         obstacles = processed_obstacles;
                 }
@@ -172,10 +182,7 @@ namespace MPCPlanner
         void propagatePredictionUncertainty(Prediction &prediction)
         {
                 if (prediction.type != PredictionType::GAUSSIAN)
-                {
-                        LOG_WARN("Cannot propagate uncertainty for predictions that are not GAUSSIAN");
                         return;
-                }
 
                 double dt = CONFIG["integrator_step"].as<double>();
                 double major = 0.;

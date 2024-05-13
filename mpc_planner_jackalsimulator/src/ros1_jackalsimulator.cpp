@@ -10,6 +10,8 @@
 #include <ros_tools/visuals.h>
 #include <ros_tools/logging.h>
 #include <ros_tools/convertions.h>
+#include <ros_tools/math.h>
+#include <ros_tools/data_saver.h>
 
 #include <std_msgs/Empty.h>
 #include <ros_tools/profiling.h>
@@ -36,6 +38,14 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
     _reconfigure = std::make_unique<JackalsimulatorReconfigure>();
 
     _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
+
+    _timeout_timer.setDuration(60.);
+    _timeout_timer.start();
+    for (int i = 0; i < CAMERA_BUFFER; i++)
+    {
+        _x_buffer[i] = 0.;
+        _y_buffer[i] = 0.;
+    }
 
     RosTools::Instrumentor::Get().BeginSession("mpc_planner_jackalsimulator");
 
@@ -81,6 +91,13 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
     _cmd_pub = nh.advertise<geometry_msgs::Twist>(
         "/output/command", 1);
 
+    _pose_pub = nh.advertise<geometry_msgs::PoseStamped>(
+        "/output/pose", 1);
+
+    _collisions_sub = nh.subscribe<std_msgs::Float64>(
+        "/feedback/collisions", 1,
+        boost::bind(&JackalPlanner::collisionCallback, this, _1));
+
     // Environment Reset
     _reset_simulation_pub = nh.advertise<std_msgs::Empty>("/lmpcc/reset_environment", 1);
     _reset_simulation_client = nh.serviceClient<std_srvs::Empty>("/gazebo/reset_world");
@@ -125,15 +142,21 @@ void JackalPlanner::startEnvironment()
 
 bool JackalPlanner::objectiveReached()
 {
-    return _state.get("x") > 25.;
+    // return _state.get("x") > 25.; //    Straight
+    return RosTools::distance(_state.getPos(), Eigen::Vector2d(24., 24.)) < 4.0; // Diagonal
+    // return RosTools::distance(_state.getPos(), Eigen::Vector2d(_data.reference_path.x.back(), _data.reference_path.y.back())) < 4.0; // Diagonal
 }
 
 void JackalPlanner::loop(const ros::TimerEvent &event)
 {
     (void)event;
+
+    _data.planning_start_time = std::chrono::system_clock::now();
+
     LOG_DEBUG("============= Loop =============");
 
-    _benchmarker->start();
+    if (_timeout_timer.hasFinished())
+        reset(false);
 
     if (objectiveReached())
         reset();
@@ -141,6 +164,8 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
     // Print the state
     if (CONFIG["debug_output"].as<bool>())
         _state.print();
+
+    _benchmarker->start();
 
     auto output = _planner->solveMPC(_state, _data);
 
@@ -168,8 +193,26 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
         cmd.angular.z = 0.0;
     }
     _cmd_pub.publish(cmd);
+
+    publishPose();
+    publishCamera();
+
     _benchmarker->stop();
 
+    if (CONFIG["recording"]["enable"].as<bool>())
+    {
+
+        // Save control inputs
+        if (output.success)
+        {
+            auto &data_saver = _planner->getDataSaver();
+            data_saver.AddData("input_a", _state.get("a"));
+            data_saver.AddData("input_v", _planner->getSolution(1, "v"));
+            data_saver.AddData("input_w", _planner->getSolution(0, "w"));
+        }
+
+        _planner->saveData(_state, _data);
+    }
     if (output.success)
     {
         _planner->visualize(_state, _data);
@@ -184,6 +227,12 @@ void JackalPlanner::stateCallback(const nav_msgs::Odometry::ConstPtr &msg)
     _state.set("y", msg->pose.pose.position.y);
     _state.set("psi", RosTools::quaternionToAngle(msg->pose.pose.orientation));
     _state.set("v", std::sqrt(std::pow(msg->twist.twist.linear.x, 2.) + std::pow(msg->twist.twist.linear.y, 2.)));
+
+    if (std::abs(msg->pose.pose.orientation.x) > (M_PI / 8.) || std::abs(msg->pose.pose.orientation.y) > (M_PI / 8.))
+    {
+        LOG_WARN("Detected flipped robot. Resetting.");
+        reset(false); // Reset without success
+    }
 }
 
 void JackalPlanner::statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -192,6 +241,12 @@ void JackalPlanner::statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr
     _state.set("y", msg->pose.position.y);
     _state.set("psi", msg->pose.orientation.z);
     _state.set("v", msg->pose.position.z);
+
+    if (std::abs(msg->pose.orientation.x) > (M_PI / 8.) || std::abs(msg->pose.orientation.y) > (M_PI / 8.))
+    {
+        LOG_ERROR("Detected flipped robot. Resetting.");
+        reset(false); // Reset without success
+    }
 }
 
 void JackalPlanner::goalCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -279,6 +334,10 @@ void JackalPlanner::obstacleCallback(const mpc_planner_msgs::ObstacleArray::Cons
         }
     }
     ensureObstacleSize(_data.dynamic_obstacles, _state);
+
+    if (CONFIG["probabilistic"]["propagate_uncertainty"].as<bool>())
+        propagatePredictionUncertainty(_data.dynamic_obstacles);
+
     _planner->onDataReceived(_data, "dynamic obstacles");
 }
 
@@ -292,22 +351,84 @@ void JackalPlanner::visualize()
     publisher.publish();
 }
 
-void JackalPlanner::reset()
+void JackalPlanner::reset(bool success)
 {
     LOG_MARK("Resetting");
-
-    // Reset the environment
-    for (int j = 0; j < 1; j++)
-    {
-        // ActuateBrake(5.0);
-        ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()).sleep();
-    }
 
     _reset_simulation_client.call(_reset_msg);
     _reset_ekf_client.call(_reset_pose_msg);
     _reset_simulation_pub.publish(std_msgs::Empty());
 
-    _planner->reset(_state, _data);
+    for (int i = 0; i < CAMERA_BUFFER; i++)
+    {
+        _x_buffer[i] = 0.;
+        _y_buffer[i] = 0.;
+    }
+
+    ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()).sleep();
+
+    _planner->reset(_state, _data, success);
+
+    _timeout_timer.start();
+}
+
+void JackalPlanner::collisionCallback(const std_msgs::Float64::ConstPtr &msg)
+{
+    _data.intrusion = (float)(msg->data);
+
+    if (_data.intrusion > 0.)
+        LOG_INFO_THROTTLE(500., "Collision detected (Intrusion: " << _data.intrusion << ")");
+}
+
+void JackalPlanner::publishPose()
+{
+    geometry_msgs::PoseStamped pose;
+    pose.pose.position.x = _state.get("x");
+    pose.pose.position.y = _state.get("y");
+    pose.pose.orientation = RosTools::angleToQuaternion(_state.get("psi"));
+
+    pose.header.stamp = ros::Time::now();
+    pose.header.frame_id = "map";
+
+    _pose_pub.publish(pose);
+}
+
+void JackalPlanner::publishCamera()
+{
+    geometry_msgs::TransformStamped msg;
+    msg.header.stamp = ros::Time::now();
+
+    if ((msg.header.stamp - _prev_stamp) < ros::Duration(0.5 / CONFIG["control_frequency"].as<double>()))
+        return;
+
+    _prev_stamp = msg.header.stamp;
+
+    msg.header.frame_id = "map";
+    msg.child_frame_id = "camera";
+
+    // Smoothen the camera
+    for (int i = 0; i < CAMERA_BUFFER - 1; i++)
+    {
+        _x_buffer[i] = _x_buffer[i + 1];
+        _y_buffer[i] = _y_buffer[i + 1];
+    }
+    _x_buffer[CAMERA_BUFFER - 1] = _state.get("x");
+    _y_buffer[CAMERA_BUFFER - 1] = _state.get("y");
+    double camera_x = 0., camera_y = 0.;
+    for (int i = 0; i < CAMERA_BUFFER; i++)
+    {
+        camera_x += _x_buffer[i];
+        camera_y += _y_buffer[i];
+    }
+    msg.transform.translation.x = camera_x / (double)CAMERA_BUFFER; //_state.get("x");
+    msg.transform.translation.y = camera_y / (double)CAMERA_BUFFER; //_state.get("y");
+    msg.transform.translation.z = 0.0;
+    msg.transform.rotation.x = 0;
+    msg.transform.rotation.y = 0;
+    msg.transform.rotation.z = 0;
+    msg.transform.rotation.w = 1;
+
+    _camera_pub.sendTransform(msg);
 }
 
 int main(int argc, char **argv)

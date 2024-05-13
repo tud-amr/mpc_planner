@@ -7,12 +7,12 @@
   <!-- <arg name="roadmap" default="maps/mobile_robotics_lab/straight.xml"/> -->
   <arg name="roadmap" default="maps/mobile_robotics_lab/diagonal.xml"/>
 
-  <arg name="jackal_name" default="jackal1"/>
+  <arg name="dingo_name" default="dingo1"/>
 
-  <rosparam command="load" file="$(find mpc_planner_jackal)/config/guidance_planner.yaml"/>
-  <node pkg="mpc_planner_jackal" type="jackal_planner" name="jackal_planner" respawn="false" output="screen">
+  <rosparam command="load" file="$(find mpc_planner_dingo)/config/guidance_planner.yaml"/>
+  <node pkg="mpc_planner_dingo" type="dingo_planner" name="dingo_planner" respawn="false" output="screen">
     <param name="simulation" value="false"/>
-    <remap from="/input/state" to="/$(arg jackal_name)/odometry/filtered"/>
+    <remap from="/input/state" to="/$(arg dingo_name)/odometry/filtered"/>
     <remap from="/input/state_pose" to="none_state_pose"/>
     <remap from="/input/goal" to="/roadmap/goal"/>
     <remap from="/input/reference_path" to="roadmap/reference"/>
@@ -23,38 +23,38 @@
   </node>
 
   <!-- <include file="$(find vicon_util)/launch/spoof_vicon.launch">
-      <arg name="topics" default="[jackal3, dynamic_object1, dynamic_object2, dynamic_object3, dynamic_object4, dynamic_object5, rectangle2x1_1]"/>
+      <arg name="topics" default="[dingo3, dynamic_object1, dynamic_object2, dynamic_object3, dynamic_object4, dynamic_object5, rectangle2x1_1]"/>
       <arg name="message_types" default="[geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped]"/>
   </include> -->
 
   <!-- Start the vicon bridge -->
 <include file="$(find vicon_bridge)/launch/vicon.launch">
-      <arg name="object_names" value="[$(arg jackal_name), dynamic_object1, dynamic_object2, dynamic_object3, dynamic_object4, dynamic_object5, dingo1]"/>
-      <arg name="object_msg_types" default="[geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped]"/>
-      <arg name="object_frame_ids" default="[map, map, map, map, map, map, map]"/>
-      <arg name="object_publish_topics" default="[/vicon/$(arg jackal_name), /vicon/dynamic_object1, /vicon/dynamic_object2, /vicon/dynamic_object3, /vicon/dynamic_object4, /vicon/dynamic_object5, /vicon/dingo1]"/>
-      <arg name="object_frequency_divider" default="[2, 2, 2, 2, 2, 2, 2]"/>
+      <arg name="object_names" value="[$(arg dingo_name), dynamic_object1, dynamic_object2, dynamic_object3, dynamic_object4, dynamic_object5]"/>
+      <arg name="object_msg_types" default="[geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped]"/>
+      <arg name="object_frame_ids" default="[map, map, map, map, map, map]"/>
+      <arg name="object_publish_topics" default="[/vicon/$(arg dingo_name), /vicon/dynamic_object1, /vicon/dynamic_object2, /vicon/dynamic_object3, /vicon/dynamic_object4, /vicon/dynamic_object5]"/>
+      <arg name="object_frequency_divider" default="[2, 2, 2, 2, 2, 2]"/>
   </include>
 
   <!-- Bundle dynamic obstacles in one convenient message -->
   <include file="$(find vicon_util)/launch/bundle_obstacles.launch">
     <arg name="run_ekfs" value="true"/>
     <arg name="visualize_scene" value="true"/>
-    <arg name="robot_topic" value="jackal3"/>
-    <arg name="dynamic_object_topics" default="[$(arg jackal_name), dynamic_object1, dynamic_object2, dingo1]"/>
+    <arg name="robot_topic" value="$(arg dingo_name)"/>
+    <arg name="dynamic_object_topics" default="[$(arg dingo_name), dynamic_object1, dynamic_object2]"/>
     <arg name="dynamic_object_radius" default="0.4"/>
     <arg name="static_object_topics" default="[]"/>
     <arg name="static_object_radius" default="0.3"/>
     <arg name="static_object_sizes" default="[]"/>
   </include>
 
-  <include file="$(find jackal_description)/launch/description.launch"/>
+  <include file="$(find dingo_description)/launch/description.launch"/>
 
   <include file="$(find roadmap)/launch/roadmap.launch">
     <arg name="map_file_name" value="$(arg roadmap)"/>
   </include>
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_planner_jackal)/rviz/ros1.rviz" output="screen"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_planner_dingo)/rviz/ros1.rviz" output="screen"/>
 
   <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" output="log"/>
 

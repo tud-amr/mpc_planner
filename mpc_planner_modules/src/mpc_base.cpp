@@ -26,7 +26,7 @@ namespace MPCPlanner
     (void)module_data;
 
     if (k == 0)
-      LOG_DEBUG("setParameters()");
+      LOG_MARK("setParameters()");
 
     for (auto &weight : _weight_names)
     {
