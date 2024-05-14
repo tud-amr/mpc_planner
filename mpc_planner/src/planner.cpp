@@ -75,8 +75,10 @@ namespace MPCPlanner
             planning_benchmarker.start();
 
             // Set the initial guess
+            bool shift_forward = CONFIG["shift_previous_solution_forward"].as<bool>() &&
+                                 CONFIG["enable_output"].as<bool>();
             if (was_feasible)
-                _solver->initializeWarmstart(state, CONFIG["shift_previous_solution_forward"].as<bool>());
+                _solver->initializeWarmstart(state, shift_forward);
             else
             {
                 // _solver->initializeWithState(state);

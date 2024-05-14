@@ -124,14 +124,8 @@ namespace MPCPlanner
                                 Eigen::Vector2d direction(std::cos(state.get("psi")), std::sin(state.get("psi")));
                                 for (int k = 0; k < CONFIG["N"].as<int>(); k++)
                                 {
-
-<<<<<<< HEAD
-                                        dist = std::pow(1.01, (double)k) *
-=======
-                                        // dist = (std::pow(1.25, (double)k)) *
                                         // Linearly scaled
                                         dist = (double)(k + 1) * 0.6 *
->>>>>>> 101b48199be5ff27f871d50dc8a7648934272613
                                                RosTools::distance(
                                                    obstacle.prediction.modes[0][k].position,
                                                    state.getPos() + state.get("v") * (double)k * direction);

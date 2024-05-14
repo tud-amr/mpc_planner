@@ -1,9 +1,9 @@
 name: "autoware"
-N: 20
+N: 30
 integrator_step: 0.2
 n_discs: 3
 
-use_simulated_obstacles: false
+use_simulated_obstacles: true # Autoware only
 
 solver_settings:
   # solver: "acados" # acados or forces
@@ -13,7 +13,16 @@ solver_settings:
   init: 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
   use_sqp: false
 
+recording:
+  enable: false
+  folder: "/home/r2c1/Documents/publications/rss-2024/results/data"
+  file: none #experiment_method
+  timestamp: false
+  num_experiments: 26
+
 debug_output: false
+debug_limits: false
+debug_visuals: false
 
 enable_output: true
 control_frequency: 20
@@ -28,25 +37,27 @@ robot:
   length: 4.8
   com_to_back: 0.95
   width: 2.25
-obstacle_radius: 1.0 #1.0 #0.4
+obstacle_radius: 1.0 #0.4
 
 linearized_constraints:
   add_halfspaces: 2 # For road constraints
 
 road:
   two_way: false
-  width: 10.0
+  width: 7.0
 
 shift_previous_solution_forward: false # Was true
 
 contouring:
   num_segments: 6
   preview: 2.0 # [s], use 0.0 to disable preview
-  use_map_bounds: false
+  use_map_bounds: false # Autoware only
+  add_road_constraints: true
 
 t-mpc:
   use_t-mpc++: true
   enable_constraints: true
+  highlight_selected: true
 
 probabilistic:
   enable: true
@@ -64,6 +75,9 @@ weights:
   preview: 0.5
   slack: 1000.
 
+visualization:
+  draw_every: 5 # stages
+
 # Copied from Prius: https://github.com/oscardegroot/lmpcc/blob/prius/lmpcc/cfg/PredictiveController_Prius.cfg
 # Variable weights are not normalized
 #
@@ -76,6 +90,3 @@ weights:
 #   contour: 0.03
 #   lag: 0.2
 #   slack: -1.
-
-visualization:
-  draw_every: 5 # stages

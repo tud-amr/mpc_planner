@@ -18,6 +18,7 @@ set(DEPENDENCIES
   ros_tools
   nav_msgs
   dynamic_reconfigure
+  tf2_ros
 )
 
 # find dependencies
