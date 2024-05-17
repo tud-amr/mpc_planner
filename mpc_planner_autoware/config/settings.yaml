@@ -22,10 +22,10 @@ recording:
 
 debug_output: false
 debug_limits: false
-debug_visuals: false
+debug_visuals: true
 
 enable_output: true
-control_frequency: 20
+control_frequency: 10 # 20
 deceleration_at_infeasible: 1.0
 max_obstacles: 4
 max_obstacle_distance: 100.
@@ -37,10 +37,10 @@ robot:
   length: 4.8
   com_to_back: 0.95
   width: 2.25
-obstacle_radius: 1.0 #0.4
+obstacle_radius: 0.5 #1.0 #0.4
 
 linearized_constraints:
-  add_halfspaces: 2 # For road constraints
+  add_halfspaces: 0 #2 # For road constraints
 
 road:
   two_way: false
@@ -49,7 +49,7 @@ road:
 shift_previous_solution_forward: false # Was true
 
 contouring:
-  num_segments: 6
+  num_segments: 12 #6
   preview: 2.0 # [s], use 0.0 to disable preview
   use_map_bounds: false # Autoware only
   add_road_constraints: true

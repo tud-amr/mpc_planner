@@ -14,6 +14,11 @@
 
 #include <mpc_planner_modules/controller_module.h>
 
+namespace tk
+{
+  class spline;
+}
+
 namespace MPCPlanner
 {
   class PathReferenceVelocity : public ControllerModule
@@ -24,9 +29,15 @@ namespace MPCPlanner
   public:
     virtual void update(State &state, const RealTimeData &data, ModuleData &module_data) override;
 
+    virtual void onDataReceived(RealTimeData &data, std::string &&data_name) override;
+
     virtual void setParameters(const RealTimeData &data, const ModuleData &module_data, int k) override;
 
+    virtual void visualize(const RealTimeData &data, const ModuleData &module_data) override;
+
   private:
+    std::unique_ptr<tk::spline> _velocity_spline;
+    int _n_segments;
   };
 }
 

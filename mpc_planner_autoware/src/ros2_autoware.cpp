@@ -168,6 +168,8 @@ void AutowarePlanner::Loop()
 {
   LOG_DEBUG("============= Loop =============");
 
+  _data.planning_start_time = std::chrono::system_clock::now();
+
   BENCHMARKERS.getBenchmarker("loop").start();
 
   if (CONFIG["debug_output"].as<bool>())
@@ -339,6 +341,9 @@ void AutowarePlanner::pathCallback(PathWithLaneId::SharedPtr msg)
     _data.reference_path.x.push_back(point.point.pose.position.x);
     _data.reference_path.y.push_back(point.point.pose.position.y);
     _data.reference_path.psi.push_back(0.0);
+
+    _data.reference_path.v.push_back(2.5);                          // point.point.longitudinal_velocity_mps);
+    _data.reference_path.s.push_back(point.point.heading_rate_rps); // For now: saved here
   }
 
   if (CONFIG["contouring"]["use_map_bounds"].as<bool>())

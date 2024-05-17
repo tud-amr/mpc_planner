@@ -25,7 +25,7 @@ from linearized_constraints import LinearizedConstraintModule
 from scenario_constraints import ScenarioConstraintModule
 
 # Import solver models that you want to use
-from solver_model import BicycleModel2ndOrder
+from solver_model import BicycleModel2ndOrder, BicycleModel2ndOrderCurvatureAware
 
 
 # def configuration_safe_horizon(settings):
@@ -50,7 +50,7 @@ from solver_model import BicycleModel2ndOrder
 
 def configuration_tmpc(settings):
     modules = ModuleManager()
-    model = BicycleModel2ndOrder()
+    model = BicycleModel2ndOrderCurvatureAware()
 
     base_module = modules.add_module(MPCBaseModule(settings))
     base_module.weigh_variable(var_name="a", weight_names="acceleration")

@@ -8,64 +8,7 @@ import numpy as np
 
 from control_modules import ObjectiveModule, Objective
 
-
-class MultiSplineXY:
-
-    def __init__(self, params, num_segments, s):
-        self.splines = []  # Classes containing the splines
-        self.lambdas = []  # Merges splines
-        for i in range(num_segments):
-            self.splines.append(SplineXY(params, i))
-            self.splines[-1].compute_point(s)
-
-            # No lambda for the first segment (it is not glued to anything prior)
-            if i > 0:
-                self.lambdas.append(1.0 / (1.0 + np.exp((s - self.splines[-1].s_start + 0.02) / 0.1)))  # Sigmoid
-
-    def get_path_and_dpath(self):
-        # We iteratively glue paths together here (start with the last path)
-        path_x = self.splines[-1].path_x
-        path_y = self.splines[-1].path_y
-        path_dx = self.splines[-1].path_dx
-        path_dy = self.splines[-1].path_dy
-        for k in range(len(self.splines) - 1, 0, -1):
-            # Glue with the previous path
-            path_x = self.lambdas[k - 1] * self.splines[k - 1].path_x + (1.0 - self.lambdas[k - 1]) * path_x
-            path_y = self.lambdas[k - 1] * self.splines[k - 1].path_y + (1.0 - self.lambdas[k - 1]) * path_y
-            path_dx = self.lambdas[k - 1] * self.splines[k - 1].path_dx + (1.0 - self.lambdas[k - 1]) * path_dx
-            path_dy = self.lambdas[k - 1] * self.splines[k - 1].path_dy + (1.0 - self.lambdas[k - 1]) * path_dy
-
-        path_norm = np.sqrt(path_dx * path_dx + path_dy * path_dy)
-        path_dx_normalized = path_dx / path_norm
-        path_dy_normalized = path_dy / path_norm
-
-        return path_x, path_y, path_dx_normalized, path_dy_normalized
-
-
-class SplineXY:
-
-    def __init__(self, param, spline_nr):
-
-        # Retrieve spline values from the parameters (stored as multi parameter by name)
-        self.x_a = param.get(f"spline{spline_nr}_ax")
-        self.x_b = param.get(f"spline{spline_nr}_bx")
-        self.x_c = param.get(f"spline{spline_nr}_cx")
-        self.x_d = param.get(f"spline{spline_nr}_dx")
-
-        self.y_a = param.get(f"spline{spline_nr}_ay")
-        self.y_b = param.get(f"spline{spline_nr}_by")
-        self.y_c = param.get(f"spline{spline_nr}_cy")
-        self.y_d = param.get(f"spline{spline_nr}_dy")
-
-        self.s_start = param.get(f"spline{spline_nr}_start")
-
-    def compute_point(self, spline_index):
-        s = spline_index - self.s_start
-        self.path_x = self.x_a * s * s * s + self.x_b * s * s + self.x_c * s + self.x_d
-        self.path_y = self.y_a * s * s * s + self.y_b * s * s + self.y_c * s + self.y_d
-        self.path_dx = 3 * self.x_a * s * s + 2 * self.x_b * s + self.x_c
-        self.path_dy = 3 * self.y_a * s * s + 2 * self.y_b * s + self.y_c
-
+from spline import Spline, Spline2D
 
 def get_preview_state(model, time_ahead):
     # Integrate the trajectory to obtain the preview point
@@ -102,15 +45,25 @@ class ContouringObjective:
             params.add("preview", add_to_rqt_reconfigure=True)
 
         for i in range(self.num_segments):
-            params.add(f"spline{i}_ax", bundle_name="spline_ax")
-            params.add(f"spline{i}_bx", bundle_name="spline_bx")
-            params.add(f"spline{i}_cx", bundle_name="spline_cx")
-            params.add(f"spline{i}_dx", bundle_name="spline_dx")
+            params.add(f"spline_x{i}_a", bundle_name="spline_x_a")
+            params.add(f"spline_x{i}_b", bundle_name="spline_x_b")
+            params.add(f"spline_x{i}_c", bundle_name="spline_x_c")
+            params.add(f"spline_x{i}_d", bundle_name="spline_x_d")
 
-            params.add(f"spline{i}_ay", bundle_name="spline_ay")
-            params.add(f"spline{i}_by", bundle_name="spline_by")
-            params.add(f"spline{i}_cy", bundle_name="spline_cy")
-            params.add(f"spline{i}_dy", bundle_name="spline_dy")
+            params.add(f"spline_y{i}_a", bundle_name="spline_y_a")
+            params.add(f"spline_y{i}_b", bundle_name="spline_y_b")
+            params.add(f"spline_y{i}_c", bundle_name="spline_y_c")
+            params.add(f"spline_y{i}_d", bundle_name="spline_y_d")
+
+            # params.add(f"bound_right{i}_a", bundle_name="bound_right_a")
+            # params.add(f"bound_right{i}_b", bundle_name="bound_right_b")
+            # params.add(f"bound_right{i}_c", bundle_name="bound_right_c")
+            # params.add(f"bound_right{i}_d", bundle_name="bound_right_d")
+
+            # params.add(f"bound_left{i}_a", bundle_name="bound_left_a")
+            # params.add(f"bound_left{i}_b", bundle_name="bound_left_b")
+            # params.add(f"bound_left{i}_c", bundle_name="bound_left_c")
+            # params.add(f"bound_left{i}_d", bundle_name="bound_left_d")
 
             params.add(f"spline{i}_start", bundle_name="spline_start")
 
@@ -126,34 +79,57 @@ class ContouringObjective:
         contour_weight = params.get("contour")
         lag_weight = params.get("lag")
 
-        splines = MultiSplineXY(params, self.num_segments, s)
-        path_x, path_y, path_dx_normalized, path_dy_normalized = splines.get_path_and_dpath()
+        spline = Spline2D(params, self.num_segments, s)
+        path_x, path_y = spline.at(s)
+        path_dx_normalized, path_dy_normalized = spline.deriv_normalized(s)
 
         contour_error = path_dy_normalized * (pos_x - path_x) - path_dx_normalized * (pos_y - path_y)
-        lag_error = -path_dx_normalized * (pos_x - path_x) - path_dy_normalized * (pos_y - path_y)
+        lag_error = path_dx_normalized * (pos_x - path_x) + path_dy_normalized * (pos_y - path_y)
+
+        # CA-MPC
+        # https://www.researchgate.net/profile/Laura-Ferranti-4/publication/371169207_Curvature-Aware_Model_Predictive_Contouring_Control/links/64775cecd702370600c50752/Curvature-Aware-Model-Predictive-Contouring-Control.pdf
+        # vel = model.get("v")
+        # psi = model.get("psi")
+
+        # v_n = path_dy_normalized * (vel * cd.cos(psi)) - path_dx_normalized * (vel * cd.sin(psi))
+        # v_t = -path_dx_normalized * (vel * cd.cos(psi)) - path_dy_normalized * (vel * cd.sin(psi))
+
+        # kappa = splines.get_curvature()
+        # R = 1. / kappa
+
+        # theta = cd.atan2((v_t* 0.2) / (R - contour_error - v_n*0.2))
 
         cost += contour_weight * contour_error**2
         cost += lag_weight * lag_error**2
 
-        if self.enable_preview and stage_idx == settings["N"] - 1:
-            print(f"Adding preview cost at T = {self.preview} ahead")
-            # In the terminal stage add a preview cost
-            preview_weight = params.get("preview")
-            preview_pos_x, preview_pos_y, preview_s = get_preview_state(model, self.preview)
+        # if self.enable_preview and stage_idx == settings["N"] - 1:
+        #     print(f"Adding preview cost at T = {self.preview} ahead")
+        #     # In the terminal stage add a preview cost
+        #     preview_weight = params.get("preview")
+        #     preview_pos_x, preview_pos_y, preview_s = get_preview_state(model, self.preview)
 
-            preview_splines = MultiSplineXY(params, self.num_segments, preview_s)
-            preview_path_x, preview_path_y, preview_path_dx_normalized, preview_path_dy_normalized = preview_splines.get_path_and_dpath()
+        #     preview_splines = MultiSplineXY(params, self.num_segments, preview_s)
+        #     preview_path_x, preview_path_y, preview_path_dx_normalized, preview_path_dy_normalized = preview_splines.get_path_and_dpath()
 
-            preview_contour_error = preview_path_dy_normalized * (preview_pos_x - preview_path_x) - preview_path_dx_normalized * (
-                preview_pos_y - preview_path_y
-            )
-            preview_lag_error = -preview_path_dx_normalized * (preview_pos_x - preview_path_x) - preview_path_dy_normalized * (
-                preview_pos_y - preview_path_y
-            )
+        #     preview_contour_error = preview_path_dy_normalized * (preview_pos_x - preview_path_x) - preview_path_dx_normalized * (
+        #         preview_pos_y - preview_path_y
+        #     )
+        #     preview_lag_error = -preview_path_dx_normalized * (preview_pos_x - preview_path_x) - preview_path_dy_normalized * (
+        #         preview_pos_y - preview_path_y
+        #     )
 
-            # We use the existing weights here to sort of scale the contribution w.r.t. the regular contouring cost
-            cost += preview_weight * contour_weight * preview_contour_error**2
-            cost += preview_weight * lag_weight * preview_lag_error**2
+        #     # We use the existing weights here to sort of scale the contribution w.r.t. the regular contouring cost
+        #     cost += preview_weight * contour_weight * preview_contour_error**2
+        #     cost += preview_weight * lag_weight * preview_lag_error**2
+
+        # Boundary penalty
+        # boundary_right = WidthSpline(params, self.num_segments, "right", s)
+        # br = boundary_right.at(s)
+        # cost += 100. * cd.fmax(contour_error - br, 0.)**2
+
+        # boundary_left = WidthSpline(params, self.num_segments, "left", s)
+        # bl = boundary_left.at(s)
+        # cost += 100. * cd.fmax(bl - contour_error, 0.)**2
 
         return cost
 
@@ -169,53 +145,3 @@ class ContouringModule(ObjectiveModule):
 
         self.objectives = []
         self.objectives.append(ContouringObjective(settings, num_segments, preview))
-
-
-# class PreviewObjective:
-
-#     def __init__(self, params, weight_list, n_segments, T):
-#         self.weight_list = weight_list
-
-#         self.T = T
-#         self.n_segments = n_segments
-
-#         self.define_parameters(params)
-
-#     def define_parameters(self, params):
-#         self.weight_list.append('preview')
-
-#     def get_value(self, z, model, settings, stage_idx):
-#         # Terminal state only
-#         if stage_idx < settings.N_bar - 2:
-#             return 0.
-
-#         cost = 0
-
-#         preview_weight = getattr(settings.params, 'preview')
-
-#         # Integrate the trajectory to obtain the preview point
-
-#         z_constant_input = casadi.vertcat(np.zeros((model.nu)), z[model.nu:model.nu+model.nx])
-
-#         z_preview = model.integrate(z_constant_input, self.T) # Integrate the dynamics T seconds ahead
-#         z_preview = casadi.vertcat(np.zeros((model.nu)), z_preview)
-
-#         pos_x = model.get_state(z_preview, 'x', True)
-#         pos_y = model.get_state(z_preview, 'y', True)
-#         s = model.get_state(z_preview, 'spline', True)
-
-#         spline = SplineParameters(settings.params, self.n_segments - 1) # Get the last spline
-#         spline.compute_path(s)
-
-#         path_norm = np.sqrt(spline.path_dx ** 2 + spline.path_dy ** 2)
-#         path_dx_normalized = spline.path_dx / path_norm
-#         path_dy_normalized = spline.path_dy / path_norm
-
-#         contour_error = path_dy_normalized * (pos_x - spline.path_x) - path_dx_normalized * (pos_y - spline.path_y)
-#         lag_error = -path_dx_normalized * (pos_x - spline.path_x) - path_dy_normalized * (pos_y - spline.path_y)
-
-#         cost += preview_weight * contour_error ** 2
-#         cost += preview_weight * lag_error ** 2
-#         # cost += settings.weights.lag * lag_error ** 2
-
-#         return cost

@@ -4,12 +4,16 @@
 #include <mpc_planner_generated.h>
 #include <mpc_planner_util/parameters.h>
 
+#include <ros_tools/visuals.h>
+#include <ros_tools/spline.h>
+
 namespace MPCPlanner
 {
 
   PathReferenceVelocity::PathReferenceVelocity(std::shared_ptr<Solver> solver)
       : ControllerModule(ModuleType::OBJECTIVE, solver, "path_reference_velocity")
   {
+    _n_segments = CONFIG["contouring"]["num_segments"].as<int>();
   }
 
   void PathReferenceVelocity::update(State &state, const RealTimeData &data, ModuleData &module_data)
@@ -17,6 +21,17 @@ namespace MPCPlanner
     (void)state;
     (void)data;
     (void)module_data;
+  }
+
+  void PathReferenceVelocity::onDataReceived(RealTimeData &data, std::string &&data_name)
+  {
+    if (data_name == "reference_path")
+    {
+      LOG_MARK("Received Reference Path");
+
+      _velocity_spline = std::make_unique<tk::spline>();
+      _velocity_spline->set_points(data.reference_path.s, data.reference_path.v);
+    }
   }
 
   void PathReferenceVelocity::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
@@ -35,6 +50,74 @@ namespace MPCPlanner
 
     // Set the parameters for velocity tracking
     setForcesParameterVelocity(k, _solver->_params, velocity_weight);
-    setForcesParameterReferenceVelocity(k, _solver->_params, reference_velocity);
+
+    if (data.reference_path.hasVelocity()) // Use a spline-based velocity reference
+    {
+      for (int i = 0; i < _n_segments; i++)
+      {
+        int index = module_data.current_path_segment + i;
+        double a, b, c, d;
+
+        if (index < _velocity_spline->m_x_.size() - 1)
+        {
+          _velocity_spline->getParameters(index, a, b, c, d);
+        }
+        else
+        {
+          // If we are beyond the spline, we should use the last spline
+          _velocity_spline->getParameters(_velocity_spline->m_x_.size() - 1, a, b, c, d);
+
+          a = 0; // Constant spline = d
+          b = 0;
+          c = 0;
+        }
+
+        setForcesParameterSplineVA(k, _solver->_params, a, i);
+        setForcesParameterSplineVB(k, _solver->_params, b, i);
+        setForcesParameterSplineVC(k, _solver->_params, c, i);
+        setForcesParameterSplineVD(k, _solver->_params, d, i);
+      }
+    }
+    else // Use a constant velocity reference
+    {
+      for (int i = 0; i < _n_segments; i++)
+      {
+        setForcesParameterSplineVA(k, _solver->_params, 0., i);
+        setForcesParameterSplineVB(k, _solver->_params, 0., i);
+        setForcesParameterSplineVC(k, _solver->_params, 0., i);
+        setForcesParameterSplineVD(k, _solver->_params, reference_velocity, i); // v = d
+      }
+    }
   }
+
+  void PathReferenceVelocity::visualize(const RealTimeData &data, const ModuleData &module_data)
+  {
+    if (data.reference_path.empty())
+      return;
+
+    // Only for debugging
+    auto &publisher = VISUALS.getPublisher("path_velocity");
+    auto &line = publisher.getNewLine();
+
+    line.setScale(0.25, 0.25, 0.1);
+    auto spline_xy = std::make_unique<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y, data.reference_path.s);
+
+    Eigen::Vector2d prev;
+    double prev_v;
+    for (double s = 0.; s < _velocity_spline->m_x_.back(); s += 0.25)
+    {
+      Eigen::Vector2d cur = spline_xy->getPoint(s);
+      double v = _velocity_spline->operator()(s);
+
+      if (s > 0.)
+      {
+        line.setColor(0, (v + prev_v) / (2. * 3. * 2.), 0.);
+        line.addLine(prev, cur);
+      }
+      prev = cur;
+      prev_v = v;
+    }
+    publisher.publish();
+  }
+
 } // namespace MPCPlanner

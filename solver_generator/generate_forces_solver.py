@@ -68,7 +68,7 @@ def generate_forces_solver(modules, settings, model, skip_solver_generation):
             solver.nh[i] = 0  # No constraints here
 
     # Equalities are specified on all stages
-    solver.eq = lambda z, p: solver_model.discrete_dynamics(z, model, settings["integrator_step"])
+    solver.eq = lambda z, p: model.discrete_dynamics(z, p, settings) #solver_model.discrete_dynamics(z, p, model, settings)
     solver.E = np.concatenate([np.zeros((model.nx, model.nu)), np.eye(model.nx)], axis=1)
 
     # Initial stage (k = 0) specifies the states
