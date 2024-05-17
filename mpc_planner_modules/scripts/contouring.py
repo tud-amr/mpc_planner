@@ -55,16 +55,6 @@ class ContouringObjective:
             params.add(f"spline_y{i}_c", bundle_name="spline_y_c")
             params.add(f"spline_y{i}_d", bundle_name="spline_y_d")
 
-            # params.add(f"bound_right{i}_a", bundle_name="bound_right_a")
-            # params.add(f"bound_right{i}_b", bundle_name="bound_right_b")
-            # params.add(f"bound_right{i}_c", bundle_name="bound_right_c")
-            # params.add(f"bound_right{i}_d", bundle_name="bound_right_d")
-
-            # params.add(f"bound_left{i}_a", bundle_name="bound_left_a")
-            # params.add(f"bound_left{i}_b", bundle_name="bound_left_b")
-            # params.add(f"bound_left{i}_c", bundle_name="bound_left_c")
-            # params.add(f"bound_left{i}_d", bundle_name="bound_left_d")
-
             params.add(f"spline{i}_start", bundle_name="spline_start")
 
         return params

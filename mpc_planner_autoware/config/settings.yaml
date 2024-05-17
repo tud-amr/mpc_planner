@@ -51,7 +51,7 @@ shift_previous_solution_forward: false # Was true
 contouring:
   num_segments: 12 #6
   preview: 2.0 # [s], use 0.0 to disable preview
-  use_map_bounds: false # Autoware only
+  use_map_bounds: true # Autoware only
   add_road_constraints: true
 
 t-mpc:

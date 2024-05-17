@@ -23,6 +23,7 @@ from gaussian_constraints import GaussianConstraintModule
 from guidance_constraints import GuidanceConstraintModule
 from linearized_constraints import LinearizedConstraintModule
 from scenario_constraints import ScenarioConstraintModule
+from contouring_constraints import ContouringConstraintModule
 
 # Import solver models that you want to use
 from solver_model import BicycleModel2ndOrder, BicycleModel2ndOrderCurvatureAware
@@ -67,6 +68,7 @@ def configuration_tmpc(settings):
     # modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
 
     # modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
+    modules.add_module(ContouringConstraintModule(settings))
     modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=GaussianConstraintModule))
 
     return model, modules

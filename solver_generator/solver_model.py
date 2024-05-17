@@ -319,15 +319,17 @@ class BicycleModel2ndOrderCurvatureAware(DynamicsModel):
         wheel_base = 2.79  # between front wheel center and rear wheel center
 
         # NOTE: Mass is equally distributed according to the parameters
-        lr = wheel_base / 2.0
-        lf = wheel_base / 2.0
-        ratio = lr / (lr + lf)
+        self.lr = wheel_base / 2.0
+        self.lf = wheel_base / 2.0
+        ratio = self.lr / (self.lr + self.lf)
+        
+        self.width = 2.25
 
         beta = cd.arctan(ratio * cd.tan(delta))
 
         return np.array([v * cd.cos(psi + beta),
                         v * cd.sin(psi + beta),
-                        (v / lr) * cd.sin(beta),
+                        (v / self.lr) * cd.sin(beta),
                         a, 
                         w])
     
