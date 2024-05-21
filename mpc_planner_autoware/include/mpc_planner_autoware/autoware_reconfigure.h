@@ -28,18 +28,20 @@ public:
 		if (_first_reconfigure_callback){
 			config.acceleration = CONFIG["weights"]["acceleration"].as<double>();
 			config.angular_velocity = CONFIG["weights"]["angular_velocity"].as<double>();
-			config.velocity = CONFIG["weights"]["velocity"].as<double>();
-			config.reference_velocity = CONFIG["weights"]["reference_velocity"].as<double>();
+			config.slack = CONFIG["weights"]["slack"].as<double>();
 			config.contour = CONFIG["weights"]["contour"].as<double>();
+			config.reference_velocity = CONFIG["weights"]["reference_velocity"].as<double>();
+			config.velocity = CONFIG["weights"]["velocity"].as<double>();
 			config.lag = CONFIG["weights"]["lag"].as<double>();
 			config.preview = CONFIG["weights"]["preview"].as<double>();
 			_first_reconfigure_callback = false;
 		}else{
 			CONFIG["weights"]["acceleration"] = config.acceleration;
 			CONFIG["weights"]["angular_velocity"] = config.angular_velocity;
-			CONFIG["weights"]["velocity"] = config.velocity;
-			CONFIG["weights"]["reference_velocity"] = config.reference_velocity;
+			CONFIG["weights"]["slack"] = config.slack;
 			CONFIG["weights"]["contour"] = config.contour;
+			CONFIG["weights"]["reference_velocity"] = config.reference_velocity;
+			CONFIG["weights"]["velocity"] = config.velocity;
 			CONFIG["weights"]["lag"] = config.lag;
 			CONFIG["weights"]["preview"] = config.preview;
 		}

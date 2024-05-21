@@ -30,17 +30,22 @@ def get_preview_state(model, time_ahead):
 
 class ContouringObjective:
 
-    def __init__(self, settings, num_segments, preview=0.0):
+    def __init__(self, settings, num_segments, preview=0.0, use_ca_mpc=True):
 
         self.num_segments = num_segments
 
         self.enable_preview = preview != 0.0
         self.preview = preview
 
+        self.use_ca_mpc = use_ca_mpc
+
     def define_parameters(self, params):
         params.add("contour", add_to_rqt_reconfigure=True)
-        params.add("lag", add_to_rqt_reconfigure=True)
 
+        params.add("reference_velocity", add_to_rqt_reconfigure=True)
+        params.add("velocity", add_to_rqt_reconfigure=True)
+        params.add("lag", add_to_rqt_reconfigure=True)
+    
         if self.enable_preview:
             params.add("preview", add_to_rqt_reconfigure=True)
 
@@ -67,30 +72,53 @@ class ContouringObjective:
         s = model.get("spline")
 
         contour_weight = params.get("contour")
-        lag_weight = params.get("lag")
 
-        spline = Spline2D(params, self.num_segments, s)
-        path_x, path_y = spline.at(s)
-        path_dx_normalized, path_dy_normalized = spline.deriv_normalized(s)
+        path = Spline2D(params, self.num_segments, s)
+        path_x, path_y = path.at(s)
+        path_dx_normalized, path_dy_normalized = path.deriv_normalized(s)
 
         contour_error = path_dy_normalized * (pos_x - path_x) - path_dx_normalized * (pos_y - path_y)
-        lag_error = path_dx_normalized * (pos_x - path_x) + path_dy_normalized * (pos_y - path_y)
-
-        # CA-MPC
-        # https://www.researchgate.net/profile/Laura-Ferranti-4/publication/371169207_Curvature-Aware_Model_Predictive_Contouring_Control/links/64775cecd702370600c50752/Curvature-Aware-Model-Predictive-Contouring-Control.pdf
-        # vel = model.get("v")
-        # psi = model.get("psi")
-
-        # v_n = path_dy_normalized * (vel * cd.cos(psi)) - path_dx_normalized * (vel * cd.sin(psi))
-        # v_t = -path_dx_normalized * (vel * cd.cos(psi)) - path_dy_normalized * (vel * cd.sin(psi))
-
-        # kappa = splines.get_curvature()
-        # R = 1. / kappa
-
-        # theta = cd.atan2((v_t* 0.2) / (R - contour_error - v_n*0.2))
 
         cost += contour_weight * contour_error**2
-        cost += lag_weight * lag_error**2
+
+        if not self.use_ca_mpc:
+            # MPCC
+            lag_weight = params.get("lag")
+            lag_error = path_dx_normalized * (pos_x - path_x) + path_dy_normalized * (pos_y - path_y)
+            cost += lag_weight * lag_error**2
+        else:
+            # CA-MPC
+            # https://www.researchgate.net/profile/Laura-Ferranti-4/publication/371169207_Curvature-Aware_Model_Predictive_Contouring_Control/links/64775cecd702370600c50752/Curvature-Aware-Model-Predictive-Contouring-Control.pdf
+
+            v = model.get("v")
+            psi = model.get("psi")
+
+            # reference_velocity = params.get("reference_velocity")
+            velocity_weight = params.get("velocity")
+
+            dt = settings["integrator_step"]
+
+            vel = np.array([v * cd.cos(psi), v * cd.sin(psi)]) # Velocity vector
+
+            t_vec = np.array([path_dx_normalized, path_dy_normalized])
+            n_vec = np.array([path_dy_normalized, -path_dx_normalized])
+
+            vt = vel.dot(t_vec) # Velocity path components
+            vn = vel.dot(n_vec)
+
+            vt_t = vt * dt # Euler integrated velocities
+            vn_t = vn * dt
+
+            R = 1. / path.get_curvature(s) # max(R) = 1 / 0.0001
+            R = cd.fmax(R, 1e5)
+
+            # Path velocity
+            s_dot = R * vt * ((R - contour_error - vn_t) + vn_t) / ((R - contour_error - vn_t)**2 + (vt_t)**2)
+
+            path_velocity = Spline(params, "spline_v", self.num_segments, s)
+            reference_velocity = path_velocity.at(s)
+
+            cost += velocity_weight * (s_dot - reference_velocity)**2 # Penalize its tracking performance
 
         # if self.enable_preview and stage_idx == settings["N"] - 1:
         #     print(f"Adding preview cost at T = {self.preview} ahead")
@@ -111,15 +139,6 @@ class ContouringObjective:
         #     # We use the existing weights here to sort of scale the contribution w.r.t. the regular contouring cost
         #     cost += preview_weight * contour_weight * preview_contour_error**2
         #     cost += preview_weight * lag_weight * preview_lag_error**2
-
-        # Boundary penalty
-        # boundary_right = WidthSpline(params, self.num_segments, "right", s)
-        # br = boundary_right.at(s)
-        # cost += 100. * cd.fmax(contour_error - br, 0.)**2
-
-        # boundary_left = WidthSpline(params, self.num_segments, "left", s)
-        # bl = boundary_left.at(s)
-        # cost += 100. * cd.fmax(bl - contour_error, 0.)**2
 
         return cost
 

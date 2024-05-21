@@ -4,8 +4,8 @@
       debug_output: false
       debug_visuals: false
       seed: 1 # Seed of the visibility-PRM. Set to -1 for random!
-      T: 6.0 #6.0
-      N: 30 #30
+      T: 4.0 #6.0 #6.0
+      N: 20 #30 #30
       winding_pass_threshold: 0.25 #1.5
       # topology_comparison: Winding #Homology (default) or UVD
       topology_comparison: Homology #Homology (default) or UVD

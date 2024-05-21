@@ -20,6 +20,7 @@ namespace MPCPlanner
     _n_segments = CONFIG["contouring"]["num_segments"].as<int>();
     _add_road_constraints = CONFIG["contouring"]["add_road_constraints"].as<bool>();
     _two_way_road = CONFIG["road"]["two_way"].as<bool>();
+    _use_ca_mpc = CONFIG["contouring"]["use_ca_mpc"].as<bool>();
 
     LOG_INITIALIZED();
   }
@@ -35,6 +36,9 @@ namespace MPCPlanner
     double closest_s;
     _spline->findClosestPoint(state.getPos(), _closest_segment, closest_s);
 
+    if (module_data.spline.get() == nullptr && _spline.get() != nullptr)
+      module_data.spline = _spline;
+
     state.set("spline", closest_s); // We need to initialize the spline state here
 
     module_data.current_path_segment = _closest_segment;
@@ -49,77 +53,53 @@ namespace MPCPlanner
     (void)module_data;
 
     // Retrieve weights once
-    static double contouring_weight, lag_weight, preview_weight;
+    static double contouring_weight, lag_weight, preview_weight, reference_velocity, velocity_weight;
     if (k == 0)
     {
       contouring_weight = CONFIG["weights"]["contour"].as<double>();
-      lag_weight = CONFIG["weights"]["lag"].as<double>();
+
       preview_weight = CONFIG["weights"]["preview"].as<double>();
+
+      if (_use_ca_mpc)
+      {
+        velocity_weight = CONFIG["weights"]["velocity"].as<double>();
+        reference_velocity = CONFIG["weights"]["reference_velocity"].as<double>();
+      }
+      else
+      {
+        lag_weight = CONFIG["weights"]["lag"].as<double>();
+      }
     }
 
     {
       setForcesParameterContour(k, _solver->_params, contouring_weight);
-      setForcesParameterLag(k, _solver->_params, lag_weight);
 
-      if (preview_weight > 0.)
-        _solver->setParameter(k, "preview", preview_weight);
-    }
-    for (int i = 0; i < _n_segments; i++)
-    {
-      int index = _closest_segment + i;
-      double ax, bx, cx, dx;
-      double ay, by, cy, dy;
-
-      // Boundaries
-      double ra, rb, rc, rd;
-      double la, lb, lc, ld;
-      double start;
-
-      if (index < _spline->numSegments())
+      if (_use_ca_mpc)
       {
-        _spline->getParameters(index,
-                               ax, bx, cx, dx,
-                               ay, by, cy, dy);
-
-        _width_right->getParameters(index,
-                                    ra, rb, rc, rd);
-        _width_left->getParameters(index,
-                                   la, lb, lc, ld);
-
-        start = _spline->getSegmentStart(index);
+        setForcesParameterReferenceVelocity(k, _solver->_params, reference_velocity);
+        setForcesParameterVelocity(k, _solver->_params, velocity_weight);
       }
       else
       {
-        // If we are beyond the spline, we should use the last spline
-        _spline->getParameters(_spline->numSegments() - 1,
-                               ax, bx, cx, dx,
-                               ay, by, cy, dy);
-
-        _width_right->getParameters(_spline->numSegments() - 1,
-                                    ra, rb, rc, rd);
-        _width_left->getParameters(_spline->numSegments() - 1,
-                                   la, lb, lc, ld);
-
-        start = _spline->getSegmentStart(_spline->numSegments() - 1);
-
-        // We should use very small splines at the end location
-        // x = d_x
-        // y = d_y
-        ax = 0.;
-        bx = 0.;
-        cx = 0.;
-        ay = 0.;
-        by = 0.;
-        cy = 0.;
-
-        ra = 0.;
-        rb = 0.;
-        rc = 0.;
-        la = 0.;
-        lb = 0.;
-        lc = 0.;
-        start = _spline->parameterLength();
+        setForcesParameterLag(k, _solver->_params, lag_weight);
       }
+      if (preview_weight > 0.)
+        _solver->setParameter(k, "preview", preview_weight);
+    }
+
+    double ax, bx, cx, dx;
+    double ay, by, cy, dy;
+    double start;
+
+    for (int i = 0; i < _n_segments; i++)
+    {
+      int index = _closest_segment + i;
+
+      _spline->getParameters(index,
+                             ax, bx, cx, dx,
+                             ay, by, cy, dy);
+
+      start = _spline->getSegmentStart(index);
 
       /** @note: We use the fast loading interface here as we need to load many parameters */
       setForcesParameterSplineXA(k, _solver->_params, ax, i);
@@ -131,17 +111,6 @@ namespace MPCPlanner
       setForcesParameterSplineYB(k, _solver->_params, by, i);
       setForcesParameterSplineYC(k, _solver->_params, cy, i);
       setForcesParameterSplineYD(k, _solver->_params, dy, i);
-
-      // Boundary
-      // setForcesParameterBoundRightA(k, _solver->_params, ra, i);
-      // setForcesParameterBoundRightB(k, _solver->_params, rb, i);
-      // setForcesParameterBoundRightC(k, _solver->_params, rc, i);
-      // setForcesParameterBoundRightD(k, _solver->_params, rd, i);
-
-      // setForcesParameterBoundLeftA(k, _solver->_params, la, i);
-      // setForcesParameterBoundLeftB(k, _solver->_params, lb, i);
-      // setForcesParameterBoundLeftC(k, _solver->_params, lc, i);
-      // setForcesParameterBoundLeftD(k, _solver->_params, ld, i);
 
       // Distance where this spline starts
       setForcesParameterSplineStart(k, _solver->_params, start, i);
@@ -155,29 +124,10 @@ namespace MPCPlanner
       LOG_MARK("Received Reference Path");
 
       // Construct a spline from the given points
-      _spline = std::make_unique<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y);
+      _spline = std::make_shared<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y, data.reference_path.s);
 
-      if (!data.left_bound.empty() && !data.right_bound.empty())
+      if (_add_road_constraints && (!data.left_bound.empty() && !data.right_bound.empty()))
       {
-        std::vector<double> widths_left, widths_right;
-        widths_right.resize(data.right_bound.x.size());
-        widths_left.resize(data.left_bound.x.size());
-
-        for (size_t i = 0; i < widths_left.size(); i++)
-        {
-          Eigen::Vector2d center(data.reference_path.x[i], data.reference_path.y[i]);
-          Eigen::Vector2d left(data.left_bound.x[i], data.left_bound.y[i]);
-          Eigen::Vector2d right(data.right_bound.x[i], data.right_bound.y[i]);
-          widths_left[i] = -RosTools::distance(center, left); // Minus because contouring erros is negative on this side
-          widths_right[i] = RosTools::distance(center, right);
-        }
-
-        _width_left = std::make_unique<tk::spline>();
-        _width_left->set_points(_spline->getTVector(), widths_left);
-
-        _width_right = std::make_unique<tk::spline>();
-        _width_right->set_points(_spline->getTVector(), widths_right);
-        // CONFIG["road"]["width"] = _width_right->operator()(0.) - _width_left->operator()(0.);
 
         // Add bounds
         _bound_left = std::make_unique<RosTools::Spline2D>(
@@ -191,8 +141,6 @@ namespace MPCPlanner
 
         // Update the road width
         CONFIG["road"]["width"] = RosTools::distance(_bound_left->getPoint(0), _bound_right->getPoint(0));
-        // if (_two_way_road)
-        // CONFIG["road"]["width"] = CONFIG["road"]["width"].as<double>() / 2.;
       }
 
       _closest_segment = -1;
@@ -512,7 +460,7 @@ namespace MPCPlanner
 
   void Contouring::reset()
   {
-    _spline.reset(nullptr);
+    _spline.reset();
     _closest_segment = 0;
   }
 

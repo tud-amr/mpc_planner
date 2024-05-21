@@ -110,13 +110,17 @@ namespace MPCPlanner
                                        << (int)module_data.static_obstacles[k].size() << " are present");
         }
 
-        int num_halfspaces = std::min((int)module_data.static_obstacles[k].size(), _n_other_halfspaces);
-        for (int h = 0; h < num_halfspaces; h++)
+        if (!module_data.static_obstacles.empty())
         {
-          int obs_id = copied_obstacles.size() + h;
-          _a1[d][k](obs_id) = module_data.static_obstacles[k][h].A(0);
-          _a2[d][k](obs_id) = module_data.static_obstacles[k][h].A(1);
-          _b[d][k](obs_id) = module_data.static_obstacles[k][h].b;
+
+          int num_halfspaces = std::min((int)module_data.static_obstacles[k].size(), _n_other_halfspaces);
+          for (int h = 0; h < num_halfspaces; h++)
+          {
+            int obs_id = copied_obstacles.size() + h;
+            _a1[d][k](obs_id) = module_data.static_obstacles[k][h].A(0);
+            _a2[d][k](obs_id) = module_data.static_obstacles[k][h].A(1);
+            _b[d][k](obs_id) = module_data.static_obstacles[k][h].b;
+          }
         }
       }
     }

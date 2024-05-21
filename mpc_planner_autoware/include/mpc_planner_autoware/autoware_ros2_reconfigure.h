@@ -40,9 +40,10 @@ public:
 	{
 		node->declare_parameter<double>("acceleration", CONFIG["weights"]["acceleration"].as<double>());
 		node->declare_parameter<double>("angular_velocity", CONFIG["weights"]["angular_velocity"].as<double>());
-		node->declare_parameter<double>("velocity", CONFIG["weights"]["velocity"].as<double>());
-		node->declare_parameter<double>("reference_velocity", CONFIG["weights"]["reference_velocity"].as<double>());
+		node->declare_parameter<double>("slack", CONFIG["weights"]["slack"].as<double>());
 		node->declare_parameter<double>("contour", CONFIG["weights"]["contour"].as<double>());
+		node->declare_parameter<double>("reference_velocity", CONFIG["weights"]["reference_velocity"].as<double>());
+		node->declare_parameter<double>("velocity", CONFIG["weights"]["velocity"].as<double>());
 		node->declare_parameter<double>("lag", CONFIG["weights"]["lag"].as<double>());
 		node->declare_parameter<double>("preview", CONFIG["weights"]["preview"].as<double>());
 	}
@@ -51,9 +52,10 @@ public:
 	{
 		updateParam<double>(parameters, "acceleration", CONFIG["weights"]["acceleration"]);
 		updateParam<double>(parameters, "angular_velocity", CONFIG["weights"]["angular_velocity"]);
-		updateParam<double>(parameters, "velocity", CONFIG["weights"]["velocity"]);
-		updateParam<double>(parameters, "reference_velocity", CONFIG["weights"]["reference_velocity"]);
+		updateParam<double>(parameters, "slack", CONFIG["weights"]["slack"]);
 		updateParam<double>(parameters, "contour", CONFIG["weights"]["contour"]);
+		updateParam<double>(parameters, "reference_velocity", CONFIG["weights"]["reference_velocity"]);
+		updateParam<double>(parameters, "velocity", CONFIG["weights"]["velocity"]);
 		updateParam<double>(parameters, "lag", CONFIG["weights"]["lag"]);
 		updateParam<double>(parameters, "preview", CONFIG["weights"]["preview"]);
 

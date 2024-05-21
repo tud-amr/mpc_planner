@@ -18,7 +18,7 @@ class PathReferenceVelocityObjective:
         self.num_segments = num_segments
 
     def define_parameters(self, params):
-        params.add("velocity", add_to_rqt_reconfigure=True)
+        # params.add("velocity", add_to_rqt_reconfigure=True)
 
         # params.add("reference_velocity", add_to_rqt_reconfigure=True)
         for i in range(self.num_segments):
@@ -30,26 +30,30 @@ class PathReferenceVelocityObjective:
         return params
 
     def get_value(self, model, params, settings, stage_idx):
-        psi = model.get("psi")
-        v = model.get("v")
-        s = model.get("spline")
+        # The cost is computed in the contouring cost when using CA-MPC
+        return 0.0
+        # # psi = model.get("psi")
+        # v = model.get("v")
+        # s = model.get("spline")
 
-        velocity_reference = Spline(params, "spline_v", self.num_segments, s).at(s)
+        # path_velocity = Spline(params, "spline_v", self.num_segments, s)
+        # velocity_reference = path_velocity.at(s)
+        # # velocity_reference = params.get("reference_velocity")
 
-        # velocity_reference = params.get("reference_velocity")
+        # velocity_weight = params.get("velocity")
 
-        velocity_weight = params.get("velocity")
+        # # spline = Spline2D(params, self.num_segments, s)
+        # # path_dx_normalized, path_dy_normalized = spline.deriv_normalized(s)
+        # # path_angle = cd.atan2(path_dy_normalized, path_dx_normalized)
+        # # diff_angle = path_angle - psi
 
-        spline = Spline2D(params, self.num_segments, s)
-        path_dx_normalized, path_dy_normalized = spline.deriv_normalized(s)
-        path_angle = cd.atan2(path_dy_normalized, path_dx_normalized)
-        diff_angle = path_angle - psi
+        # # # Only weigh the component of the velocity in the direction of the path
+        # # v_path = cd.cos(diff_angle) * v
 
-        # Only weigh the component of the velocity in the direction of the path
-        v_path = cd.cos(diff_angle) * v
-
-        # track the given velocity reference
-        return velocity_weight * ((v_path - velocity_reference) ** 2)
+        # # track the given velocity reference
+        # # return velocity_weight * ((v_path - velocity_reference) ** 2)
+        # # return velocity_weight * ((v - velocity_reference) ** 2)
+        # return 0.0
 
 
 class PathReferenceVelocityModule(ObjectiveModule):

@@ -291,11 +291,11 @@ class BicycleModel2ndOrderCurvatureAware(DynamicsModel):
 
     def __init__(self):
         super().__init__()
-        self.nu = 2
+        self.nu = 3
         self.nx = 6
 
         self.states = ["x", "y", "psi", "v", "delta", "spline"]
-        self.inputs = ["a", "w"]
+        self.inputs = ["a", "w", "slack"]
 
         self.do_not_use_integration_for_last_n_states(n=1)
 
@@ -306,8 +306,8 @@ class BicycleModel2ndOrderCurvatureAware(DynamicsModel):
 
         # NOTE: the angle of the vehicle should not be limited to -pi, pi, as the solution will not shift when it is at the border!
         # a was 3.0
-        self.lower_bound = [-3.0, -1.5, -1.0e6, -1.0e6, -np.pi * 4, -0.01, -0.45, -1.0]
-        self.upper_bound = [3.0, 1.5, 1.0e6, 1.0e6, np.pi * 4, 8.0, 0.45, 5000.0]
+        self.lower_bound = [-3.0, -1.5, 0., -1.0e6, -1.0e6, -np.pi * 4, -0.01, -0.45, -1.0]
+        self.upper_bound = [3.0, 1.5, 1.0e2, 1.0e6, 1.0e6, np.pi * 4, 8.0, 0.45, 5000.0]
 
     def continuous_model(self, x, u):
         a = u[0]
@@ -345,7 +345,7 @@ class BicycleModel2ndOrderCurvatureAware(DynamicsModel):
 
         # v = np.array([vel * cd.cos(psi), vel * cd.sin(psi)])
 
-         # CA-MPCC
+         # CA-MPC
         path = Spline2D(self.params, self.settings["contouring"]["num_segments"], s)
         path_x, path_y = path.at(s)
         path_dx_normalized, path_dy_normalized = path.deriv_normalized(s)
@@ -364,7 +364,7 @@ class BicycleModel2ndOrderCurvatureAware(DynamicsModel):
 
         dt = self.settings["integrator_step"]
 
-        R = 1. / path.get_curvature(s)
+        R = 1. / path.get_curvature(s) # max(R) = 1 / 0.0001
         R = cd.fmax(R, 1e5)
 
         theta = cd.atan2(vt_t, R - contour_error - vn_t)

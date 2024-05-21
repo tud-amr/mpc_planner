@@ -3,6 +3,7 @@ import sys
 
 import casadi as cd
 import numpy as np
+import math
 
 from util.math import rotation_matrix
 from control_modules import ConstraintModule
@@ -17,10 +18,9 @@ class ContouringConstraintModule(ConstraintModule):
     def __init__(self, settings):
         super().__init__()
 
-
         self.module_name = "ContouringConstraints"  # Needs to correspond to the c++ name of the module
         self.import_name = "contouring_constraints.h"
-        self.description = "Avoid obstacles, modeled as ellipsoids (possibly including Gaussian noise)."
+        self.description = "Constrain the contouring error to stay within road boundaries"
 
         self.constraints.append(ContouringConstraint(settings["contouring"]["num_segments"]))
 
@@ -59,8 +59,12 @@ class ContouringConstraint:
         constraints = []
         pos_x = model.get("x")
         pos_y = model.get("y")
-        pos = np.array([pos_x, pos_y])
         s = model.get("spline")
+
+        try:
+            slack = model.get("slack")
+        except:
+            slack = 0.0
 
         try:
             psi = model.get("psi")
@@ -76,13 +80,16 @@ class ContouringConstraint:
         width_left = Spline(params, "width_left", self.num_segments, s)
         width_right = Spline(params, "width_right", self.num_segments, s)
 
-        # Angle deviation from the path
-        delta_psi = psi - cd.atan2(path_dy_normalized, path_dx_normalized)
 
-        w_cur = model.width / 2. * cd.cos(delta_psi) + model.lr * cd.sin(cd.fabs(delta_psi))
+        # Accurate width of the vehicle incorporating its orientation w.r.t. the path
+        # delta_psi = psi - cd.atan2(path_dy_normalized, path_dx_normalized) # Angle w.r.t. the path
+        # w_cur = model.width / 2. * cd.cos(delta_psi) + model.lr * cd.sin(cd.sqrt(delta_psi*delta_psi + 0.00001))
+
+        # Simpler
+        w_cur = model.width / 2. 
 
         # Forces does not support bounds that depend on the parameters. Two constraints are needed.
-        constraints.append(contour_error - (width_right.at(s) - w_cur))
-        constraints.append(-(width_left.at(s) - w_cur) - contour_error)
+        constraints.append(contour_error + w_cur - width_right.at(s) - slack)
+        constraints.append(-contour_error + w_cur - width_left.at(s) - slack) # -width_left because widths are positive
 
         return constraints

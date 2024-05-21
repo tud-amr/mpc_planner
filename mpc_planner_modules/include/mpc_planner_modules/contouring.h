@@ -26,14 +26,13 @@ namespace MPCPlanner
     void reset() override;
 
   private:
-    std::unique_ptr<RosTools::Spline2D> _spline{nullptr};
+    std::shared_ptr<RosTools::Spline2D> _spline{nullptr};
     std::unique_ptr<RosTools::Spline2D> _bound_left{nullptr}, _bound_right{nullptr};
-    std::unique_ptr<tk::spline> _width_left{nullptr}, _width_right{nullptr};
 
     int _closest_segment{0};
     int _n_segments;
 
-    bool _add_road_constraints{false}, _two_way_road{false};
+    bool _add_road_constraints{false}, _two_way_road{false}, _use_ca_mpc;
 
     void constructRoadConstraints(const RealTimeData &data, ModuleData &module_data);
     void constructRoadConstraintsFromCenterline(const RealTimeData &data, ModuleData &module_data);

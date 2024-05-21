@@ -1,5 +1,5 @@
 name: "autoware"
-N: 30
+N: 20
 integrator_step: 0.2
 n_discs: 3
 
@@ -22,10 +22,10 @@ recording:
 
 debug_output: false
 debug_limits: false
-debug_visuals: true
+debug_visuals: false
 
 enable_output: true
-control_frequency: 10 # 20
+control_frequency: 10
 deceleration_at_infeasible: 1.0
 max_obstacles: 4
 max_obstacle_distance: 100.
@@ -49,10 +49,11 @@ road:
 shift_previous_solution_forward: false # Was true
 
 contouring:
+  use_ca_mpc: true
   num_segments: 12 #6
   preview: 2.0 # [s], use 0.0 to disable preview
   use_map_bounds: true # Autoware only
-  add_road_constraints: true
+  add_road_constraints: false
 
 t-mpc:
   use_t-mpc++: true
@@ -66,12 +67,12 @@ probabilistic:
 
 weights:
   goal: 10.
-  velocity: 0.05
+  velocity: 0.02 # CA-MPC Path velocity #0.05
   acceleration: 0.2
   angular_velocity: 0.5
   reference_velocity: 2.5
-  contour: 0.05
-  lag: 0.02
+  contour: 0.05 #0.05
+  lag: 0.0 #0.02
   preview: 0.5
   slack: 1000.
 

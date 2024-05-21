@@ -102,6 +102,14 @@ namespace MPCPlanner
 
     void FixedSizeTrajectory::add(const Eigen::Vector2d &p)
     {
+        // On jump, erase the trajectory
+        if (std::sqrt((p - positions.back()).transpose() * (p - positions.back())) > 5.0)
+        {
+            positions.clear();
+            positions.push_back(p);
+            return;
+        }
+
         if ((int)positions.size() < _size)
         {
             positions.push_back(p);

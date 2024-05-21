@@ -342,7 +342,7 @@ void AutowarePlanner::pathCallback(PathWithLaneId::SharedPtr msg)
     _data.reference_path.y.push_back(point.point.pose.position.y);
     _data.reference_path.psi.push_back(0.0);
 
-    _data.reference_path.v.push_back(2.5);                          // point.point.longitudinal_velocity_mps);
+    _data.reference_path.v.push_back(point.point.longitudinal_velocity_mps);
     _data.reference_path.s.push_back(point.point.heading_rate_rps); // For now: saved here
   }
 

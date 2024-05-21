@@ -42,17 +42,18 @@ namespace MPCPlanner
     static double velocity_weight, reference_velocity;
 
     // Retrieve once
-    if (k == 0)
-    {
-      velocity_weight = CONFIG["weights"]["velocity"].as<double>();
-      reference_velocity = CONFIG["weights"]["reference_velocity"].as<double>();
-    }
+    // if (k == 0)
+    // {
+    //   velocity_weight = CONFIG["weights"]["velocity"].as<double>();
+    //   reference_velocity = CONFIG["weights"]["reference_velocity"].as<double>();
+    // }
 
     // Set the parameters for velocity tracking
-    setForcesParameterVelocity(k, _solver->_params, velocity_weight);
+    // setForcesParameterVelocity(k, _solver->_params, velocity_weight);
 
     if (data.reference_path.hasVelocity()) // Use a spline-based velocity reference
     {
+      LOG_MARK("Using spline-based reference velocity");
       for (int i = 0; i < _n_segments; i++)
       {
         int index = module_data.current_path_segment + i;
@@ -64,12 +65,11 @@ namespace MPCPlanner
         }
         else
         {
-          // If we are beyond the spline, we should use the last spline
-          _velocity_spline->getParameters(_velocity_spline->m_x_.size() - 1, a, b, c, d);
-
-          a = 0; // Constant spline = d
-          b = 0;
-          c = 0;
+          // Brake at the end
+          a = 0.;
+          b = 0.;
+          c = 0.;
+          d = 0.;
         }
 
         setForcesParameterSplineVA(k, _solver->_params, a, i);
