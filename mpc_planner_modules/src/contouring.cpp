@@ -36,8 +36,8 @@ namespace MPCPlanner
     double closest_s;
     _spline->findClosestPoint(state.getPos(), _closest_segment, closest_s);
 
-    if (module_data.spline.get() == nullptr && _spline.get() != nullptr)
-      module_data.spline = _spline;
+    if (module_data.path.get() == nullptr && _spline.get() != nullptr)
+      module_data.path = _spline;
 
     state.set("spline", closest_s); // We need to initialize the spline state here
 
@@ -54,15 +54,18 @@ namespace MPCPlanner
 
     // Retrieve weights once
     static double contouring_weight, lag_weight, preview_weight, reference_velocity, velocity_weight;
+    static double terminal_angle_weight, terminal_contouring_weight;
     if (k == 0)
     {
       contouring_weight = CONFIG["weights"]["contour"].as<double>();
 
       preview_weight = CONFIG["weights"]["preview"].as<double>();
+      velocity_weight = CONFIG["weights"]["velocity"].as<double>();
+      terminal_angle_weight = CONFIG["weights"]["terminal_angle"].as<double>();
+      terminal_contouring_weight = CONFIG["weights"]["terminal_contouring"].as<double>();
 
       if (_use_ca_mpc)
       {
-        velocity_weight = CONFIG["weights"]["velocity"].as<double>();
         reference_velocity = CONFIG["weights"]["reference_velocity"].as<double>();
       }
       else
@@ -73,16 +76,19 @@ namespace MPCPlanner
 
     {
       setForcesParameterContour(k, _solver->_params, contouring_weight);
+      setForcesParameterVelocity(k, _solver->_params, velocity_weight);
+      setForcesParameterTerminalAngle(k, _solver->_params, terminal_angle_weight);
+      setForcesParameterTerminalContouring(k, _solver->_params, terminal_contouring_weight);
 
       if (_use_ca_mpc)
       {
         setForcesParameterReferenceVelocity(k, _solver->_params, reference_velocity);
-        setForcesParameterVelocity(k, _solver->_params, velocity_weight);
       }
       else
       {
         setForcesParameterLag(k, _solver->_params, lag_weight);
       }
+
       if (preview_weight > 0.)
         _solver->setParameter(k, "preview", preview_weight);
     }
@@ -163,7 +169,7 @@ namespace MPCPlanner
       return false;
 
     // Check if we reached the end of the spline
-    return RosTools::distance(state.getPos(), _spline->getPoint(_spline->parameterLength())) < 0.1;
+    return RosTools::distance(state.getPos(), _spline->getPoint(_spline->parameterLength())) < 1.0;
 
     // int index = _closest_segment + _n_segments - 1;
     // return index >= _spline->numSegments();
@@ -260,7 +266,6 @@ namespace MPCPlanner
     PROFILE_SCOPE("Contouring::Visualize");
 
     visualizeReferencePath(data, module_data);
-
     visualizeRoadConstraints(data, module_data);
 
     if (CONFIG["debug_visuals"].as<bool>())
@@ -269,6 +274,7 @@ namespace MPCPlanner
       visualizeDebugRoadBoundary(data, module_data);
       visualizeDebugGluedSplines(data, module_data);
       visualizeAllSplineIndices(data, module_data);
+      visualizeTrackedSection(data, module_data);
     }
   }
 
@@ -286,24 +292,38 @@ namespace MPCPlanner
     publisher_current.publish();
   }
 
+  void Contouring::visualizeTrackedSection(const RealTimeData &data, const ModuleData &module_data)
+  {
+    (void)data;
+    (void)module_data;
+
+    // Visualize the current points
+    auto &publisher = VISUALS.getPublisher(_name + "/tracked_path");
+    auto &line = publisher.getNewLine();
+
+    line.setColorInt(10);
+    line.setScale(0.3, 0.3, 0.3);
+
+    /** @todo visualize each section*/
+    for (int i = _closest_segment; i < _closest_segment + _n_segments; i++)
+    {
+      double s_start = _spline->getSegmentStart(i);
+      for (double s = s_start + 1.0; s < _spline->getSegmentStart(i + 1); s += 1.0)
+      {
+        if (s > 0)
+          line.addLine(_spline->getPoint(s - 1.0), _spline->getPoint(s));
+      }
+    }
+
+    publisher.publish();
+  }
+
   // Move to data visualization
   void Contouring::visualizeReferencePath(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)module_data;
-    visualizePathPoints(data.reference_path, _name + "/points", true);
+    visualizePathPoints(data.reference_path, _name + "/path", false);
     visualizeSpline(*_spline, _name + "/path", true);
-
-    if (!data.left_bound.empty())
-    {
-
-      visualizePathPoints(data.left_bound, _name + "/boundary_points", false);
-      visualizePathPoints(data.right_bound, _name + "/boundary_points", true);
-    }
-    if (_bound_left != nullptr)
-    {
-      visualizeSpline(*_bound_left, _name + "/boundary_path", false);
-      visualizeSpline(*_bound_right, _name + "/boundary_path", true);
-    }
   }
 
   void Contouring::visualizeRoadConstraints(const RealTimeData &data, const ModuleData &module_data)

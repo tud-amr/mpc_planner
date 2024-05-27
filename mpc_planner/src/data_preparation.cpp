@@ -39,8 +39,7 @@ namespace MPCPlanner
                                         robot_area.emplace_back(-center_offset + radius +
                                                                     (double)i * (length - 2. * radius) / ((double)(n_discs - 1.)),
                                                                 radius); // Other discs in between
-                                LOG_VALUE("offset", robot_area.back().offset);
-                                LOG_VALUE("radius", robot_area.back().radius);
+                                LOG_MARK("Disc " << i << ": offset " << robot_area.back().offset << ", radius " << robot_area.back().radius);
                         }
                 }
 

@@ -29,29 +29,12 @@ from contouring_constraints import ContouringConstraintModule
 from solver_model import BicycleModel2ndOrder, BicycleModel2ndOrderCurvatureAware
 
 
-# def configuration_safe_horizon(settings):
-#     modules = ModuleManager()
-#     model = ContouringSecondOrderUnicycleModelWithSlack()
-
-#     # Module that allows for penalization of variables
-#     base_module = modules.add_module(MPCBaseModule(settings))
-
-#     # Penalize ||a||_2^2 and ||w||_2^2
-#     base_module.weigh_variable(var_name="a", weight_names="acceleration")
-#     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
-#     base_module.weigh_variable(var_name="slack", weight_names="slack")
-
-#     # modules.add_module(GoalModule(settings))  # Track a goal
-#     modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
-#     modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
-
-#     modules.add_module(ScenarioConstraintModule(settings))
-#     return model, modules
-
-
 def configuration_tmpc(settings):
     modules = ModuleManager()
-    model = BicycleModel2ndOrderCurvatureAware()
+    if settings["contouring"]["use_ca_mpc"]:
+        model = BicycleModel2ndOrderCurvatureAware()
+    else:
+        model = BicycleModel2ndOrder()
 
     base_module = modules.add_module(MPCBaseModule(settings))
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
@@ -60,7 +43,8 @@ def configuration_tmpc(settings):
 
     modules.add_module(ContouringModule(settings, 
         num_segments=settings["contouring"]["num_segments"], 
-        preview=settings["contouring"]["preview"]))
+        preview=settings["contouring"]["preview"],
+        use_ca_mpc=settings["contouring"]["use_ca_mpc"]))
     modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
 
     modules.add_module(ContouringConstraintModule(settings))
@@ -72,7 +56,11 @@ def configuration_tmpc(settings):
 
 def configuration_lmpcc(settings):
     modules = ModuleManager()
-    model = BicycleModel2ndOrderCurvatureAware()
+
+    if settings["contouring"]["use_ca_mpc"]:
+        model = BicycleModel2ndOrderCurvatureAware()
+    else:
+        model = BicycleModel2ndOrder()
 
     # Penalize ||a||_2^2 and ||w||_2^2
     base_module = modules.add_module(MPCBaseModule(settings))

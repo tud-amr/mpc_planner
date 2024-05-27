@@ -5,7 +5,7 @@ import casadi as cd
 import numpy as np
 import math
 
-from util.math import rotation_matrix
+from util.math import rotation_matrix, haar_difference_without_abs
 from control_modules import ConstraintModule
 
 from spline import Spline2D, Spline
@@ -47,12 +47,14 @@ class ContouringConstraint:
         lower_bound = []
         lower_bound.append(-np.inf)
         lower_bound.append(-np.inf)
+        # lower_bound.append(-np.inf)
         return lower_bound
 
     def get_upper_bound(self):
         upper_bound = []
         upper_bound.append(0.)
         upper_bound.append(0.)
+        # upper_bound.append(0.)
         return upper_bound
 
     def get_constraints(self, model, params, settings, stage_idx):
@@ -82,8 +84,8 @@ class ContouringConstraint:
 
 
         # Accurate width of the vehicle incorporating its orientation w.r.t. the path
-        # delta_psi = psi - cd.atan2(path_dy_normalized, path_dx_normalized) # Angle w.r.t. the path
-        # w_cur = model.width / 2. * cd.cos(delta_psi) + model.lr * cd.sin(cd.sqrt(delta_psi*delta_psi + 0.00001))
+        # delta_psi = haar_difference_without_abs(psi, cd.atan2(path_dy_normalized, path_dx_normalized)) # Angle w.r.t. the path
+        # w_cur = model.width / 2. * cd.cos(delta_psi) + model.lr * cd.sin(cd.fabs(delta_psi))
 
         # Simpler
         w_cur = model.width / 2. 
@@ -91,5 +93,7 @@ class ContouringConstraint:
         # Forces does not support bounds that depend on the parameters. Two constraints are needed.
         constraints.append(contour_error + w_cur - width_right.at(s) - slack)
         constraints.append(-contour_error + w_cur - width_left.at(s) - slack) # -width_left because widths are positive
+
+        # constraints.append(cd.fabs(delta_psi) - 0.35 * np.pi)
 
         return constraints

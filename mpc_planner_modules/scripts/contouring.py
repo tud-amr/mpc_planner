@@ -9,14 +9,15 @@ import numpy as np
 from control_modules import ObjectiveModule, Objective
 
 from spline import Spline, Spline2D
+from util.math import haar_difference_without_abs
 
-def get_preview_state(model, time_ahead):
+def get_preview_state(model, settings, time_ahead):
     # Integrate the trajectory to obtain the preview point
     copied_model = copy.deepcopy(model)
 
     z_constant_input = cd.vertcat(np.zeros((model.nu)), model.get_x())
 
-    z_preview = model.integrate(z_constant_input, time_ahead)  # Integrate the dynamics T seconds ahead
+    z_preview = model.integrate(z_constant_input, settings, integration_step=time_ahead)  # Integrate the dynamics T seconds ahead
     z_preview = cd.vertcat(np.zeros((model.nu)), z_preview)
 
     # Retrieve the resulting position and spline
@@ -45,6 +46,9 @@ class ContouringObjective:
         params.add("reference_velocity", add_to_rqt_reconfigure=True)
         params.add("velocity", add_to_rqt_reconfigure=True)
         params.add("lag", add_to_rqt_reconfigure=True)
+
+        params.add("terminal_angle", add_to_rqt_reconfigure=True)
+        params.add("terminal_contouring", add_to_rqt_reconfigure=True)
     
         if self.enable_preview:
             params.add("preview", add_to_rqt_reconfigure=True)
@@ -69,9 +73,19 @@ class ContouringObjective:
 
         pos_x = model.get("x")
         pos_y = model.get("y")
+        psi = model.get("psi")
+        v = model.get("v")
         s = model.get("spline")
 
         contour_weight = params.get("contour")
+        velocity_weight = params.get("velocity")
+
+        # From path
+        path_velocity = Spline(params, "spline_v", self.num_segments, s)
+        reference_velocity = path_velocity.at(s)
+
+        # Static
+        # reference_velocity = params.get("reference_velocity")
 
         path = Spline2D(params, self.num_segments, s)
         path_x, path_y = path.at(s)
@@ -86,15 +100,10 @@ class ContouringObjective:
             lag_weight = params.get("lag")
             lag_error = path_dx_normalized * (pos_x - path_x) + path_dy_normalized * (pos_y - path_y)
             cost += lag_weight * lag_error**2
+            cost += velocity_weight * (v - reference_velocity)**2
         else:
             # CA-MPC
             # https://www.researchgate.net/profile/Laura-Ferranti-4/publication/371169207_Curvature-Aware_Model_Predictive_Contouring_Control/links/64775cecd702370600c50752/Curvature-Aware-Model-Predictive-Contouring-Control.pdf
-
-            v = model.get("v")
-            psi = model.get("psi")
-
-            # reference_velocity = params.get("reference_velocity")
-            velocity_weight = params.get("velocity")
 
             dt = settings["integrator_step"]
 
@@ -115,42 +124,63 @@ class ContouringObjective:
             # Path velocity
             s_dot = R * vt * ((R - contour_error - vn_t) + vn_t) / ((R - contour_error - vn_t)**2 + (vt_t)**2)
 
-            path_velocity = Spline(params, "spline_v", self.num_segments, s)
-            reference_velocity = path_velocity.at(s)
+            # Lorenzo's equations        
+            # projection_ratio = 1.0 / (1.0 - ((pos_x - path_x) * path_ddx  + (pos_y - path_y) * path_ddy))
+            # s_dot = v * (cd.cos(psi) * path_dx_normalized + cd.sin(psi) * path_dy_normalized) * projection_ratio
 
             cost += velocity_weight * (s_dot - reference_velocity)**2 # Penalize its tracking performance
 
-        # if self.enable_preview and stage_idx == settings["N"] - 1:
-        #     print(f"Adding preview cost at T = {self.preview} ahead")
-        #     # In the terminal stage add a preview cost
-        #     preview_weight = params.get("preview")
-        #     preview_pos_x, preview_pos_y, preview_s = get_preview_state(model, self.preview)
+        # Terminal cost
+        if True and stage_idx == settings["N"] - 1:
 
-        #     preview_splines = MultiSplineXY(params, self.num_segments, preview_s)
-        #     preview_path_x, preview_path_y, preview_path_dx_normalized, preview_path_dy_normalized = preview_splines.get_path_and_dpath()
+            terminal_angle_weight = params.get("terminal_angle")
+            terminal_contouring_mp = params.get("terminal_contouring")
 
-        #     preview_contour_error = preview_path_dy_normalized * (preview_pos_x - preview_path_x) - preview_path_dx_normalized * (
-        #         preview_pos_y - preview_path_y
-        #     )
-        #     preview_lag_error = -preview_path_dx_normalized * (preview_pos_x - preview_path_x) - preview_path_dy_normalized * (
-        #         preview_pos_y - preview_path_y
-        #     )
+            # Compute the angle w.r.t. the path
+            path_angle = cd.atan2(path_dy_normalized, path_dx_normalized)
+            angle_error = haar_difference_without_abs(psi, path_angle)
 
-        #     # We use the existing weights here to sort of scale the contribution w.r.t. the regular contouring cost
-        #     cost += preview_weight * contour_weight * preview_contour_error**2
-        #     cost += preview_weight * lag_weight * preview_lag_error**2
+            # Penalize the angle error
+            cost += terminal_angle_weight * angle_error**2
+            cost += terminal_contouring_mp * contour_weight * contour_error**2
+
+            if not self.use_ca_mpc:
+                cost += terminal_contouring_mp * lag_weight * lag_error**2
+            else:
+                cost += terminal_contouring_mp * velocity_weight * (s_dot - reference_velocity)**2
 
         return cost
 
 
 class ContouringModule(ObjectiveModule):
 
-    def __init__(self, settings, num_segments, preview=0.0):
+    def __init__(self, settings, num_segments, preview=0.0, use_ca_mpc=True):
         super().__init__()
         self.module_name = "Contouring"  # Needs to correspond to the c++ name of the module
         self.import_name = "contouring.h"
         self.type = "objective"
-        self.description = "Tracks a 2D reference path with contouring costs"
+        if use_ca_mpc:
+            self.description = "Curvature-Aware MPC: Tracks a 2D reference path with curvature-aware contouring costs"
+        else:
+            self.description = "MPCC: Tracks a 2D reference path with contouring costs"
 
         self.objectives = []
-        self.objectives.append(ContouringObjective(settings, num_segments, preview))
+        self.objectives.append(ContouringObjective(settings, num_segments, preview, use_ca_mpc))
+
+# Unused preview cost
+# if self.enable_preview and stage_idx == settings["N"] - 1:
+#     print(f"Adding preview cost at T = {self.preview} ahead")
+#     # In the terminal stage add a preview cost
+#     preview_weight = params.get("preview")
+#     preview_pos_x, preview_pos_y, preview_s = get_preview_state(model, settings, self.preview)
+
+#     preview_path = Spline2D(params, self.num_segments, preview_s)
+#     preview_path_x, preview_path_y = path.at(preview_s)
+#     preview_path_dx_normalized, preview_path_dy_normalized = preview_path.deriv_normalized(self.preview)
+
+#     preview_contour_error = preview_path_dy_normalized * (preview_pos_x - preview_path_x) - \
+#     preview_path_dx_normalized * (preview_pos_y - preview_path_y)           
+
+#     # We use the existing weights here to sort of scale the contribution w.r.t. the regular contouring cost
+#     cost += preview_weight * contour_weight * preview_contour_error**2
+#     # cost += preview_weight * lag_weight * preview_lag_error**2

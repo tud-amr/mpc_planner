@@ -20,7 +20,9 @@ namespace MPCPlanner
   {
     (void)state;
     (void)data;
-    (void)module_data;
+
+    if (module_data.path_velocity == nullptr && _velocity_spline != nullptr)
+      module_data.path_velocity = _velocity_spline;
   }
 
   void PathReferenceVelocity::onDataReceived(RealTimeData &data, std::string &&data_name)
@@ -29,7 +31,7 @@ namespace MPCPlanner
     {
       LOG_MARK("Received Reference Path");
 
-      _velocity_spline = std::make_unique<tk::spline>();
+      _velocity_spline = std::make_shared<tk::spline>();
       _velocity_spline->set_points(data.reference_path.s, data.reference_path.v);
     }
   }
@@ -95,6 +97,9 @@ namespace MPCPlanner
     if (data.reference_path.empty())
       return;
 
+    if (!CONFIG["debug_visuals"].as<bool>())
+      return;
+
     // Only for debugging
     auto &publisher = VISUALS.getPublisher("path_velocity");
     auto &line = publisher.getNewLine();
@@ -104,7 +109,7 @@ namespace MPCPlanner
 
     Eigen::Vector2d prev;
     double prev_v;
-    for (double s = 0.; s < _velocity_spline->m_x_.back(); s += 0.25)
+    for (double s = 0.; s < _velocity_spline->m_x_.back(); s += 1.0)
     {
       Eigen::Vector2d cur = spline_xy->getPoint(s);
       double v = _velocity_spline->operator()(s);

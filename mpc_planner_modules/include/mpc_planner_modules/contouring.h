@@ -40,6 +40,7 @@ namespace MPCPlanner
 
     void visualizeReferencePath(const RealTimeData &data, const ModuleData &module_data);
     void visualizeCurrentSegment(const RealTimeData &data, const ModuleData &module_data);
+    void visualizeTrackedSection(const RealTimeData &data, const ModuleData &module_data);
     void visualizeRoadConstraints(const RealTimeData &data, const ModuleData &module_data);
 
     void visualizeDebugRoadBoundary(const RealTimeData &data, const ModuleData &module_data);

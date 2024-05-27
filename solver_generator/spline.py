@@ -84,4 +84,4 @@ class Spline2D:
         path_x_deriv2 = self.spline_x.deriv2(s)
         path_y_deriv2 = self.spline_y.deriv2(s)
 
-        return cd.sqrt(path_x_deriv2 * path_x_deriv2 + path_y_deriv2 * path_y_deriv2)
+        return cd.sqrt(path_x_deriv2 * path_x_deriv2 + path_y_deriv2 * path_y_deriv2)# + 0.0000000001) # Max = 1e2

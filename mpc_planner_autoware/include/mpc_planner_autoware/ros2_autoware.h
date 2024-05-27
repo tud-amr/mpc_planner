@@ -7,6 +7,8 @@
 #include <mpc_planner_solver/state.h>
 
 #include <mpc_planner_msgs/msg/obstacle_array.hpp>
+
+#include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <nav_msgs/msg/path.hpp>
@@ -20,6 +22,7 @@
 #include <autoware_auto_vehicle_msgs/msg/steering_report.hpp>
 #include <autoware_auto_perception_msgs/msg/tracked_objects.hpp>
 #include <autoware_adapi_v1_msgs/msg/operation_mode_state.hpp>
+#include "autoware_adapi_v1_msgs/srv/change_operation_mode.hpp"
 
 // #include <autoware_auto_perception_msgs/msg/predicted_objects.hpp>
 
@@ -33,16 +36,17 @@ namespace MPCPlanner
 namespace RosTools
 {
   class Benchmarker;
+  class Timer;
 }
 
 using namespace MPCPlanner;
 class Reconfigure;
 
 using autoware_adapi_v1_msgs::msg::OperationModeState;
+using autoware_auto_perception_msgs::msg::TrackedObjects;
 using autoware_auto_planning_msgs::msg::PathWithLaneId;
 using autoware_auto_planning_msgs::msg::Trajectory;
 using autoware_auto_planning_msgs::msg::TrajectoryPoint;
-using autoware_auto_perception_msgs::msg::TrackedObjects;
 using autoware_auto_vehicle_msgs::msg::SteeringReport;
 
 class AutowarePlanner : public rclcpp::Node
@@ -55,6 +59,9 @@ public:
   void initializeParameterCallbacks();
   void setRobotRegion();
   void startEnvironment();
+  void startExperiment();
+
+  void reset(bool success);
 
   void Loop(); // Main loop
 
@@ -79,11 +86,16 @@ private:
   State _state;
 
   bool _disable_pedestrian_simulator{false}; // If real obstacles are received
+  bool _starting{true};
 
   rclcpp::TimerBase::SharedPtr _timer;
   rclcpp::Time _state_received_time;
 
   std::unique_ptr<Reconfigure> _reconfigure;
+
+  // Experiment timer
+  std::unique_ptr<RosTools::Timer> _experiment_timer;
+  bool _can_timeout;
 
   // Subscribers and publishers
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _state_sub;
@@ -98,10 +110,15 @@ private:
 
   // Pedestrian Simulator
   rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr _ped_reset_pub;
+  rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr _ped_reset_to_start_pub;
   rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr _ped_horizon_pub;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr _ped_integrator_step_pub;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr _ped_clock_frequency_pub;
   rclcpp::Client<std_srvs::srv::Empty>::SharedPtr _ped_start_client;
+
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr _autoware_position_pub;
+  rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr _trigger_goal_pub;
+  rclcpp::Client<autoware_adapi_v1_msgs::srv::ChangeOperationMode>::SharedPtr _change_operation_mode_client;
 
   // Parameter updates
   std::shared_ptr<rclcpp::ParameterEventHandler> _param_subscriber;
@@ -113,6 +130,8 @@ private:
   // bool isPathTheSame(PathWithLaneId::SharedPtr path);
 
   void visualize();
+  void checkCollisions();
+  void changeAutowareModeToAuto();
 };
 
 #endif // AutowarePlanner_PLANNER_H

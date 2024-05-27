@@ -100,8 +100,6 @@ namespace MPCPlanner
         std::vector<double> v;
         std::vector<double> s;
 
-        int current_segment = -1;
-
         ReferencePath(int length = 10);
         void clear();
 

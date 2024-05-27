@@ -33,7 +33,8 @@ public:
 			config.reference_velocity = CONFIG["weights"]["reference_velocity"].as<double>();
 			config.velocity = CONFIG["weights"]["velocity"].as<double>();
 			config.lag = CONFIG["weights"]["lag"].as<double>();
-			config.preview = CONFIG["weights"]["preview"].as<double>();
+			config.terminal_angle = CONFIG["weights"]["terminal_angle"].as<double>();
+			config.terminal_contouring = CONFIG["weights"]["terminal_contouring"].as<double>();
 			_first_reconfigure_callback = false;
 		}else{
 			CONFIG["weights"]["acceleration"] = config.acceleration;
@@ -43,7 +44,8 @@ public:
 			CONFIG["weights"]["reference_velocity"] = config.reference_velocity;
 			CONFIG["weights"]["velocity"] = config.velocity;
 			CONFIG["weights"]["lag"] = config.lag;
-			CONFIG["weights"]["preview"] = config.preview;
+			CONFIG["weights"]["terminal_angle"] = config.terminal_angle;
+			CONFIG["weights"]["terminal_contouring"] = config.terminal_contouring;
 		}
 	}
 

@@ -28,7 +28,7 @@ namespace MPCPlanner
   private:
     int _num_segments;
 
-    std::unique_ptr<tk::spline> _width_left{nullptr}, _width_right{nullptr};
+    std::shared_ptr<tk::spline> _width_left{nullptr}, _width_right{nullptr};
   };
 }
 #endif // __ELLIPSOID_CONSTRAINTS_H_

@@ -36,7 +36,7 @@ namespace MPCPlanner
     virtual void visualize(const RealTimeData &data, const ModuleData &module_data) override;
 
   private:
-    std::unique_ptr<tk::spline> _velocity_spline;
+    std::shared_ptr<tk::spline> _velocity_spline;
     int _n_segments;
   };
 }

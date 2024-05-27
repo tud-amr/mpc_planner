@@ -2,8 +2,11 @@
 
 <launch>
 
+  <arg name="standalone_mode" default="false" description="launches only the planner if true"/>
+
   <node pkg="mpc_planner_autoware" exec="autoware_planner" name="autoware_planner" respawn="false" output="screen">
     <param from="$(find-pkg-share mpc_planner_autoware)/config/ros2_guidance_planner.yaml"/>
+    <param from="$(find-pkg-share mpc_planner_autoware)/config/autotune_guidance.yaml"/>
     <remap from="~/input/state" to="/localization/kinematic_state"/>
     <remap from="~/input/steering" to="/vehicle/status/steering_status"/>
     <remap from="~/input/goal" to="/goal_pose"/>
@@ -14,13 +17,8 @@
     <remap from="~/output/trajectory" to="/planning/scenario_planning/motion_velocity_smoother/trajectory"/>
   </node>
 
-  <include file="$(find-pkg-share pedestrian_simulator)/launch/ros2_simulation.launch">
-    <arg name="pedestrian_scenario" value="autoware/demo_1.xml"/>
-  </include>
-  <!-- several_crossing.xml | crossing_spree.xml | me_4crossing.xml -->
-
-  <include file="$(find-pkg-share lanelets_to_path)/launch/lanelets_to_path.launch"/>
-
-  <node pkg="rqt_gui" exec="rqt_gui" name="rqt_gui" namespace="" output="log"/>
+  <group unless="$(var standalone_mode)">
+    <include file="$(find-pkg-share mpc_planner_autoware)/launch/path_and_pedestrians.launch"/>
+  </group>
 
 </launch>  

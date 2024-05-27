@@ -23,14 +23,19 @@ namespace MPCPlanner
   {
     (void)state;
     (void)data;
-    (void)module_data;
+
+    if (module_data.path_width_left == nullptr && _width_left != nullptr)
+      module_data.path_width_left = _width_left;
+
+    if (module_data.path_width_right == nullptr && _width_right != nullptr)
+      module_data.path_width_right = _width_right;
   }
 
   void ContouringConstraints::onDataReceived(RealTimeData &data, std::string &&data_name)
   {
     if (data_name == "reference_path")
     {
-      auto spline = RosTools::Spline2D(data.reference_path.x, data.reference_path.y);
+      auto spline = RosTools::Spline2D(data.reference_path.x, data.reference_path.y, data.reference_path.s);
 
       if (!data.left_bound.empty() && !data.right_bound.empty())
       {
@@ -51,12 +56,13 @@ namespace MPCPlanner
 
         std::vector<double> s_vec;
 
-        _width_left = std::make_unique<tk::spline>();
+        _width_left = std::make_shared<tk::spline>();
         _width_left->set_points(data.reference_path.s, widths_left);
         // _width_left->set_points(spline.getTVector(), widths_left);
 
-        _width_right = std::make_unique<tk::spline>();
+        _width_right = std::make_shared<tk::spline>();
         _width_right->set_points(data.reference_path.s, widths_right);
+
         // _width_right->set_points(spline.getTVector(), widths_right);
         // CONFIG["road"]["width"] = _width_right->operator()(0.) - _width_left->operator()(0.);
       }
@@ -72,7 +78,7 @@ namespace MPCPlanner
 
     for (int i = 0; i < _num_segments; i++)
     {
-      int index = data.reference_path.current_segment + i;
+      int index = module_data.current_path_segment + i;
 
       // Boundaries
       double ra, rb, rc, rd;
@@ -129,7 +135,10 @@ namespace MPCPlanner
     (void)data;
     (void)module_data;
 
-    if (_width_right == nullptr || _width_left == nullptr || module_data.spline == nullptr)
+    if (!CONFIG["debug_visuals"].as<bool>())
+      return;
+
+    if (_width_right == nullptr || _width_left == nullptr || module_data.path == nullptr)
       return;
 
     auto &line_publisher = VISUALS.getPublisher(_name + "/road_boundary");
@@ -139,13 +148,13 @@ namespace MPCPlanner
 
     Eigen::Vector2d prev_right, prev_left;
 
-    for (double cur_s = 0.; cur_s < _width_right->m_x_.back(); cur_s += 0.1)
+    for (double cur_s = 0.; cur_s < _width_right->m_x_.back(); cur_s += 0.5)
     {
       double right = _width_right->operator()(cur_s);
       double left = _width_left->operator()(cur_s);
 
-      Eigen::Vector2d path_point = module_data.spline->getPoint(cur_s);
-      Eigen::Vector2d dpath = module_data.spline->getOrthogonal(cur_s);
+      Eigen::Vector2d path_point = module_data.path->getPoint(cur_s);
+      Eigen::Vector2d dpath = module_data.path->getOrthogonal(cur_s);
 
       if (cur_s > 0)
       {
@@ -158,8 +167,8 @@ namespace MPCPlanner
     }
     line_publisher.publish();
 
-    if (!CONFIG["debug_visuals"].as<bool>())
-      return;
+    // if (!CONFIG["debug_visuals"].as<bool>())
+      // return;
 
     auto &publisher = VISUALS.getPublisher(_name + "/road_boundary_points");
     auto &points = publisher.getNewPointMarker("CUBE");
@@ -171,12 +180,12 @@ namespace MPCPlanner
     {
 
       double cur_s = _solver->getOutput(k, "spline");
-      Eigen::Vector2d path_point = module_data.spline->getPoint(cur_s);
+      Eigen::Vector2d path_point = module_data.path->getPoint(cur_s);
 
       points.setColorInt(5, 10);
       points.addPointMarker(path_point);
 
-      Eigen::Vector2d dpath = module_data.spline->getOrthogonal(cur_s);
+      Eigen::Vector2d dpath = module_data.path->getOrthogonal(cur_s);
 
       // line is parallel to the spline
       Eigen::Vector2d boundary_left = path_point - dpath * (_width_left->operator()(cur_s));

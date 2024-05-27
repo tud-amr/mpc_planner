@@ -4,9 +4,9 @@
       debug_output: false
       debug_visuals: false
       seed: 1 # Seed of the visibility-PRM. Set to -1 for random!
-      T: 4.0 #6.0 #6.0
-      N: 20 #30 #30
-      winding_pass_threshold: 0.25 #1.5
+      T: 8.0 #6.0 # 4.0
+      N: 40 # 20
+      winding_pass_threshold: 1.5 #0.25 #0.05 #0.25 #1.5
       # topology_comparison: Winding #Homology (default) or UVD
       topology_comparison: Homology #Homology (default) or UVD
       sampling_function: Uniform # Uniform (default)
@@ -16,7 +16,7 @@
       track_selected_homology_only: false
       sample_margin: 0. #0. # Was 0.
       view_angle_times_pi: 0.606 # View angle when sampling in a conus (disabled by default)
-      n_samples: 100 # Number of samples for PRM
+      n_samples: 50 # Number of samples for PRM
       timeout: 5.0 # Timeout for PRM sampling [ms]
       n_paths: 4 # Number of guidance trajectories
       max_velocity: 5.0 #3.0       # Maximum velocity of connections between nodes
@@ -40,7 +40,7 @@
         collision: 0.0 #0.005 #0.5
         velocity_tracking: 0.01
       visuals:
-        transparency: 0.1 #0.5 #0.9               # The least transparent the obstacle visualization is (0-1)
+        transparency: 0.9 #0.5 #0.9               # The least transparent the obstacle visualization is (0-1)
         visualize_all_samples: false # Visualizes all PRM samples
         visualize_homology: false
         show_indices: false

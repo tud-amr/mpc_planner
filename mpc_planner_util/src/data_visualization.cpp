@@ -81,7 +81,7 @@ namespace MPCPlanner
         line.setScale(0.1);
 
         Eigen::Vector2d p;
-        for (double s = 0.; s < spline.parameterLength(); s += 0.5)
+        for (double s = 0.; s < spline.parameterLength(); s += 1.0)
         {
             if (s > 0.)
                 line.addLine(p, spline.getPoint(s));
@@ -125,7 +125,7 @@ namespace MPCPlanner
         for (auto &obstacle : obstacles)
         {
             cylinder.setScale(2. * obstacle.radius, 2. * obstacle.radius, 0.01);
-            cylinder.setColorInt(obstacle.index, CONFIG["max_obstacles"].as<int>(), alpha);
+            cylinder.setColorInt(obstacle.index, alpha, RosTools::Colormap::BRUNO);
             for (size_t k = 0; k < obstacle.prediction.modes[0].size(); k++)
                 cylinder.addPointMarker(obstacle.prediction.modes[0][k].position, 0.0);
         }

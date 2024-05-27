@@ -105,6 +105,7 @@ def generate_forces_solver(modules, settings, model, skip_solver_generation):
         options.maxit = 500  # Maximum number of iterations
         options.mu0 = 20
         options.init = solver_settings["init"]  # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
+        options.nlp.TolStat = solver_settings["tolstat"]
     else:
         options.solvemethod = "SQP_NLP"
         options.sqp_nlp.maxqps = 1

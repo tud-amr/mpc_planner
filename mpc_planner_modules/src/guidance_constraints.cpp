@@ -6,6 +6,7 @@
 #include <ros_tools/visuals.h>
 #include <ros_tools/profiling.h>
 #include <ros_tools/data_saver.h>
+#include <ros_tools/math.h>
 
 #include <omp.h>
 
@@ -28,7 +29,8 @@ namespace MPCPlanner
 
         global_guidance_ = std::make_unique<GuidancePlanner::GlobalGuidance>();
         GuidancePlanner::Config::debug_visuals_ = CONFIG["debug_visuals"].as<bool>();
-        // config_->N_pedestrians_ = GuidancePlanner::Config::N; // Increase the horizon expected for pedestrians to the PRM horizon
+
+        global_guidance_->SetPlanningFrequency(CONFIG["control_frequency"].as<double>());
 
         _use_tmpcpp = CONFIG["t-mpc"]["use_t-mpc++"].as<bool>();
         _enable_constraints = CONFIG["t-mpc"]["enable_constraints"].as<bool>();
@@ -76,40 +78,94 @@ namespace MPCPlanner
 
         // Set the goals of the global guidance planner
         global_guidance_->SetStart(state.getPos(), state.get("psi"), state.get("v"));
-        // global_guidance_->SetStart(state.getPos(), 0., std::sqrt(std::pow(state.get("vx"), 2.) + std::pow(state.get("vy"), 2.)));
-        global_guidance_->SetReferenceVelocity(CONFIG["weights"]["reference_velocity"].as<double>());
+
+        if (module_data.path_velocity != nullptr)
+            global_guidance_->SetReferenceVelocity(module_data.path_velocity->operator()(state.get("spline")));
+        else
+            global_guidance_->SetReferenceVelocity(CONFIG["weights"]["reference_velocity"].as<double>());
 
         if (!CONFIG["enable_output"].as<bool>())
         {
             LOG_INFO_THROTTLE(15000, "Not propagating nodes (output is disabled)");
             global_guidance_->DoNotPropagateNodes();
         }
-        /** @note Reference path */
-        bool two_way = CONFIG["road"]["two_way"].as<bool>();
-        double road_width_left_ = CONFIG["road"]["width"].as<double>() / 2.;
-        double road_width_right_ = CONFIG["road"]["width"].as<double>() / 2.;
 
-        /** @todo Find where we are on the spline */
-        int current_segment;
-        double current_s;
+        // Set the goals for the guidance planner
+        setGoals(state, module_data);
 
-        _spline->findClosestPoint(state.getPos(), current_segment, current_s);
-
-        double road_width_left = two_way ? road_width_left_ * 3. : road_width_left_;
-        double robot_radius = CONFIG["robot_radius"].as<double>();
-
-        global_guidance_->LoadReferencePath(std::max(0., current_s), _spline,
-                                            road_width_left - robot_radius - 0.1,
-                                            road_width_right_ - robot_radius - 0.1);
-
-        // global_guidance_->SetGoals({GuidancePlanner::Goal(state.getPos() + Eigen::Vector2d(4., 0.), 0.),
-        //                             GuidancePlanner::Goal(state.getPos() + Eigen::Vector2d(4., 3.), 1.),
-        //                             GuidancePlanner::Goal(state.getPos() + Eigen::Vector2d(4., -3.), 1.)});
         LOG_MARK("Running Guidance Search");
-        global_guidance_->Update(); // data); /** @note The main update */
+        global_guidance_->Update(); /** @note The main update */
+
         // LOG_VALUE("Number of Guidance Trajectories", global_guidance_->NumberOfGuidanceTrajectories());
         empty_data_ = data;
         empty_data_.dynamic_obstacles.clear();
+    }
+
+    void GuidanceConstraints::setGoals(State &state, const ModuleData &module_data)
+    {
+        LOG_MARK("Setting guidance planner goals");
+
+        double current_s = state.get("spline");
+        double robot_radius = CONFIG["robot_radius"].as<double>();
+
+        if (module_data.path_velocity == nullptr || module_data.path_width_left == nullptr || module_data.path_width_right == nullptr)
+        {
+            global_guidance_->LoadReferencePath(std::max(0., state.get("spline")), module_data.path,
+                                                CONFIG["road"]["width"].as<double>() / 2. - robot_radius - 0.1,
+                                                CONFIG["road"]["width"].as<double>() / 2. - robot_radius - 0.1);
+            return;
+        }
+
+        // Define goals along the reference path, taking into account the velocity along the path
+        double final_s = current_s;
+        for (int k = 1; k < global_guidance_->GetConfig()->N; k++) // Euler integrate the velocity along the path
+            final_s += module_data.path_velocity->operator()(final_s) * _solver->dt;
+
+        int n_long = global_guidance_->GetConfig()->longitudinal_goals_;
+        int n_lat = global_guidance_->GetConfig()->vertical_goals_;
+
+        ROSTOOLS_ASSERT((n_lat % 2) == 1, "Number of lateral grid points should be odd!");
+        ROSTOOLS_ASSERT(n_long >= 2, "There should be at least two longitudinal goals (start, end)");
+
+        int middle_lat = (n_lat - 1) / 2;
+        std::vector<double> s_long = RosTools::linspace(current_s, final_s, n_long);
+
+        ROSTOOLS_ASSERT(s_long[1] - s_long[0] > 0.05, "Goals should have some spacing between them (Config::reference_velocity_ should not be zero)");
+
+        double long_best = s_long.back();
+
+        std::vector<GuidancePlanner::Goal> goals;
+        for (int i = 0; i < n_long; i++)
+        {
+            double s = s_long[i]; // Distance along the path for these goals
+
+            // Compute its cost (distance to the desired goal)
+            double long_cost = std::abs(s - long_best);
+
+            // Compute the normal vector to the reference path
+            Eigen::Vector2d line_point = module_data.path->getPoint(s);
+            Eigen::Vector2d normal = module_data.path->getOrthogonal(s);
+
+            // Place goals orthogonally to the path
+            std::vector<double> dist_lat = RosTools::linspace(-module_data.path_width_left->operator()(s) + robot_radius,
+                                                              module_data.path_width_right->operator()(s) - robot_radius,
+                                                              n_lat);
+            // Put the middle goal on the reference path
+            dist_lat[middle_lat] = 0.0;
+
+            for (int j = 0; j < n_lat; j++)
+            {
+                if (i == 0 && j != middle_lat)
+                    continue; // Only the first goal should be in the center
+
+                double d = dist_lat[j];
+
+                double lat_cost = std::abs(d);                                     // Higher cost, the further away from the center line
+                goals.emplace_back(line_point + normal * d, long_cost + lat_cost); // Add the goal
+            }
+        }
+
+        global_guidance_->SetGoals(goals);
     }
 
     void GuidanceConstraints::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
@@ -358,33 +414,24 @@ namespace MPCPlanner
         if (!ready)
             return false;
 
-        if (_spline == nullptr)
-        {
-            missing_data += "Reference Path, ";
-            return false;
-        }
-
         return true;
     }
 
     //     /** @brief Load obstacles into the Homotopy module */
     void GuidanceConstraints::onDataReceived(RealTimeData &data, std::string &&data_name)
     {
-        if (data_name == "reference_path") // New
-        {
-            LOG_MARK("Received Reference Path");
 
-            _spline = std::make_unique<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y); // Construct a spline from the given points
-        }
-        else if (data_name == "goal") // New
+        if (data_name == "goal") // New
         {
-            LOG_MARK("Received goal");
+            LOG_MARK("Goal input is not yet implemented for T-MPC");
 
             // Eigen::Vector2d start = global_guidance_->GetStart();
             // std::vector<double> x = {start(0), data.goal(0)};
             // std::vector<double> y = {start(1), data.goal(1)};
 
-            // _spline = std::make_unique<RosTools::Spline2D>(x, y); // Construct a spline from the given points
+            // module_data = std::make_unique<RosTools::Spline2D>(x, y); // Construct a spline from the given point
+
+            /** @todo */
         }
 
         // We wait for both the obstacles and state to arrive before we compute here
@@ -402,8 +449,8 @@ namespace MPCPlanner
             for (auto &obstacle : data.dynamic_obstacles)
             {
                 std::vector<Eigen::Vector2d> positions;
-                positions.push_back(obstacle.position); /** @note Strange that we need k = 0 here */
-                for (size_t k = 0; k < std::max(obstacle.prediction.modes[0].size(), (size_t)GuidancePlanner::Config::N); k++)
+                positions.push_back(obstacle.position);                          /** @note Strange that we need k = 0 here */
+                for (size_t k = 0; k < obstacle.prediction.modes[0].size(); k++) // std::max(obstacle.prediction.modes[0].size(), (size_t)GuidancePlanner::Config::N); k++)
                 {
                     positions.push_back(obstacle.prediction.modes[0][k].position);
                 }
@@ -416,7 +463,7 @@ namespace MPCPlanner
 
     void GuidanceConstraints::reset()
     {
-        _spline.reset(nullptr);
+        // _spline.reset(nullptr);
         global_guidance_->Reset();
 
         for (auto &planner : planners_)
@@ -458,20 +505,3 @@ namespace MPCPlanner
         global_guidance_->saveData(data_saver); // Save data from the guidance planner
     }
 } // namespace MPCPlanner
-
-//     // void GuidanceConstraints::ReconfigureCallback(SolverInterface *solver_interface, lmpcc::PredictiveControllerConfig &config,
-//     //                                               uint32_t level, bool first_callback)
-//     // {
-//     //   if (first_callback)
-//     //   {
-//     //     config.spline_consistency = global_guidance_->GetConfig()->selection_weight_consistency_;
-//     //   }
-//     //   else
-//     //   {
-//     //     global_guidance_->GetConfig()->selection_weight_consistency_ = config.spline_consistency;
-//     //   }
-
-//     //   global_guidance_->SetReferenceVelocity(config.velocity_reference);
-//     //   config_->visualized_guidance_trajectory_nr_ = config.visualize_trajectory_nr;
-//     //   config_->highlight_selected_guidance_ = config.highlight_selected;
-//     // }

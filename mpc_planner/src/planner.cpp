@@ -206,7 +206,7 @@ namespace MPCPlanner
         // Save planning data
         double planning_time = BENCHMARKERS.getBenchmarker("planning").getLast();
         data_saver.AddData("runtime_control_loop", planning_time);
-        if (planning_time > 0.05)
+        if (planning_time > 1. / CONFIG["control_frequency"].as<double>())
             LOG_WARN("Planning took too long: " << planning_time << " ms");
         data_saver.AddData("runtime_optimization", BENCHMARKERS.getBenchmarker("optimization").getLast());
 

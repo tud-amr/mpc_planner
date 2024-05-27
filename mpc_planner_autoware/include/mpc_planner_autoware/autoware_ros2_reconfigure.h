@@ -45,7 +45,8 @@ public:
 		node->declare_parameter<double>("reference_velocity", CONFIG["weights"]["reference_velocity"].as<double>());
 		node->declare_parameter<double>("velocity", CONFIG["weights"]["velocity"].as<double>());
 		node->declare_parameter<double>("lag", CONFIG["weights"]["lag"].as<double>());
-		node->declare_parameter<double>("preview", CONFIG["weights"]["preview"].as<double>());
+		node->declare_parameter<double>("terminal_angle", CONFIG["weights"]["terminal_angle"].as<double>());
+		node->declare_parameter<double>("terminal_contouring", CONFIG["weights"]["terminal_contouring"].as<double>());
 	}
 
 	virtual rcl_interfaces::msg::SetParametersResult updateROSParameters(const std::vector<rclcpp::Parameter> &parameters)
@@ -57,7 +58,8 @@ public:
 		updateParam<double>(parameters, "reference_velocity", CONFIG["weights"]["reference_velocity"]);
 		updateParam<double>(parameters, "velocity", CONFIG["weights"]["velocity"]);
 		updateParam<double>(parameters, "lag", CONFIG["weights"]["lag"]);
-		updateParam<double>(parameters, "preview", CONFIG["weights"]["preview"]);
+		updateParam<double>(parameters, "terminal_angle", CONFIG["weights"]["terminal_angle"]);
+		updateParam<double>(parameters, "terminal_contouring", CONFIG["weights"]["terminal_contouring"]);
 
 		auto result = rcl_interfaces::msg::SetParametersResult();
 		result.successful = true;

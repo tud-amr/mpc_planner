@@ -6,7 +6,7 @@ from util.files import model_map_path, write_to_yaml
 from spline import Spline2D
 
 # Returns discretized dynamics of a given model (see below)
-def forces_discrete_dynamics(z, p, model, settings, nx = None):
+def forces_discrete_dynamics(z, p, model, settings, nx = None, integration_step=None):
     import forcespro.nlp
 
     """
@@ -21,13 +21,16 @@ def forces_discrete_dynamics(z, p, model, settings, nx = None):
 
     if nx is None:
         nx = model.nx
+    
+    if integration_step is None:
+        integration_step = settings["integrator_step"]
 
     return forcespro.nlp.integrate(
         model.continuous_model,
         z[model.nu : model.nu + nx],
         z[0 : model.nu],
         integrator=forcespro.nlp.integrators.RK4,
-        stepsize=settings["integrator_step"],
+        stepsize=integration_step,
     )
 
 
@@ -56,19 +59,19 @@ class DynamicsModel:
         self.params = None
         self.nx_integrate = None
 
-    def discrete_dynamics(self, z, p, settings):
+    def discrete_dynamics(self, z, p, settings, **kwargs):
         params = settings["params"]
         params.load(p)
         self.load(z)
         self.load_settings(settings)
 
         nx_integrate = self.nx if self.nx_integrate is None else self.nx_integrate
-        integrated_states = forces_discrete_dynamics(z, p, self, settings, nx=nx_integrate)
+        integrated_states = forces_discrete_dynamics(z, p, self, settings, nx=nx_integrate, **kwargs)
 
-        integrated_states = self.model_discrete_dynamics(z, integrated_states)
+        integrated_states = self.model_discrete_dynamics(z, integrated_states, **kwargs)
         return integrated_states
 
-    def model_discrete_dynamics(self, z, integrated_states):
+    def model_discrete_dynamics(self, z, integrated_states, **kwargs):
         return integrated_states
 
     def get_nvar(self):
@@ -122,8 +125,8 @@ class DynamicsModel:
 
         write_to_yaml(file_path, map)
 
-    # def integrate(self, z, duration):
-        # return discrete_dynamics(z, self, duration)
+    def integrate(self, z, settings, integration_step):
+        return self.discrete_dynamics(z, settings["params"].get_p(), settings, integration_step=integration_step)
 
     def do_not_use_integration_for_last_n_states(self, n):
         self.nx_integrate = self.nx - n
@@ -240,11 +243,11 @@ class BicycleModel2ndOrder(DynamicsModel):
 
     def __init__(self):
         super().__init__()
-        self.nu = 2
+        self.nu = 3
         self.nx = 6
 
         self.states = ["x", "y", "psi", "v", "delta", "spline"]
-        self.inputs = ["a", "w"]
+        self.inputs = ["a", "w", "slack"]
 
         # Prius limits: https://github.com/oscardegroot/lmpcc/blob/prius/lmpcc_solver/scripts/systems.py
         # w [-0.2, 0.2] | a [-1.0 1.0]
@@ -253,8 +256,8 @@ class BicycleModel2ndOrder(DynamicsModel):
 
         # NOTE: the angle of the vehicle should not be limited to -pi, pi, as the solution will not shift when it is at the border!
         # a was 3.0
-        self.lower_bound = [-6.0, -1.5, -1.0e6, -1.0e6, -np.pi * 4, -0.01, -0.45, -1.0]
-        self.upper_bound = [6.0, 1.5, 1.0e6, 1.0e6, np.pi * 4, 8.0, 0.45, 5000.0]
+        self.lower_bound = [-3.0, -1.5, 0.0, -1.0e6, -1.0e6, -np.pi * 4, -0.01, -0.55, -1.0]
+        self.upper_bound = [3.0, 1.5, 1.0e2, 1.0e6, 1.0e6, np.pi * 4, 5.0, 0.55, 5000.0]
 
     def continuous_model(self, x, u):
         a = u[0]
@@ -281,6 +284,7 @@ class BicycleModel2ndOrder(DynamicsModel):
         lr = wheel_base / 2.0
         lf = wheel_base / 2.0
         ratio = lr / (lr + lf)
+        self.width = 2.25
 
         beta = cd.arctan(ratio * cd.tan(delta))
 
@@ -306,8 +310,9 @@ class BicycleModel2ndOrderCurvatureAware(DynamicsModel):
 
         # NOTE: the angle of the vehicle should not be limited to -pi, pi, as the solution will not shift when it is at the border!
         # a was 3.0
-        self.lower_bound = [-3.0, -1.5, 0., -1.0e6, -1.0e6, -np.pi * 4, -0.01, -0.45, -1.0]
-        self.upper_bound = [3.0, 1.5, 1.0e2, 1.0e6, 1.0e6, np.pi * 4, 8.0, 0.45, 5000.0]
+        # delta was -0.45, 0.45
+        self.lower_bound = [-3.0, -1.5, 0., -1.0e6, -1.0e6, -np.pi * 4, -0.01, -0.55, -1.0]
+        self.upper_bound = [3.0, 1.5, 1.0e2, 1.0e6, 1.0e6, np.pi * 4, 8.0, 0.55, 5000.0]
 
     def continuous_model(self, x, u):
         a = u[0]
@@ -333,7 +338,7 @@ class BicycleModel2ndOrderCurvatureAware(DynamicsModel):
                         a, 
                         w])
     
-    def model_discrete_dynamics(self, z, integrated_states):
+    def model_discrete_dynamics(self, z, integrated_states, **kwargs):
 
         x = self.get_x()
 
@@ -349,12 +354,11 @@ class BicycleModel2ndOrderCurvatureAware(DynamicsModel):
         path = Spline2D(self.params, self.settings["contouring"]["num_segments"], s)
         path_x, path_y = path.at(s)
         path_dx_normalized, path_dy_normalized = path.deriv_normalized(s)
+        path_ddx, path_ddy = path.deriv2(s)
 
         # Contour = n_vec
         contour_error = path_dy_normalized * (pos_x - path_x) - path_dx_normalized * (pos_y - path_y)
-        # lag_error = -path_dx_normalized * (pos_x - path_x) - path_dy_normalized * (pos_y - path_y)
 
-        # p_tilde = p + v * dt -> dp = p_tilde - p
         dp = np.array([integrated_states[0] - pos_x, integrated_states[1] - pos_y])
         t_vec = np.array([path_dx_normalized, path_dy_normalized])
         n_vec = np.array([path_dy_normalized, -path_dx_normalized])
@@ -362,18 +366,16 @@ class BicycleModel2ndOrderCurvatureAware(DynamicsModel):
         vt_t = dp.dot(t_vec)
         vn_t = dp.dot(n_vec)
 
-        dt = self.settings["integrator_step"]
-
         R = 1. / path.get_curvature(s) # max(R) = 1 / 0.0001
         R = cd.fmax(R, 1e5)
 
         theta = cd.atan2(vt_t, R - contour_error - vn_t)
 
-        # Is vt vt_t / dt?
-        # vt = vt_t / dt
-        # vn = vn_t / dt
-
-        # s_dot = R * (vt * (R - contour_error - vn_t) + vt * vn_t) / ((R - contour_error - vn_t)**2 + vt_t**2)
+        # Lorenzo's equations        
+        # R = 1. / path.get_curvature(s) # max(R) = 1 / 0.0001
+        # b = (integrated_states[0] - pos_x) * path_dx_normalized + (integrated_states[1] - pos_y) * path_dy_normalized
+        # l = R * (1 - ((integrated_states[0] - path_x) * path_ddx + (integrated_states[1] - path_y) * path_ddy))
+        # DS = R * cd.atan2(b, l)
 
         return cd.vertcat(integrated_states, s + R*theta)
 

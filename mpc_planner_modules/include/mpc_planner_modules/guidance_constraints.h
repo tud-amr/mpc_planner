@@ -94,20 +94,10 @@ namespace MPCPlanner
             LocalPlanner(int _id, bool _is_original_planner = false);
         };
 
-        // void SetGoalCosts();
-
-        // void SetParameters(LocalPlanner &planner, const RealTimeData &data, int N_iter, int &param_idx);
-
+        void setGoals(State &state, const ModuleData &module_data);
         void initializeSolverWithGuidance(LocalPlanner &planner);
 
         int FindBestPlanner();
-
-        // void VisualizeOptimizedPlan(LocalPlanner &planner);
-
-        // void VisualizeWarmstartPlan(LocalPlanner &planner, RosTools::ROSPointMarker &plan_points, RosTools::ROSPointMarker &ellipse, RosTools::ROSLine &line);
-        // void VisualizeGuidedPlan(LocalPlanner &planner, RosTools::ROSPointMarker &plan_points, RosTools::ROSPointMarker &ellipse, RosTools::ROSLine &line);
-        // void VisualizeGMPCCPlan(LocalPlanner &planner, RosTools::ROSPointMarker &plan_points, RosTools::ROSPointMarker &ellipse, RosTools::ROSLine &line);
-        // void VisualizeLMPCCPlan(LocalPlanner &planner, RosTools::ROSPointMarker &plan_points, RosTools::ROSPointMarker &ellipse, RosTools::ROSLine &line);
 
     private: // Member variables
         std::vector<LocalPlanner> planners_;
@@ -115,7 +105,8 @@ namespace MPCPlanner
         std::unique_ptr<GuidancePlanner::GlobalGuidance> global_guidance_;
 
         // To set the goals
-        std::unique_ptr<RosTools::Spline2D> _spline{nullptr};
+        // std::unique_ptr<RosTools::Spline2D> _spline{nullptr};
+        // std::unique_ptr<tk::spline> _velocity_spline{nullptr};
 
         // Configuration parameters
         bool _use_tmpcpp{true}, _enable_constraints{true};
