@@ -3,6 +3,8 @@
 #include <mpc_planner_util/parameters.h>
 #include <mpc_planner_util/data_visualization.h>
 
+#include <guidance_planner/global_guidance.h>
+
 #include <ros_tools/visuals.h>
 #include <ros_tools/profiling.h>
 #include <ros_tools/data_saver.h>
@@ -27,7 +29,7 @@ namespace MPCPlanner
     {
         LOG_INITIALIZE("Guidance Constraints");
 
-        global_guidance_ = std::make_unique<GuidancePlanner::GlobalGuidance>();
+        global_guidance_ = std::make_shared<GuidancePlanner::GlobalGuidance>();
         GuidancePlanner::Config::debug_visuals_ = CONFIG["debug_visuals"].as<bool>();
 
         global_guidance_->SetPlanningFrequency(CONFIG["control_frequency"].as<double>());
@@ -35,6 +37,7 @@ namespace MPCPlanner
         _use_tmpcpp = CONFIG["t-mpc"]["use_t-mpc++"].as<bool>();
         _enable_constraints = CONFIG["t-mpc"]["enable_constraints"].as<bool>();
         _control_frequency = CONFIG["control_frequency"].as<double>();
+        _planning_time = 1. / _control_frequency;
 
         // Initialize the constraint modules
         int n_solvers = global_guidance_->GetConfig()->n_paths_; // + 1 for the main lmpcc solver?
@@ -95,6 +98,8 @@ namespace MPCPlanner
 
         LOG_MARK("Running Guidance Search");
         global_guidance_->Update(); /** @note The main update */
+
+        mapGuidanceTrajectoriesToPlanners();
 
         // LOG_VALUE("Number of Guidance Trajectories", global_guidance_->NumberOfGuidanceTrajectories());
         empty_data_ = data;
@@ -168,6 +173,66 @@ namespace MPCPlanner
         global_guidance_->SetGoals(goals);
     }
 
+    void GuidanceConstraints::mapGuidanceTrajectoriesToPlanners()
+    {
+        // Map each of the found guidance trajectories to an optimization ID
+        // Maintaining the same homotopy class so that its initialization is valid
+
+        std::vector<int> remaining_trajectories;
+        for (size_t p = 0; p < planners_.size(); p++)
+        {
+            planners_[p].taken = false;
+            planners_[p].existing_guidance = false;
+        }
+        _map_homotopy_class_to_planner.clear();
+
+        for (int i = 0; i < global_guidance_->NumberOfGuidanceTrajectories(); i++)
+        {
+            int homotopy_class = global_guidance_->GetGuidanceTrajectory(i).topology_class;
+            // LOG_VALUE("Homotopy Class", homotopy_class);
+
+            // Does it match any of the planners?
+            bool planner_found = false;
+            for (size_t p = 0; p < planners_.size(); p++)
+            {
+                /** @note More than one guidance trajectory may map to the same planner */
+                if (planners_[p].result.guidance_ID == homotopy_class && !planners_[p].taken)
+                {
+                    _map_homotopy_class_to_planner[i] = p;
+                    planners_[p].taken = true;
+                    planners_[p].existing_guidance = true;
+                    planner_found = true;
+                    // LOG_INFO("Planner " << p << " reserved for homotopy class " << homotopy_class);
+                    break;
+                }
+            }
+
+            if (!planner_found)
+                remaining_trajectories.push_back(i);
+        }
+
+        // Assign the remaining trajectories to the remaining planners
+        for (int i : remaining_trajectories)
+        {
+            for (size_t p = 0; p < planners_.size(); p++)
+            {
+                if (!planners_[p].taken)
+                {
+                    _map_homotopy_class_to_planner[i] = p;
+                    planners_[p].taken = true;
+                    planners_[p].existing_guidance = false;
+                }
+            }
+        }
+
+        // Debug: Log the result
+        // for (int i = 0; i < global_guidance_->NumberOfGuidanceTrajectories(); i++)
+        // {
+        //     LOG_VALUE("Map Guidance Plan" << i,
+        //               _map_homotopy_class_to_planner[i]);
+        // }
+    }
+
     void GuidanceConstraints::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
     {
         (void)module_data;
@@ -191,6 +256,9 @@ namespace MPCPlanner
 
         if (!_use_tmpcpp && !global_guidance_->Succeeded())
             return 0;
+
+        bool shift_forward = CONFIG["shift_previous_solution_forward"].as<bool>() &&
+                             CONFIG["enable_output"].as<bool>();
 
 #pragma omp parallel for num_threads(8)
         for (auto &planner : planners_)
@@ -223,7 +291,10 @@ namespace MPCPlanner
             {
                 LOG_MARK("Planner [" << planner.id << "]: Loading guidance into the solver and constructing constraints");
 
-                initializeSolverWithGuidance(planner);
+                if (planner.existing_guidance)
+                    planner.local_solver->initializeWarmstart(state, shift_forward);
+                else
+                    initializeSolverWithGuidance(planner);
 
                 planner.guidance_constraints->update(state, data, module_data); // Updates linearization of constraints
                 planner.safety_constraints->update(state, data, module_data);   // Updates collision avoidance constraints
@@ -242,10 +313,8 @@ namespace MPCPlanner
             }
 
             // Set timeout (Planning time - used time - time necessary afterwards)
-            double planning_time = 1. / _control_frequency;
             std::chrono::duration<double> used_time = std::chrono::system_clock::now() - data.planning_start_time;
-
-            planner.local_solver->_params.solver_timeout = planning_time - used_time.count() - 0.006;
+            planner.local_solver->_params.solver_timeout = _planning_time - used_time.count() - 0.006;
 
             // SOLVE OPTIMIZATION
             // if (enable_guidance_warmstart_)
@@ -271,7 +340,7 @@ namespace MPCPlanner
                 planner.result.color = guidance_trajectory.color_;                               // A color index to visualize with
 
                 if (guidance_trajectory.previously_selected_) // Prefer the selected trajectory
-                    planner.result.objective *= 1. / global_guidance_->GetConfig()->selection_weight_consistency_;
+                    planner.result.objective *= global_guidance_->GetConfig()->selection_weight_consistency_;
             }
         }
 
@@ -391,7 +460,9 @@ namespace MPCPlanner
                 else if (planner.is_original_planner)
                     visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 1.0, 11, 12, true, false);
                 else
-                    visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 0.2, planner.result.color, global_guidance_->GetConfig()->n_paths_);
+                    visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 1.0, planner.result.color, global_guidance_->GetConfig()->n_paths_, true, false);
+                // else if (!planner.existing_guidance) // Visualizes new homotopy classes
+                // visualizeTrajectory(trajectory, _name + "/optimized_trajectories", false, 0.2, 11, 12, true, false);
             }
         }
 

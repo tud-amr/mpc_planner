@@ -19,9 +19,12 @@
 #include <mpc_planner_modules/controller_module.h>
 #include <mpc_planner_solver/solver_interface.h>
 
-#include <ros_tools/spline.h>
+#include <unordered_map>
 
-#include <guidance_planner/global_guidance.h>
+namespace GuidancePlanner
+{
+    class GlobalGuidance;
+}
 
 namespace MPCPlanner
 {
@@ -91,10 +94,14 @@ namespace MPCPlanner
             bool is_original_planner = false;
             bool disabled = true;
 
+            bool taken = false;
+            bool existing_guidance = false;
+
             LocalPlanner(int _id, bool _is_original_planner = false);
         };
 
         void setGoals(State &state, const ModuleData &module_data);
+        void mapGuidanceTrajectoriesToPlanners();
         void initializeSolverWithGuidance(LocalPlanner &planner);
 
         int FindBestPlanner();
@@ -102,15 +109,14 @@ namespace MPCPlanner
     private: // Member variables
         std::vector<LocalPlanner> planners_;
 
-        std::unique_ptr<GuidancePlanner::GlobalGuidance> global_guidance_;
+        std::shared_ptr<GuidancePlanner::GlobalGuidance> global_guidance_;
 
-        // To set the goals
-        // std::unique_ptr<RosTools::Spline2D> _spline{nullptr};
-        // std::unique_ptr<tk::spline> _velocity_spline{nullptr};
+        std::unordered_map<int, int> _map_homotopy_class_to_planner;
 
         // Configuration parameters
         bool _use_tmpcpp{true}, _enable_constraints{true};
         double _control_frequency{20.};
+        double _planning_time;
 
         RealTimeData empty_data_;
 

@@ -92,42 +92,51 @@ class ContouringObjective:
         path_dx_normalized, path_dy_normalized = path.deriv_normalized(s)
 
         contour_error = path_dy_normalized * (pos_x - path_x) - path_dx_normalized * (pos_y - path_y)
+        # contour_error_squared = (pos_x - path_x) **2 + (pos_y - path_y) ** 2 
 
         cost += contour_weight * contour_error**2
 
         if not self.use_ca_mpc:
             # MPCC
             lag_weight = params.get("lag")
+
+            contour_error = path_dy_normalized * (pos_x - path_x) - path_dx_normalized * (pos_y - path_y)
             lag_error = path_dx_normalized * (pos_x - path_x) + path_dy_normalized * (pos_y - path_y)
+
             cost += lag_weight * lag_error**2
             cost += velocity_weight * (v - reference_velocity)**2
+            cost += contour_weight * contour_error**2
         else:
             # CA-MPC
             # https://www.researchgate.net/profile/Laura-Ferranti-4/publication/371169207_Curvature-Aware_Model_Predictive_Contouring_Control/links/64775cecd702370600c50752/Curvature-Aware-Model-Predictive-Contouring-Control.pdf
 
-            dt = settings["integrator_step"]
+            # dt = settings["integrator_step"]
 
-            vel = np.array([v * cd.cos(psi), v * cd.sin(psi)]) # Velocity vector
+            # vel = np.array([v * cd.cos(psi), v * cd.sin(psi)]) # Velocity vector
 
-            t_vec = np.array([path_dx_normalized, path_dy_normalized])
-            n_vec = np.array([path_dy_normalized, -path_dx_normalized])
+            # t_vec = np.array([path_dx_normalized, path_dy_normalized])
+            # n_vec = np.array([path_dy_normalized, -path_dx_normalized])
 
-            vt = vel.dot(t_vec) # Velocity path components
-            vn = vel.dot(n_vec)
+            # vt = vel.dot(t_vec) # Velocity path components
+            # vn = vel.dot(n_vec)
 
-            vt_t = vt * dt # Euler integrated velocities
-            vn_t = vn * dt
+            # vt_t = vt * dt # Euler integrated velocities
+            # vn_t = vn * dt
 
-            R = 1. / path.get_curvature(s) # max(R) = 1 / 0.0001
-            R = cd.fmax(R, 1e5)
+            # R = 1. / path.get_curvature(s) # max(R) = 1 / 0.0001
+            # R = cd.fmax(R, 1e5)
 
-            # Path velocity
-            s_dot = R * vt * ((R - contour_error - vn_t) + vn_t) / ((R - contour_error - vn_t)**2 + (vt_t)**2)
+            # # Path velocity
+            # s_dot = R * vt * ((R - contour_error - vn_t) + vn_t) / ((R - contour_error - vn_t)**2 + (vt_t)**2)
 
             # Lorenzo's equations        
-            # projection_ratio = 1.0 / (1.0 - ((pos_x - path_x) * path_ddx  + (pos_y - path_y) * path_ddy))
-            # s_dot = v * (cd.cos(psi) * path_dx_normalized + cd.sin(psi) * path_dy_normalized) * projection_ratio
+            path_ddx, path_ddy = path.deriv2(s) 
+            projection_ratio = 1.0 / (1.0 - ((pos_x - path_x) * path_ddx  + (pos_y - path_y) * path_ddy))
+            s_dot = v * (cd.cos(psi) * path_dx_normalized + cd.sin(psi) * path_dy_normalized) * projection_ratio
+            # Path projection is unnecessary with CA-MPC
+            contour_error_squared = (pos_x - path_x)**2 + (pos_y - path_y)**2
 
+            cost += contour_weight * contour_error_squared
             cost += velocity_weight * (s_dot - reference_velocity)**2 # Penalize its tracking performance
 
         # Terminal cost
@@ -142,12 +151,14 @@ class ContouringObjective:
 
             # Penalize the angle error
             cost += terminal_angle_weight * angle_error**2
-            cost += terminal_contouring_mp * contour_weight * contour_error**2
 
             if not self.use_ca_mpc:
                 cost += terminal_contouring_mp * lag_weight * lag_error**2
+                cost += terminal_contouring_mp * contour_weight * contour_error**2
             else:
+                cost += terminal_contouring_mp * contour_weight * contour_error_squared
                 cost += terminal_contouring_mp * velocity_weight * (s_dot - reference_velocity)**2
+
 
         return cost
 

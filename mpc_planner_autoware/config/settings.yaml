@@ -72,7 +72,7 @@ probabilistic:
 weights:
   acceleration: 13.0
   angular_velocity: 13.6
-  contour: 1.0
+  contour: 0.1 #4.0
   reference_velocity: 2.5
   slack: 10000.0
   terminal_angle: 100.0
