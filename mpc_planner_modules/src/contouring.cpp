@@ -130,7 +130,10 @@ namespace MPCPlanner
       LOG_MARK("Received Reference Path");
 
       // Construct a spline from the given points
-      _spline = std::make_shared<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y, data.reference_path.s);
+      if (data.reference_path.s.empty())
+        _spline = std::make_shared<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y);
+      else
+        _spline = std::make_shared<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y, data.reference_path.s);
 
       if (_add_road_constraints && (!data.left_bound.empty() && !data.right_bound.empty()))
       {

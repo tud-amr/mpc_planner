@@ -7,6 +7,7 @@ prm:
   # topology_comparison: Winding  # Homology (default), Winding or UVD
   topology_comparison: Homology
   sampling_function: Uniform # Uniform (default)
+  winding_pass_threshold: 1.5
   use_learning: false
   predictions_are_constant_velocity: true
   track_selected_homology_only: false

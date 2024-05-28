@@ -10,6 +10,7 @@ solver_settings:
   enable_timeout: true
   init: 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
   use_sqp: false
+  tolstat: 1e-3
 
 recording:
   enable: false
@@ -46,6 +47,7 @@ road:
 shift_previous_solution_forward: false
 
 contouring:
+  use_ca_mpc: true
   num_segments: 3
   preview: 0.0
   add_road_constraints: true
@@ -70,6 +72,8 @@ weights:
   preview: 0.0
   lag: 0.75
   slack: 10000.
+  terminal_angle: 100.0 # 0.0
+  terminal_contouring: 10.0 # 0.0
 
 visualization:
   draw_every: 5 # stages

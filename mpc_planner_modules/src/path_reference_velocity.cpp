@@ -31,8 +31,11 @@ namespace MPCPlanner
     {
       LOG_MARK("Received Reference Path");
 
-      _velocity_spline = std::make_shared<tk::spline>();
-      _velocity_spline->set_points(data.reference_path.s, data.reference_path.v);
+      if (data.reference_path.hasVelocity())
+      {
+        _velocity_spline = std::make_shared<tk::spline>();
+        _velocity_spline->set_points(data.reference_path.s, data.reference_path.v);
+      }
     }
   }
 
@@ -41,14 +44,14 @@ namespace MPCPlanner
     (void)module_data;
     (void)data;
 
-    static double velocity_weight, reference_velocity;
+    static double reference_velocity, velocity_weight;
 
     // Retrieve once
-    // if (k == 0)
-    // {
-    //   velocity_weight = CONFIG["weights"]["velocity"].as<double>();
-    //   reference_velocity = CONFIG["weights"]["reference_velocity"].as<double>();
-    // }
+    if (k == 0)
+    {
+      velocity_weight = CONFIG["weights"]["velocity"].as<double>();
+      reference_velocity = CONFIG["weights"]["reference_velocity"].as<double>();
+    }
 
     // Set the parameters for velocity tracking
     // setForcesParameterVelocity(k, _solver->_params, velocity_weight);
@@ -61,7 +64,7 @@ namespace MPCPlanner
         int index = module_data.current_path_segment + i;
         double a, b, c, d;
 
-        if (index < _velocity_spline->m_x_.size() - 1)
+        if (index < (int)_velocity_spline->m_x_.size() - 1)
         {
           _velocity_spline->getParameters(index, a, b, c, d);
         }
@@ -94,6 +97,7 @@ namespace MPCPlanner
 
   void PathReferenceVelocity::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
+    (void)module_data;
     if (data.reference_path.empty())
       return;
 

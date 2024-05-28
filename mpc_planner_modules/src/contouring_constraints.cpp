@@ -35,7 +35,7 @@ namespace MPCPlanner
   {
     if (data_name == "reference_path")
     {
-      auto spline = RosTools::Spline2D(data.reference_path.x, data.reference_path.y, data.reference_path.s);
+      LOG_MARK("Reference Path Received");
 
       if (!data.left_bound.empty() && !data.right_bound.empty())
       {
@@ -168,7 +168,7 @@ namespace MPCPlanner
     line_publisher.publish();
 
     // if (!CONFIG["debug_visuals"].as<bool>())
-      // return;
+    // return;
 
     auto &publisher = VISUALS.getPublisher(_name + "/road_boundary_points");
     auto &points = publisher.getNewPointMarker("CUBE");
