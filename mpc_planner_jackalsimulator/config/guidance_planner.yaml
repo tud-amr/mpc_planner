@@ -7,8 +7,9 @@ prm:
   # topology_comparison: Winding  # Homology (default), Winding or UVD
   topology_comparison: Homology
   sampling_function: Uniform # Uniform (default)
-  winding_pass_threshold: 1.5
+  winding_pass_threshold: 0.25
   use_learning: false
+  turning_radius: 0.305 # Jackal
   predictions_are_constant_velocity: true
   track_selected_homology_only: false
   sample_margin: 0. #0. # Was 0.
@@ -17,16 +18,17 @@ prm:
   n_samples: 30 # Number of samples for PRM
   timeout: 10 # Timeout for PRM sampling [ms]
   n_paths: 4       # Number of guidance trajectories
-  max_velocity:     3.0       # Maximum velocity of connections between nodes
-  max_acceleration: 4.0       # Maximum velocity of connections between nodes
+  max_velocity:     7.0 #3.0       # Maximum velocity of connections between nodes
+  max_acceleration: 7.0       # Maximum velocity of connections between nodes
   connection_filters:
-    forward:      true
-    acceleration: true
+    forward:      false
+    velocity:     false
+    acceleration: false
   goals:  # Only used when `LoadReferencePath` is used to set the goals
     longitudinal: 5 #5   # Number of goals in direction of the path
     vertical: 5       # Number of goals in direction orthogonal to the path
   selection_weights:  # Selection weights to determine what spline is best
-    consistency: 1.33 # 0.24904675216524505  # How much better should a new trajectory be to be selected [%]
+    consistency: 0.75 #1.33 # 0.24904675216524505  # How much better should a new trajectory be to be selected [%]
     length: 5. #0. #1.
     velocity: 0. #2.
     acceleration: 1. #1.
@@ -38,10 +40,9 @@ prm:
     collision: 0.5
     velocity_tracking: 0.01
   visuals:
-    # transparency: 0.8               # The least transparent the obstacle visualization is (0-1)
     transparency: 0.5               # The least transparent the obstacle visualization is (0-1)
     # transparency: 0.9               # The least transparent the obstacle visualization is (0-1)
-    visualize_all_samples: false    # Visualizes all PRM samples
+    visualize_all_samples: true    # Visualizes all PRM samples
     visualize_homology: false
     show_indices: false
   enable:

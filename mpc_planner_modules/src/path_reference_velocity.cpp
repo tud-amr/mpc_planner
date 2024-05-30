@@ -44,12 +44,12 @@ namespace MPCPlanner
     (void)module_data;
     (void)data;
 
-    static double reference_velocity, velocity_weight;
+    static double reference_velocity; //, velocity_weight;
 
     // Retrieve once
     if (k == 0)
     {
-      velocity_weight = CONFIG["weights"]["velocity"].as<double>();
+      // velocity_weight = CONFIG["weights"]["velocity"].as<double>();
       reference_velocity = CONFIG["weights"]["reference_velocity"].as<double>();
     }
 
@@ -112,7 +112,7 @@ namespace MPCPlanner
     auto spline_xy = std::make_unique<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y, data.reference_path.s);
 
     Eigen::Vector2d prev;
-    double prev_v;
+    double prev_v = 0.;
     for (double s = 0.; s < _velocity_spline->m_x_.back(); s += 1.0)
     {
       Eigen::Vector2d cur = spline_xy->getPoint(s);
