@@ -37,8 +37,6 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
 
     _reconfigure = std::make_unique<JackalsimulatorReconfigure>();
 
-    _benchmarker = std::make_unique<RosTools::Benchmarker>("loop");
-
     _timeout_timer.setDuration(60.);
     _timeout_timer.start();
     for (int i = 0; i < CAMERA_BUFFER; i++)
@@ -61,6 +59,8 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
 JackalPlanner::~JackalPlanner()
 {
     LOG_INFO("Stopped Jackal Planner");
+    BENCHMARKERS.print();
+
     RosTools::Instrumentor::Get().EndSession();
 }
 
@@ -159,13 +159,16 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
         reset(false);
 
     if (objectiveReached())
+    {
         reset();
-
+        BENCHMARKERS.print();
+    }
     // Print the state
     if (CONFIG["debug_output"].as<bool>())
         _state.print();
 
-    _benchmarker->start();
+    auto &loop_benchmarker = BENCHMARKERS.getBenchmarker("loop");
+    loop_benchmarker.start();
 
     auto output = _planner->solveMPC(_state, _data);
 
@@ -197,7 +200,7 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
     publishPose();
     publishCamera();
 
-    _benchmarker->stop();
+    loop_benchmarker.stop();
 
     if (CONFIG["recording"]["enable"].as<bool>())
     {
@@ -440,6 +443,8 @@ int main(int argc, char **argv)
     VISUALS.init(&nh);
 
     ros::spin();
+
+    BENCHMARKERS.print();
 
     return 0;
 }
