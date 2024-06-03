@@ -75,8 +75,6 @@ private:
 
     RosTools::Timer _timeout_timer;
 
-    std::unique_ptr<RosTools::Benchmarker> _benchmarker;
-
     // Subscribers and publishers
     ros::Subscriber _state_sub, _state_pose_sub;
     ros::Subscriber _goal_sub;
