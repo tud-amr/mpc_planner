@@ -1,0 +1,7 @@
+<library path="lib/libmpc_planner_rosnavigation">
+        <class name ="local_planner/ROSNavigationPlanner" type ="local_planner::ROSNavigationPlanner" base_class_type= "nav_core::BaseLocalPlanner">
+                <description>
+                        Topology-Driven Model Predictive Control (T-MPC) ROS Navigation Plugin
+                </description>
+        </class>
+</library>

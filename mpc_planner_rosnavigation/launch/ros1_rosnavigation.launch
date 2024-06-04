@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <arg name="gui" default="false" />
+  <arg name="project_name" default="" />
+  
+  <arg name="roadmap_map" value="maps/open_space/24.xml"/>
+
+  <!-- <arg name="pedestrian_scenario" default="static/8_corridor.xml" /> -->
+  <arg name="pedestrian_scenario" default="open_space/24.xml" />
+
+
+  <rosparam command="load" file="$(find mpc_planner_rosnavigation)/config/guidance_planner.yaml"/>
+  <!-- <node pkg="mpc_planner_rosnavigation" type="rosnavigation_planner" name="rosnavigation_planner" required="true" respawn="false" output="screen">
+        <remap from="/input/state_pose" to="robot_state"/>
+        <remap from="/input/goal" to="/goal_pose"/>
+        <remap from="/input/reference_path" to="roadmap/reference"/>
+        <remap from="/input/obstacles" to="/pedestrian_simulator/trajectory_predictions"/>
+        <remap from="/output/command" to="/cmd_vel"/>
+        <remap from="/output/pose" to="/pedestrian_simulator/robot_state"/>
+        <remap from="/feedback/collisions" to="/pedestrian_simulator/collision_detected"/>
+  </node> -->
+  <include file="$(find jackal_navigation)/launch/odom_navigation_demo.launch">
+      <!-- <remap from="/input/state_pose" to="robot_state"/>
+      <remap from="/input/goal" to="/goal_pose"/>
+      <remap from="/input/reference_path" to="roadmap/reference"/>
+      <remap from="/input/obstacles" to="/pedestrian_simulator/trajectory_predictions"/>
+      <remap from="/output/command" to="/cmd_vel"/>
+      <remap from="/output/pose" to="/pedestrian_simulator/robot_state"/>
+      <remap from="/feedback/collisions" to="/pedestrian_simulator/collision_detected"/> -->
+		<!-- <arg name="recording_name" value="$(arg recording_name)"/> -->
+	</include>
+
+  <include file="$(find pedestrian_simulator)/launch/ros1_simulation.launch">
+    <arg name="pedestrian_scenario" value="$(arg pedestrian_scenario)"/>
+  </include>
+
+  <node pkg="pedestrian_simulator" type="collision_checker_node" name="collision_checker_node" output="screen"/>
+
+  <include file="$(find jackal_gazebo)/launch/jackal_world.launch">
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="config" value="front_laser"/>
+  </include>
+
+  <include file="$(find mobile_robot_state_publisher)/launch/mobile_robot_publisher.launch"/>
+
+  <!-- <include file="$(find roadmap)/launch/roadmap.launch"> -->
+    <!-- <arg name="map_file_name" value="$(arg roadmap_map)"/> -->
+  <!-- </include> -->
+
+  <!-- <node pkg="tf2_ros" exec="static_transform_publisher" name="static_map" output="log" args="0 0 0 0 0 0 odom map"/> -->
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_planner_rosnavigation)/rviz/ros1.rviz" output="screen"/>
+  <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_planner_rosnavigation)/rviz/ros1_3d.rviz" output="screen"/> -->
+
+  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" output="log"/>
+
+</launch>  
