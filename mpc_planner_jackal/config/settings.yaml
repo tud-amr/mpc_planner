@@ -6,10 +6,11 @@ n_discs: 1
 solver_settings:
   # solver: "acados" # acados or forces
   solver: "forces" # acados or forces
-  floating_license: false
+  floating_license: true
   enable_timeout: true
   init: 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
   use_sqp: false
+  tolstat: 1e-3
 
 recording:
   enable: false
@@ -21,6 +22,7 @@ recording:
 
 debug_limits: false
 debug_output: false
+debug_visuals: false
 
 enable_output: true
 control_frequency: 20
@@ -46,6 +48,7 @@ road:
 shift_previous_solution_forward: false
 
 contouring:
+  use_ca_mpc: true
   num_segments: 3
   preview: 0.0
   add_road_constraints: true
@@ -70,6 +73,8 @@ weights:
   preview: 0.0
   lag: 0.1
   slack: 10000.
+  terminal_angle: 100.0 # 0.0
+  terminal_contouring: 10.0 # 0.0
 
 visualization:
   draw_every: 5 # stages

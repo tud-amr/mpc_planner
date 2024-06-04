@@ -23,7 +23,7 @@
   </node>
 
   <!-- <include file="$(find vicon_util)/launch/spoof_vicon.launch">
-      <arg name="topics" default="[jackal3, dynamic_object1, dynamic_object2, dynamic_object3, dynamic_object4, dynamic_object5, rectangle2x1_1]"/>
+      <arg name="topics" default="[jackal1, dynamic_object1, dynamic_object2, dynamic_object3, dynamic_object4, dynamic_object5, rectangle2x1_1]"/>
       <arg name="message_types" default="[geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped]"/>
   </include> -->
 
@@ -40,8 +40,8 @@
   <include file="$(find vicon_util)/launch/bundle_obstacles.launch">
     <arg name="run_ekfs" value="true"/>
     <arg name="visualize_scene" value="true"/>
-    <arg name="robot_topic" value="jackal3"/>
-    <arg name="dynamic_object_topics" default="[$(arg jackal_name), dynamic_object1, dynamic_object2, dingo1]"/>
+    <arg name="robot_topic" value="jackal1"/>
+    <arg name="dynamic_object_topics" default="[$(arg jackal_name), dynamic_object1, dynamic_object2]"/>
     <arg name="dynamic_object_radius" default="0.4"/>
     <arg name="static_object_topics" default="[]"/>
     <arg name="static_object_radius" default="0.3"/>
