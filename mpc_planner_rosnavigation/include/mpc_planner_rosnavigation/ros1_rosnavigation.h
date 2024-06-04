@@ -89,6 +89,8 @@ namespace local_planner
     private:
         // ROS Navigation stack
         costmap_2d::Costmap2DROS *costmap_ros_;
+        costmap_2d::Costmap2D *costmap_; //!< Pointer to the 2d costmap (obtained from the costmap ros wrapper)
+
         tf2_ros::Buffer *tf_;
         bool initialized_;
         std::vector<geometry_msgs::PoseStamped> global_plan_; //!< Store the current global plan
@@ -96,6 +98,7 @@ namespace local_planner
         ros::NodeHandle general_nh_;
 
         // Other
+        bool done_{false};
 
         std::unique_ptr<Planner> _planner;
 
@@ -107,6 +110,7 @@ namespace local_planner
         bool _enable_output{false};
 
         RosTools::Timer _timeout_timer;
+        boost::mutex _reset_mutex; //!< Mutex that locks the obstacle array (multi-threaded)
 
         // Subscribers and publishers
         ros::Subscriber _state_sub, _state_pose_sub;

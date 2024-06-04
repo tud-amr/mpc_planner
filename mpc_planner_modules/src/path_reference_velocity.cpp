@@ -104,6 +104,8 @@ namespace MPCPlanner
     if (!CONFIG["debug_visuals"].as<bool>())
       return;
 
+    LOG_MARK("PathReferenceVelocity::Visualize");
+
     // Only for debugging
     auto &publisher = VISUALS.getPublisher("path_velocity");
     auto &line = publisher.getNewLine();

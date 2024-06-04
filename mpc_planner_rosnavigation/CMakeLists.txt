@@ -1,59 +1,56 @@
 cmake_minimum_required(VERSION 3.8)
 project(mpc_planner_rosnavigation)
 
-add_compile_options(-std=c++17)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
+find_package(OpenMP)
+if(OPENMP_FOUND)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+else()
+  message(WARNING "Compiling without OPENMP (OPENMP not found)")
+endif()
 
 set(DEPENDENCIES
-  base_local_planner
-  costmap_2d
-  costmap_converter
-  roscpp
+  rclcpp
+  nav_msgs
+  std_msgs
+  std_srvs
+  ros_tools
   mpc_planner
   mpc_planner_msgs
-  mpc_planner_modules
-  mpc_planner_solver
-  mpc_planner_util
-  mpc_planner_types
-  nav_core
-  ros_tools
-  nav_msgs
-  dynamic_reconfigure
-  tf2_ros
 )
 
-# find dependencies
-find_package(catkin REQUIRED COMPONENTS
-  ${DEPENDENCIES}
-)
-
-generate_dynamic_reconfigure_options(cfg/settings.cfg)
-
-catkin_package(
-  CATKIN_DEPENDS ${DEPENDENCIES}
-  INCLUDE_DIRS include/${PROJECT_NAME}
-)
+find_package(ament_cmake REQUIRED)
+foreach(pkg IN LISTS DEPENDENCIES)
+  find_package(${pkg} REQUIRED)
+endforeach()
 
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
 )
 
-add_library(${PROJECT_NAME}
-  src/ros1_rosnavigation.cpp
+add_executable(jackal_planner src/ros2_rosnavigation.cpp)
+target_include_directories(jackal_planner PUBLIC
+"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+"$<INSTALL_INTERFACE:include/${PROJECT_NAME}>"
 )
-add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+ament_target_dependencies(jackal_planner ${DEPENDENCIES})
 
-# add_executable(rosnavigation_planner src/ros1_rosnavigation.cpp)
-# add_dependencies(rosnavigation_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(rosnavigation_planner ${catkin_LIBRARIES})
-add_definitions(-DMPC_PLANNER_ROS)
+install(TARGETS jackal_planner
+  DESTINATION lib/${PROJECT_NAME})
 
-install(TARGETS ${PROJECT_NAME}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-)
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME})
 
-install(FILES
-  mpc_planner_rosnavigation_plugin.xml
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+install(DIRECTORY config
+  DESTINATION share/${PROJECT_NAME})
+  
+install(DIRECTORY rviz
+  DESTINATION share/${PROJECT_NAME})
+
+ament_export_dependencies(${DEPENDENCIES})
+ament_package()

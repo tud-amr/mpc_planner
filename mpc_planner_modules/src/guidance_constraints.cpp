@@ -65,6 +65,12 @@ namespace MPCPlanner
         (void)module_data;
         LOG_MARK("Guidance Constraints: Update");
 
+        if (module_data.path == nullptr)
+        {
+            LOG_MARK("Path data not yet available");
+            return;
+        }
+
         // Convert static obstacles
         if (!module_data.static_obstacles.empty())
         {
@@ -426,7 +432,8 @@ namespace MPCPlanner
         LOG_MARK("Guidance Constraints: Visualize()");
 
         // global_guidance_->Visualize(highlight_selected_guidance_, visualized_guidance_trajectory_nr_);
-        global_guidance_->Visualize(CONFIG["t-mpc"]["highlight_selected"].as<bool>(), -1);
+        if (!(_use_tmpcpp && global_guidance_->GetConfig()->n_paths_ == 0)) // If global guidance
+            global_guidance_->Visualize(CONFIG["t-mpc"]["highlight_selected"].as<bool>(), -1);
         for (size_t i = 0; i < planners_.size(); i++)
         {
             auto &planner = planners_[i];
@@ -519,15 +526,16 @@ namespace MPCPlanner
             std::vector<GuidancePlanner::Obstacle> obstacles;
             for (auto &obstacle : data.dynamic_obstacles)
             {
+
                 std::vector<Eigen::Vector2d> positions;
-                positions.push_back(obstacle.position);                          /** @note Strange that we need k = 0 here */
+                positions.push_back(obstacle.position); /** @note Strange that we need k = 0 here */
+
                 for (size_t k = 0; k < obstacle.prediction.modes[0].size(); k++) // std::max(obstacle.prediction.modes[0].size(), (size_t)GuidancePlanner::Config::N); k++)
                 {
                     positions.push_back(obstacle.prediction.modes[0][k].position);
                 }
                 obstacles.emplace_back(obstacle.index, positions, obstacle.radius + data.robot_area[0].radius);
             }
-
             global_guidance_->LoadObstacles(obstacles, {});
         }
     }

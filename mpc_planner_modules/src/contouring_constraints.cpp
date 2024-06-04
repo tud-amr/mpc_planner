@@ -138,6 +138,8 @@ namespace MPCPlanner
     if (!CONFIG["debug_visuals"].as<bool>())
       return;
 
+    LOG_MARK("ContouringConstraints::Visualize");
+
     if (_width_right == nullptr || _width_left == nullptr || module_data.path == nullptr)
       return;
 

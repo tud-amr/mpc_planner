@@ -41,7 +41,10 @@ namespace local_planner
             ros::NodeHandle nh("~/" + name);
 
             tf_ = tf;
+
             costmap_ros_ = costmap_ros;
+            costmap_ = costmap_ros_->getCostmap();
+
             initialized_ = true;
 
             LOG_INFO("Started ROSNavigation Planner");
@@ -72,12 +75,6 @@ namespace local_planner
             }
 
             RosTools::Instrumentor::Get().BeginSession("mpc_planner_rosnavigation");
-
-            // Start the control loop
-            // _timer = nh.createTimer(
-            //     ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()),
-            //     &ROSNavigationPlanner::loop,
-            //     this);
 
             LOG_DIVIDER();
         }
@@ -178,6 +175,18 @@ namespace local_planner
 
     void ROSNavigationPlanner::startEnvironment()
     {
+
+        // Manually add obstacles in the costmap!
+        // int mx, my;
+        // costmap_->worldToMapEnforceBounds(2., 2., mx, my);
+        // LOG_VALUE("mx", mx);
+        // LOG_VALUE("my", my);
+
+        // for (int i = 0; i < 10; i++)
+        // {
+        //     costmap_->setCost(mx + i, my, costmap_2d::LETHAL_OBSTACLE);
+        // }
+
         LOG_INFO("Starting pedestrian simulator");
         for (int i = 0; i < 20; i++)
         {
@@ -214,36 +223,43 @@ namespace local_planner
             return false;
         }
 
-        return _planner->isObjectiveReached(_state, _data);
+        bool goal_reached = _planner->isObjectiveReached(_state, _data) && !done_; // Activate once
+        if (goal_reached)
+        {
+            LOG_SUCCESS("Goal Reached!");
+            done_ = true;
+        }
 
-        // return _state.get("x") > 25.; //    Straight
-        // return RosTools::distance(_state.getPos(), Eigen::Vector2d(24., 24.)) < 4.0; // Diagonal
-        // return RosTools::distance(_state.getPos(), Eigen::Vector2d(_data.reference_path.x.back(), _data.reference_path.y.back())) < 4.0; // Diagonal
+        return goal_reached;
     }
 
     void ROSNavigationPlanner::loop(geometry_msgs::Twist &cmd_vel)
     {
 
-        _data.planning_start_time = std::chrono::system_clock::now();
+        // Copy data for thread safety
+        RealTimeData data = _data;
+        State state = _state;
+
+        data.planning_start_time = std::chrono::system_clock::now();
 
         LOG_DEBUG("============= Loop =============");
 
         if (_timeout_timer.hasFinished())
+        {
             reset(false);
+            cmd_vel.linear.x = 0.;
+            cmd_vel.angular.z = 0.;
+            LOG_HOOK();
+            return;
+        }
 
-        // if (objectiveReached())
-        // {
-        // reset();
-        // BENCHMARKERS.print();
-        // }
-        // Print the state
         if (CONFIG["debug_output"].as<bool>())
-            _state.print();
+            state.print();
 
         auto &loop_benchmarker = BENCHMARKERS.getBenchmarker("loop");
         loop_benchmarker.start();
 
-        auto output = _planner->solveMPC(_state, _data);
+        auto output = _planner->solveMPC(state, data);
 
         LOG_MARK("Success: " << output.success);
 
@@ -282,16 +298,16 @@ namespace local_planner
             if (output.success)
             {
                 auto &data_saver = _planner->getDataSaver();
-                data_saver.AddData("input_a", _state.get("a"));
+                data_saver.AddData("input_a", state.get("a"));
                 data_saver.AddData("input_v", _planner->getSolution(1, "v"));
                 data_saver.AddData("input_w", _planner->getSolution(0, "w"));
             }
 
-            _planner->saveData(_state, _data);
+            _planner->saveData(state, data);
         }
         if (output.success)
         {
-            _planner->visualize(_state, _data);
+            _planner->visualize(state, data);
             visualize();
         }
         LOG_DEBUG("============= End Loop =============");
@@ -327,6 +343,7 @@ namespace local_planner
 
     void ROSNavigationPlanner::goalCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
     {
+        reset();
         LOG_DEBUG("Goal callback");
         _data.goal(0) = msg->pose.position.x;
         _data.goal(1) = msg->pose.position.y;
@@ -353,7 +370,9 @@ namespace local_planner
     {
         LOG_MARK("Path callback");
 
-        if (isPathTheSame(msg))
+        int downsample = 25;
+
+        if (isPathTheSame(msg) || msg->poses.size() < downsample + 1)
             return;
 
         _data.reference_path.clear();
@@ -361,7 +380,7 @@ namespace local_planner
         int count = 0;
         for (auto &pose : msg->poses)
         {
-            if (count % 75 == 0) // Todo
+            if (count % downsample == 0) // Todo
             {
                 _data.reference_path.x.push_back(pose.pose.position.x);
                 _data.reference_path.y.push_back(pose.pose.position.y);
@@ -434,7 +453,8 @@ namespace local_planner
 
     void ROSNavigationPlanner::reset(bool success)
     {
-        LOG_MARK("Resetting");
+        LOG_INFO("Resetting");
+        boost::mutex::scoped_lock l(_reset_mutex);
 
         _reset_simulation_client.call(_reset_msg);
         _reset_ekf_client.call(_reset_pose_msg);
@@ -446,11 +466,15 @@ namespace local_planner
             _y_buffer[i] = 0.;
         }
 
-        ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()).sleep();
-
         _planner->reset(_state, _data, success);
 
+        ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()).sleep();
+
+        done_ = false;
+        LOG_HOOK();
+
         _timeout_timer.start();
+        LOG_HOOK();
     }
 
     void ROSNavigationPlanner::collisionCallback(const std_msgs::Float64::ConstPtr &msg)

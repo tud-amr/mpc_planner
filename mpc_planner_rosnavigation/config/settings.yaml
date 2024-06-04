@@ -67,7 +67,7 @@ weights:
   velocity: 0.55
   acceleration: 0.34
   angular_velocity: 0.85
-  reference_velocity: 2.0 #1.5
+  reference_velocity: 1.5
   contour: 0.05
   preview: 0.0
   lag: 0.75

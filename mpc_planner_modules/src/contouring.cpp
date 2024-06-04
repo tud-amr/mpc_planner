@@ -266,7 +266,11 @@ namespace MPCPlanner
     if (_spline.get() == nullptr)
       return;
 
+    if (data.reference_path.empty())
+      return;
+
     PROFILE_SCOPE("Contouring::Visualize");
+    LOG_MARK("Contouring::Visualize");
 
     visualizeReferencePath(data, module_data);
     visualizeRoadConstraints(data, module_data);
@@ -325,6 +329,7 @@ namespace MPCPlanner
   void Contouring::visualizeReferencePath(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)module_data;
+
     visualizePathPoints(data.reference_path, _name + "/path", false);
     visualizeSpline(*_spline, _name + "/path", true);
   }
