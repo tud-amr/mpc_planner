@@ -44,8 +44,6 @@
     <arg name="map_file_name" value="$(arg roadmap_map)"/>
   </include>
 
-  <!-- <node pkg="tf2_ros" exec="static_transform_publisher" name="static_map" output="log" args="0 0 0 0 0 0 odom map"/> -->
-
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_planner_jackalsimulator)/rviz/ros1.rviz" output="screen"/>
   <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_planner_jackalsimulator)/rviz/ros1_3d.rviz" output="screen"/> -->
 

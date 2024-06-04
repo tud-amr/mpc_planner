@@ -156,6 +156,7 @@ namespace MPCPlanner
             // Compute the normal vector to the reference path
             Eigen::Vector2d line_point = module_data.path->getPoint(s);
             Eigen::Vector2d normal = module_data.path->getOrthogonal(s);
+            double angle = module_data.path->getPathAngle(s);
 
             // Place goals orthogonally to the path
             std::vector<double> dist_lat = RosTools::linspace(-module_data.path_width_left->operator()(s) + robot_radius,
@@ -171,8 +172,17 @@ namespace MPCPlanner
 
                 double d = dist_lat[j];
 
-                double lat_cost = std::abs(d);                                     // Higher cost, the further away from the center line
-                goals.emplace_back(line_point + normal * d, long_cost + lat_cost); // Add the goal
+                double lat_cost = std::abs(d); // Higher cost, the further away from the center line
+
+                Eigen::Vector2d res = line_point + normal * d;
+                GuidancePlanner::SpaceTimePoint::PVector result;
+                result(0) = res(0);
+                result(1) = res(1);
+
+                if (GuidancePlanner::SpaceTimePoint::numStates() == 3)
+                    result(2) = angle;
+
+                goals.emplace_back(result, long_cost + lat_cost); // Add the goal
             }
         }
 

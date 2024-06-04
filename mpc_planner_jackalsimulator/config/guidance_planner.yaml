@@ -19,7 +19,7 @@ guidance_planner:
   predictions_are_constant_velocity: true
 
   dynamics:
-    connections: Dubins # Straight (default) or Dubins
+    connections: Straight # Straight (default) or Dubins
     turning_radius: 0.305 # [m]
 
   sampling:
@@ -30,7 +30,7 @@ guidance_planner:
   max_velocity: 7.0 # Maximum velocity of connections between nodes
   max_acceleration: 7.0 # Maximum velocity of connections between nodes
   connection_filters:
-    forward: false
+    forward: true
     velocity: false
     acceleration: false
   selection_weights: # Weights on the spline selection heuristic cost

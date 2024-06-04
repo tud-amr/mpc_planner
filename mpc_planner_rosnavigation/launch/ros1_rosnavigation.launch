@@ -2,7 +2,7 @@
 
 <launch>
 
-  <arg name="gui" default="true" />
+  <arg name="gui" default="false" />
   <arg name="project_name" default="" />
   
   <arg name="roadmap_map" value="maps/open_space/24.xml"/>
