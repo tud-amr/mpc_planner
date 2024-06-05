@@ -20,6 +20,7 @@ from path_reference_velocity import PathReferenceVelocityModule
 
 from ellipsoid_constraints import EllipsoidConstraintModule
 from gaussian_constraints import GaussianConstraintModule
+from decomp_constraints import DecompConstraintModule
 from guidance_constraints import GuidanceConstraintModule
 from linearized_constraints import LinearizedConstraintModule
 from scenario_constraints import ScenarioConstraintModule
@@ -80,16 +81,19 @@ def configuration_safe_horizon(settings):
 
 def configuration_tmpc(settings):
     modules = ModuleManager()
-    model = ContouringSecondOrderUnicycleModel()
+    model = ContouringSecondOrderUnicycleModelWithSlack()
 
     base_module = modules.add_module(MPCBaseModule(settings))
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
+    base_module.weigh_variable(var_name="slack", weight_names="slack")
 
     modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
     modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
 
     modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
+    modules.add_module(DecompConstraintModule(settings))
+
     # modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=GaussianConstraintModule))
 
     return model, modules
@@ -108,6 +112,7 @@ def configuration_lmpcc(settings):
     modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
 
     modules.add_module(EllipsoidConstraintModule(settings))
+    modules.add_module(DecompConstraintModule(settings))
 
     return model, modules
 

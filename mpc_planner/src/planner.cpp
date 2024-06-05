@@ -113,6 +113,9 @@ namespace MPCPlanner
 
             _solver->loadWarmstart();
 
+            std::chrono::duration<double> used_time = std::chrono::system_clock::now() - data.planning_start_time;
+            _solver->_params.solver_timeout = 1. / CONFIG["control_frequency"].as<double>() - used_time.count() - 0.006;
+
             // Solve MPC
             LOG_MARK("Solve optimization");
             {

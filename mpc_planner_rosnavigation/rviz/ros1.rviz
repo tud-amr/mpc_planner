@@ -11,8 +11,6 @@ Panels:
         - /Lab1
         - /Lab1/Robot1/Shape1
         - /Odometry1/Shape1
-        - /Map1
-        - /Map2
       Splitter Ratio: 0.6411764621734619
     Tree Height: 1106
   - Class: rviz/Selection
@@ -176,7 +174,7 @@ Visualization Manager:
           Marker Topic: /move_base/planned_trajectory
           Name: Planned Trajectory
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -184,7 +182,7 @@ Visualization Manager:
           Marker Topic: /move_base/contouring/path
           Name: Reference Path
           Namespaces:
-            {}
+            "": true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -210,7 +208,7 @@ Visualization Manager:
               Marker Topic: /move_base/guidance_planner/start_and_goals
               Name: Start and Goals
               Namespaces:
-                {}
+                "": true
               Queue Size: 100
               Value: true
             - Class: rviz/MarkerArray
@@ -218,7 +216,7 @@ Visualization Manager:
               Marker Topic: /move_base/guidance_planner/graph
               Name: Graph
               Namespaces:
-                {}
+                "": true
               Queue Size: 100
               Value: true
             - Class: rviz/MarkerArray
@@ -234,7 +232,7 @@ Visualization Manager:
               Marker Topic: /move_base/guidance_planner/trajectories
               Name: Guidance Trajectories
               Namespaces:
-                {}
+                "": true
               Queue Size: 100
               Value: true
             - Class: rviz/MarkerArray
@@ -258,7 +256,7 @@ Visualization Manager:
               Marker Topic: /move_base/guidance_constraints/optimized_trajectories
               Name: Optimized Trajectories
               Namespaces:
-                {}
+                "": true
               Queue Size: 100
               Value: true
             - Class: rviz/MarkerArray
@@ -470,6 +468,14 @@ Visualization Manager:
       Unreliable: false
       Use Timestamp: false
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /move_base/free_space
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 238; 238; 236
@@ -507,7 +513,7 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 35.84978103637695
+      Scale: 43.05510711669922
       Target Frame: <Fixed Frame>
       X: 11.041421890258789
       Y: 12.398346900939941

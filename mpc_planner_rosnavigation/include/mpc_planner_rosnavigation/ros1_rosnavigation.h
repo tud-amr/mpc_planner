@@ -69,7 +69,6 @@ namespace local_planner
         void initializeSubscribersAndPublishers(ros::NodeHandle &nh);
 
         void startEnvironment();
-        // bool objectiveReached();
 
         void loop(geometry_msgs::Twist &cmd_vel);
 

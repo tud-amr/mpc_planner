@@ -5,6 +5,11 @@
 
 #include <chrono>
 
+namespace costmap_2d
+{
+    class Costmap2D;
+}
+
 namespace MPCPlanner
 {
 
@@ -15,6 +20,9 @@ namespace MPCPlanner
         FixedSizeTrajectory past_trajectory;
 
         std::vector<DynamicObstacle> dynamic_obstacles;
+
+        costmap_2d::Costmap2D *costmap{nullptr}; // Costmap for static obstacles
+
         ReferencePath reference_path;
         Boundary left_bound, right_bound;
 

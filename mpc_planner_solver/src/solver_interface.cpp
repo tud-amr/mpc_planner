@@ -114,6 +114,7 @@ namespace MPCPlanner
 
 	void Solver::initializeWithBraking(const State &initial_state)
 	{
+		LOG_MARK("Initialize Plan with a Braking Plan");
 		initializeWithState(initial_state); // Initialize all variables
 
 		double x, y, psi, v, a;

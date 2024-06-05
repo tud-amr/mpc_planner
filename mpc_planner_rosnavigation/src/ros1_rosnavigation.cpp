@@ -13,6 +13,7 @@
 #include <ros_tools/convertions.h>
 #include <ros_tools/math.h>
 #include <ros_tools/data_saver.h>
+#include <ros_tools/spline.h>
 
 #include <std_msgs/Empty.h>
 #include <ros_tools/profiling.h>
@@ -44,6 +45,7 @@ namespace local_planner
 
             costmap_ros_ = costmap_ros;
             costmap_ = costmap_ros_->getCostmap();
+            _data.costmap = costmap_;
 
             initialized_ = true;
 
@@ -242,7 +244,7 @@ namespace local_planner
 
         data.planning_start_time = std::chrono::system_clock::now();
 
-        LOG_DEBUG("============= Loop =============");
+        LOG_MARK("============= Loop =============");
 
         if (_timeout_timer.hasFinished())
         {
@@ -310,11 +312,12 @@ namespace local_planner
             _planner->visualize(state, data);
             visualize();
         }
-        LOG_DEBUG("============= End Loop =============");
+        LOG_MARK("============= End Loop =============");
     }
 
     void ROSNavigationPlanner::stateCallback(const nav_msgs::Odometry::ConstPtr &msg)
     {
+        LOG_MARK("State callback");
         _state.set("x", msg->pose.pose.position.x);
         _state.set("y", msg->pose.pose.position.y);
         _state.set("psi", RosTools::quaternionToAngle(msg->pose.pose.orientation));
@@ -329,6 +332,8 @@ namespace local_planner
 
     void ROSNavigationPlanner::statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
     {
+        LOG_MARK("State callback");
+
         _state.set("x", msg->pose.position.x);
         _state.set("y", msg->pose.position.y);
         _state.set("psi", msg->pose.orientation.z);
@@ -343,8 +348,9 @@ namespace local_planner
 
     void ROSNavigationPlanner::goalCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
     {
+        LOG_MARK("Goal callback");
+
         reset();
-        LOG_DEBUG("Goal callback");
         _data.goal(0) = msg->pose.position.x;
         _data.goal(1) = msg->pose.position.y;
         _data.goal_received = true;
@@ -370,7 +376,7 @@ namespace local_planner
     {
         LOG_MARK("Path callback");
 
-        int downsample = 25;
+        int downsample = CONFIG["downsample_path"].as<double>();
 
         if (isPathTheSame(msg) || msg->poses.size() < downsample + 1)
             return;
@@ -380,19 +386,37 @@ namespace local_planner
         int count = 0;
         for (auto &pose : msg->poses)
         {
-            if (count % downsample == 0) // Todo
+            if (count % downsample == 0 || count == msg->poses.size() - 1) // Todo
             {
                 _data.reference_path.x.push_back(pose.pose.position.x);
                 _data.reference_path.y.push_back(pose.pose.position.y);
-                _data.reference_path.psi.push_back(0.0);
+                _data.reference_path.psi.push_back(RosTools::quaternionToAngle(pose.pose.orientation));
             }
             count++;
         }
+
+        // Fit a clothoid on the global path to sample points on the spline from
+        // RosTools::Clothoid2D clothoid(_data.reference_path.x, _data.reference_path.y, _data.reference_path.psi, 2.0);
+        // _data.reference_path.clear();
+        // clothoid.getPointsOnClothoid(_data.reference_path.x, _data.reference_path.y, _data.reference_path.s);
+
+        // Velocity
+        /*LOG_VALUE("velocity reference", CONFIG["weights"]["reference_velocity"].as<double>());
+        for (size_t i = 0; i < _data.reference_path.x.size(); i++)
+        {
+            if (i != _data.reference_path.x.size() - 1)
+                _data.reference_path.v.push_back(CONFIG["weights"]["reference_velocity"].as<double>());
+            else
+                _data.reference_path.v.push_back(0.);
+        }*/
+
         _planner->onDataReceived(_data, "reference_path");
     }
 
     void ROSNavigationPlanner::obstacleCallback(const mpc_planner_msgs::ObstacleArray::ConstPtr &msg)
     {
+        LOG_MARK("Obstacle callback");
+
         _data.dynamic_obstacles.clear();
 
         for (auto &obstacle : msg->obstacles)
@@ -467,18 +491,19 @@ namespace local_planner
         }
 
         _planner->reset(_state, _data, success);
+        _data.costmap = costmap_;
 
         ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()).sleep();
 
         done_ = false;
-        LOG_HOOK();
 
         _timeout_timer.start();
-        LOG_HOOK();
     }
 
     void ROSNavigationPlanner::collisionCallback(const std_msgs::Float64::ConstPtr &msg)
     {
+        LOG_MARK("Collision callback");
+
         _data.intrusion = (float)(msg->data);
 
         if (_data.intrusion > 0.)
@@ -536,18 +561,4 @@ namespace local_planner
         _camera_pub.sendTransform(msg);
     }
 
-    // int main(int argc, char **argv)
-    // {
-    //     ros::init(argc, argv, ros::this_node::getName());
-
-    //     ros::NodeHandle nh;
-    //     auto rosnavigation_planner = std::make_shared<ROSNavigationPlanner>(nh);
-    //     VISUALS.init(&nh);
-
-    //     ros::spin();
-
-    //     BENCHMARKERS.print();
-
-    //     return 0;
-    // }
 } // namespace local_planner
