@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <arg name="gui" default="false" />
+  <arg name="project_name" default="" />
+  <arg name="roadmap_map" value="maps/open_space/24.xml"/>
+  <!-- <arg name="roadmap" default="maps/mobile_robotics_lab/diagonal.xml"/> -->
+  <arg name="pedestrian_scenario" default="static/1_middle.xml" />
+
+  <arg name="dingo_name" default="dingo1"/>
+
+  <rosparam command="load" file="$(find mpc_planner_dingo)/config/guidance_planner.yaml"/>
+  <node pkg="mpc_planner_dingo" type="dingo_planner" name="dingo_planner" respawn="false" output="screen">
+    <!-- <remap from="/input/state" to="robot_state"/> -->
+    <remap from="/input/state_pose" to="robot_state"/>
+    <remap from="/input/goal" to="/goal_pose"/>
+    <remap from="/input/reference_path" to="roadmap/reference"/>
+    <remap from="/input/obstacles_sim" to="/pedestrian_simulator/trajectory_predictions"/>
+    <remap from="/input/obstacles" to="vicon_util/dynamic_objects"/>
+    <remap from="/input/bluetooth" to="/bluetooth_teleop/joy"/>
+    <remap from="/output/command" to="/cmd_vel"/>
+  </node>
+
+  <include file="$(find pedestrian_simulator)/launch/ros1_simulation.launch">
+    <arg name="pedestrian_scenario" value="$(arg pedestrian_scenario)"/>
+  </include>
+
+  <include file="$(find dingo_gazebo)/launch/dingo_world.launch">
+    <arg name="gui" value="$(arg gui)" />
+  </include>
+
+  <include file="$(find mobile_robot_state_publisher)/launch/mobile_robot_publisher.launch"/>
+
+  <include file="$(find roadmap)/launch/roadmap.launch">
+    <arg name="map_file_name" value="$(arg roadmap_map)"/>
+  </include>
+
+  <!-- <include file="$(find dingo_description)/launch/description.launch"/> -->
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_planner_dingo)/rviz/ros1.rviz" output="screen"/>
+
+  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" output="log"/>
+
+</launch>  

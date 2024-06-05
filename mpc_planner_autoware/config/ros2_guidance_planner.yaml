@@ -2,9 +2,12 @@
   ros__parameters:
     prm:
       debug_output: false
+      debug_visuals: false
       seed: 1 # Seed of the visibility-PRM. Set to -1 for random!
-      T: 4.0 #6.0
-      N: 20 #30
+      T: 8.0 #6.0 # 4.0
+      N: 40 # 20
+      winding_pass_threshold: 1.5 #0.25 #0.05 #0.25 #1.5
+      # topology_comparison: Winding #Homology (default) or UVD
       topology_comparison: Homology #Homology (default) or UVD
       sampling_function: Uniform # Uniform (default)
       use_learning: false
@@ -13,19 +16,19 @@
       track_selected_homology_only: false
       sample_margin: 0. #0. # Was 0.
       view_angle_times_pi: 0.606 # View angle when sampling in a conus (disabled by default)
-      n_samples: 30 # Number of samples for PRM
-      timeout: 10.0 # Timeout for PRM sampling [ms]
+      n_samples: 50 # Number of samples for PRM
+      timeout: 5.0 # Timeout for PRM sampling [ms]
       n_paths: 4 # Number of guidance trajectories
-      max_velocity: 8.0 #3.0       # Maximum velocity of connections between nodes
+      max_velocity: 5.0 #3.0       # Maximum velocity of connections between nodes
       max_acceleration: 5.0 # 3.0 # Maximum velocity of connections between nodes
       connection_filters:
         forward: true
         acceleration: true
       goals: # Only used when `LoadReferencePath` is used to set the goals
         longitudinal: 5 # Number of goals in direction of the path
-        vertical: 5 # Number of goals in direction orthogonal to the path
+        vertical: 3 # Number of goals in direction orthogonal to the path
       selection_weights: # Selection weights to determine what spline is best
-        consistency: 2.0 # Higher = more consistent #1.33 # 0.24904675216524505  # How much better should a new trajectory be to be selected [%]
+        consistency: 1. # 0 = do not switch <-> 1 = no preference for previous path.
         length: 5. #0. #1.
         velocity: 0. #2.
         acceleration: 1. #1.
@@ -37,7 +40,7 @@
         collision: 0.0 #0.005 #0.5
         velocity_tracking: 0.01
       visuals:
-        transparency: 0.5 #0.5 #0.9               # The least transparent the obstacle visualization is (0-1)
+        transparency: 0.9 #0.5 #0.9               # The least transparent the obstacle visualization is (0-1)
         visualize_all_samples: false # Visualizes all PRM samples
         visualize_homology: false
         show_indices: false

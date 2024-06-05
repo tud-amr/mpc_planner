@@ -10,8 +10,13 @@ Panels:
         - /Planner1/SH-MPC1
         - /Lab1
         - /Lab1/Robot1/Shape1
+        - /Odometry1/Shape1
       Splitter Ratio: 0.6411764621734619
+<<<<<<< HEAD
     Tree Height: 1106
+=======
+    Tree Height: 719
+>>>>>>> main
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -90,31 +95,16 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        VLP16:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        VLP16_base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
         base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        baseplate_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
         chassis_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        fenders_link:
+        front_fender_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -133,15 +123,6 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        hokuyo_base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        hokuyo_base_scan:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
         imu_link:
           Alpha: 1
           Show Axes: false
@@ -151,6 +132,11 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
         navsat_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_fender_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -198,7 +184,7 @@ Visualization Manager:
           Marker Topic: /jackalsimulator_planner/contouring/points
           Name: Reference Path Points
           Namespaces:
-            "": true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -210,13 +196,13 @@ Visualization Manager:
           Queue Size: 100
           Value: false
         - Class: rviz/MarkerArray
-          Enabled: true
+          Enabled: false
           Marker Topic: /jackalsimulator_planner/obstacle_predictions
           Name: Planner Obstacle Predictions
           Namespaces:
-            "": true
+            {}
           Queue Size: 100
-          Value: true
+          Value: false
         - Class: rviz/Group
           Displays:
             - Class: rviz/MarkerArray
@@ -228,37 +214,37 @@ Visualization Manager:
               Queue Size: 100
               Value: true
             - Class: rviz/MarkerArray
-              Enabled: true
+              Enabled: false
               Marker Topic: /jackalsimulator_planner/guidance_planner/graph
               Name: Graph
               Namespaces:
                 "": true
               Queue Size: 100
-              Value: true
+              Value: false
             - Class: rviz/MarkerArray
-              Enabled: true
+              Enabled: false
               Marker Topic: /jackalsimulator_planner/guidance_planner/geometric_paths
               Name: Geometric Paths
               Namespaces:
                 "": true
               Queue Size: 100
-              Value: true
+              Value: false
             - Class: rviz/MarkerArray
-              Enabled: true
+              Enabled: false
               Marker Topic: /jackalsimulator_planner/guidance_planner/trajectories
               Name: Guidance Trajectories
               Namespaces:
                 "": true
               Queue Size: 100
-              Value: true
+              Value: false
             - Class: rviz/MarkerArray
-              Enabled: true
+              Enabled: false
               Marker Topic: /jackalsimulator_planner/guidance_planner/obstacles_3d
               Name: 3D Obstacles
               Namespaces:
                 "": true
               Queue Size: 100
-              Value: true
+              Value: false
             - Class: rviz/MarkerArray
               Enabled: false
               Marker Topic: /jackalsimulator_planner/guidance_constraints/warmstart_trajectories
@@ -418,9 +404,18 @@ Visualization Manager:
       Marker Topic: /jackalsimulator_planner/contouring/points
       Name: MarkerArray
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /jackalsimulator_planner/gaussian_constraints
+      Name: Gaussian Constraints
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+<<<<<<< HEAD
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /jackalsimulator_planner/gaussian_constraints
@@ -428,6 +423,42 @@ Visualization Manager:
       Namespaces:
         "": true
       Queue Size: 100
+=======
+    - Angle Tolerance: 0.10000000149011612
+      Class: rviz/Odometry
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: false
+      Enabled: true
+      Keep: 100
+      Name: Odometry
+      Position Tolerance: 0.10000000149011612
+      Queue Size: 10
+      Shape:
+        Alpha: 0.5
+        Axes Length: 1
+        Axes Radius: 0.10000000149011612
+        Color: 32; 74; 135
+        Head Length: 0
+        Head Radius: 0
+        Shaft Length: 0.20000000298023224
+        Shaft Radius: 0.20000000298023224
+        Value: Arrow
+      Topic: /odometry/filtered
+      Unreliable: false
+>>>>>>> main
       Value: true
   Enabled: true
   Global Options:
@@ -466,10 +497,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 41.297340393066406
+      Scale: 37.604244232177734
       Target Frame: <Fixed Frame>
-      X: 15.819169998168945
-      Y: 0.13518919050693512
+      X: 11.041421890258789
+      Y: 12.398346900939941
     Saved: ~
 Window Geometry:
   Displays:
@@ -477,7 +508,11 @@ Window Geometry:
   Height: 1403
   Hide Left Dock: true
   Hide Right Dock: true
+<<<<<<< HEAD
   QMainWindow State: 000000ff00000000fd000000040000000000000236000004ddfc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073000000003d000004dd000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c000002610000000100000112000004ddfc0200000003fb0000000a00560069006500770073000000003d000004dd000000a400fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000001200530065006c0065006300740069006f006e010000025a000000b2000000000000000000000002000006b8000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000006b80000003efc0100000002fb0000000800540069006d00650100000000000006b8000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000006b8000004dd00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+=======
+  QMainWindow State: 000000ff00000000fd0000000400000000000002360000035afc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073000000003d0000035a000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c000002610000000100000112000004ddfc0200000003fb0000000a00560069006500770073000000003d000004dd000000a400fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000001200530065006c0065006300740069006f006e010000025a000000b2000000000000000000000002000006b8000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000006b80000003efc0100000002fb0000000800540069006d00650100000000000006b8000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000006b8000004dd00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+>>>>>>> main
   Selection:
     collapsed: false
   Time:

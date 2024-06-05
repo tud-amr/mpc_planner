@@ -15,6 +15,10 @@ namespace MPCPlanner
   {
     LOG_INITIALIZE("Ellipsoid Constraints");
     LOG_INITIALIZED();
+
+    _n_discs = CONFIG["n_discs"].as<int>();
+    _robot_radius = CONFIG["robot_radius"].as<double>();
+    _risk = CONFIG["probabilistic"]["risk"].as<double>();
   }
 
   void EllipsoidConstraints::update(State &state, const RealTimeData &data, ModuleData &module_data)
@@ -31,8 +35,8 @@ namespace MPCPlanner
     if (k == 1)
       LOG_MARK("EllipsoidConstraints::setParameters");
 
-    setForcesParameterEgoDiscRadius(k, _solver->_params, CONFIG["robot_radius"].as<double>());
-    for (int d = 0; d < CONFIG["n_discs"].as<int>(); d++)
+    setForcesParameterEgoDiscRadius(k, _solver->_params, _robot_radius);
+    for (int d = 0; d < _n_discs; d++)
       setForcesParameterEgoDiscOffset(k, _solver->_params, data.robot_area[d].offset, d);
 
     for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
@@ -54,7 +58,7 @@ namespace MPCPlanner
       }
       else if (obstacle.prediction.type == PredictionType::GAUSSIAN)
       {
-        double chi = RosTools::ExponentialQuantile(0.5, 1.0 - CONFIG["probabilistic"]["risk"].as<double>());
+        double chi = RosTools::ExponentialQuantile(0.5, 1.0 - _risk);
 
         setForcesParameterEllipsoidObstMajor(k, _solver->_params, mode[k - 1].major_radius, i);
         setForcesParameterEllipsoidObstMinor(k, _solver->_params, mode[k - 1].minor_radius, i);

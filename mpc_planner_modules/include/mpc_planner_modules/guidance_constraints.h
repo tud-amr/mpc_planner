@@ -19,9 +19,12 @@
 #include <mpc_planner_modules/controller_module.h>
 #include <mpc_planner_solver/solver_interface.h>
 
-#include <ros_tools/spline.h>
+#include <unordered_map>
 
-#include <guidance_planner/global_guidance.h>
+namespace GuidancePlanner
+{
+    class GlobalGuidance;
+}
 
 namespace MPCPlanner
 {
@@ -75,7 +78,7 @@ namespace MPCPlanner
         void onDataReceived(RealTimeData &data, std::string &&data_name) override;
 
         void reset() override;
-        // void ExportData(RosTools::DataSaver &data_saver) override;
+        void saveData(RosTools::DataSaver &data_saver) override;
         // void GetMethodName(std::string &name) override;
 
     private: // Private functions
@@ -91,39 +94,29 @@ namespace MPCPlanner
             bool is_original_planner = false;
             bool disabled = true;
 
+            bool taken = false;
+            bool existing_guidance = false;
+
             LocalPlanner(int _id, bool _is_original_planner = false);
         };
 
-        // void SetGoalCosts();
-
-        // void SetParameters(LocalPlanner &planner, const RealTimeData &data, int N_iter, int &param_idx);
-
+        void setGoals(State &state, const ModuleData &module_data);
+        void mapGuidanceTrajectoriesToPlanners();
         void initializeSolverWithGuidance(LocalPlanner &planner);
 
         int FindBestPlanner();
 
-        // void VisualizeOptimizedPlan(LocalPlanner &planner);
-
-        // void VisualizeWarmstartPlan(LocalPlanner &planner, RosTools::ROSPointMarker &plan_points, RosTools::ROSPointMarker &ellipse, RosTools::ROSLine &line);
-        // void VisualizeGuidedPlan(LocalPlanner &planner, RosTools::ROSPointMarker &plan_points, RosTools::ROSPointMarker &ellipse, RosTools::ROSLine &line);
-        // void VisualizeGMPCCPlan(LocalPlanner &planner, RosTools::ROSPointMarker &plan_points, RosTools::ROSPointMarker &ellipse, RosTools::ROSLine &line);
-        // void VisualizeLMPCCPlan(LocalPlanner &planner, RosTools::ROSPointMarker &plan_points, RosTools::ROSPointMarker &ellipse, RosTools::ROSLine &line);
-
     private: // Member variables
         std::vector<LocalPlanner> planners_;
 
-        // std::unique_ptr<RosTools::ROSMarkerPublisher> plan_markers_;
+        std::shared_ptr<GuidancePlanner::GlobalGuidance> global_guidance_;
 
-        std::unique_ptr<GuidancePlanner::GlobalGuidance> global_guidance_;
-
-        // To set the goals
-        std::unique_ptr<RosTools::Spline2D> _spline{nullptr};
-        // std::unique_ptr<RosTools::Spline2D> _guidance_spline{nullptr};
+        std::unordered_map<int, int> _map_homotopy_class_to_planner;
 
         // Configuration parameters
-        // bool add_original_planner_, enable_guidance_constraints_, enable_guidance_warmstart_;
-        // bool highlight_selected_guidance_, visualize_warmstart_;
-        // int visualized_guidance_trajectory_nr_;
+        bool _use_tmpcpp{true}, _enable_constraints{true};
+        double _control_frequency{20.};
+        double _planning_time;
 
         RealTimeData empty_data_;
 

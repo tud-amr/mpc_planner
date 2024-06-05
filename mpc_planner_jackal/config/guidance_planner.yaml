@@ -3,7 +3,7 @@ prm:
   seed: 1                               # Seed of the visibility-PRM. Set to -1 for random!
   T: 4.0 #6.0
   N: 20 #30
-  topology_comparison: Homology         # Homology (default) or UVD
+  topology_comparison: Winding         # Homology (default) or UVD
   sampling_function: Uniform # Uniform (default)
   use_learning: false
   predictions_are_constant_velocity: true
@@ -34,7 +34,7 @@ prm:
     collision: 0.5
     velocity_tracking: 0.01
   visuals:
-    transparency: 0.9 #0.5 #0.9               # The least transparent the obstacle visualization is (0-1)
+    transparency: 0.5 #0.5 #0.9               # The least transparent the obstacle visualization is (0-1)
     visualize_all_samples: false    # Visualizes all PRM samples
     visualize_homology: false
     show_indices: false

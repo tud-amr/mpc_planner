@@ -69,6 +69,9 @@ class Parameters:
         map["num parameters"] = self._param_idx
         write_to_yaml(file_path, self._params)
 
+    def get_p(self):
+        return self._p
+
     def get(self, parameter):
         if self._p is None:
             print("Load parameters before requesting them!")

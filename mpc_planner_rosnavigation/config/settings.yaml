@@ -1,0 +1,86 @@
+name: "rosnavigation"
+N: 30
+integrator_step: 0.2
+n_discs: 1
+
+# ROS Navigation only
+downsample_path: 10
+
+solver_settings:
+  # solver: "acados" # acados or forces
+  solver: "forces" # acados or forces
+  floating_license: false
+  enable_timeout: true
+  init: 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
+  use_sqp: false
+  tolstat: 1e-3
+
+recording:
+  enable: false
+  folder: "/home/r2c1/Documents/publications/multi-mpc-2023/results/data"
+  file: none #experiment_method
+  timestamp: false
+  num_experiments: 26
+
+debug_output: false
+debug_limits: false
+debug_visuals: false
+
+enable_output: true
+control_frequency: 20
+deceleration_at_infeasible: 3.0
+max_obstacles: 12 # (solver)
+robot_radius: 0.325
+robot:
+  length: 0.65
+  width: 0.65
+  com_to_back: 0.0
+obstacle_radius: 0.4
+
+linearized_constraints:
+  add_halfspaces: 0  # (solver)
+
+scenario_constraints:
+  parallel_solvers: 1
+
+road:
+  two_way: false
+  width: 6.0 #6.0
+
+shift_previous_solution_forward: false
+
+contouring:
+  use_ca_mpc: true
+  num_segments: 8
+  preview: 0.0
+  add_road_constraints: true
+
+t-mpc:
+  use_t-mpc++: true
+  enable_constraints: true
+  highlight_selected: true
+
+decomp:
+  range: 2.0
+  max_constraints: 12
+
+probabilistic:
+  enable: true
+  risk: 0.05
+  propagate_uncertainty: true
+
+weights:
+  goal: 10.
+  velocity: 0.55
+  acceleration: 0.34
+  angular_velocity: 0.85
+  reference_velocity: 1.5
+  contour: 0.05
+  preview: 0.0
+  lag: 0.75
+  slack: 10000.
+  terminal_angle: 100.0 # 0.0
+  terminal_contouring: 10.0 # 0.0
+
+visualization:
+  draw_every: 5 # stages

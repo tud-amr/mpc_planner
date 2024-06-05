@@ -15,17 +15,15 @@
 
   <build_depend>std_msgs</build_depend>
   <build_depend>std_srvs</build_depend>
+  <exec_depend>nav_msgs</exec_depend>
 
-  <depend>autoware_auto_planning_msgs</depend>
+  <!-- <depend>autoware_auto_planning_msgs</depend>
   <depend>autoware_auto_vehicle_msgs</depend>
   <depend>autoware_auto_perception_msgs</depend>
+  <depend>autoware_adapi_v1_msgs</depend> -->
 
-  <exec_depend>nav_msgs</exec_depend>
-  <exec_depend>pedestrian_simulator</exec_depend>
-  <exec_depend>lanelets_to_path</exec_depend>
-
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
+  <!-- <exec_depend>pedestrian_simulator</exec_depend> -->
+  <!-- <exec_depend>lanelets_to_path</exec_depend> -->
 
   <export>
     <build_type>ament_cmake</build_type>

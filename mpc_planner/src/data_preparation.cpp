@@ -39,8 +39,7 @@ namespace MPCPlanner
                                         robot_area.emplace_back(-center_offset + radius +
                                                                     (double)i * (length - 2. * radius) / ((double)(n_discs - 1.)),
                                                                 radius); // Other discs in between
-                                LOG_VALUE("offset", robot_area.back().offset);
-                                LOG_VALUE("radius", robot_area.back().radius);
+                                LOG_MARK("Disc " << i << ": offset " << robot_area.back().offset << ", radius " << robot_area.back().radius);
                         }
                 }
 
@@ -109,16 +108,31 @@ namespace MPCPlanner
                         LOG_MARK("Received " << obstacles.size() << " > " << max_obstacles << " obstacles. Keeping the closest.");
 
                         Eigen::Vector2d obstacle_pos;
-                        Eigen::Vector2d vehicle_pos = state.getPos();
 
                         distances.clear();
                         for (auto &obstacle : obstacles)
                         {
+                                double dist;
+                                double min_dist = 1e5;
 
                                 //   if (reject_function != nullptr && reject_function(vehicle_pos, obstacle.position)) // If we should reject this                                                                                    // obstacle, push a high distance
                                 // distances.push_back(1e8);
                                 //   else
-                                distances.push_back(RosTools::distance(vehicle_pos, obstacle.position));
+                                // Eigen::Vector2d obstacle_pos = obstacle.position;
+                                // Eigen::Vector2d obstacle_pos = obstacle.position;
+                                Eigen::Vector2d direction(std::cos(state.get("psi")), std::sin(state.get("psi")));
+                                for (int k = 0; k < CONFIG["N"].as<int>(); k++)
+                                {
+                                        // Linearly scaled
+                                        dist = (double)(k + 1) * 0.6 *
+                                               RosTools::distance(
+                                                   obstacle.prediction.modes[0][k].position,
+                                                   state.getPos() + state.get("v") * (double)k * direction);
+
+                                        if (dist < min_dist)
+                                                min_dist = dist;
+                                }
+                                distances.push_back(min_dist); // RosTools::distance(vehicle_pos, obstacle.position));
                         }
 
                         // Sort obstacles on distance
@@ -131,6 +145,11 @@ namespace MPCPlanner
 
                         for (size_t v = 0; v < max_obstacles; v++)
                                 processed_obstacles.push_back(obstacles[indices[v]]);
+
+                        for (size_t i = 0; i < processed_obstacles.size(); i++) // Sequential IDs
+                        {
+                                processed_obstacles[i].index = i;
+                        }
 
                         obstacles = processed_obstacles;
                 }
@@ -156,10 +175,7 @@ namespace MPCPlanner
         void propagatePredictionUncertainty(Prediction &prediction)
         {
                 if (prediction.type != PredictionType::GAUSSIAN)
-                {
-                        LOG_WARN("Cannot propagate uncertainty for predictions that are not GAUSSIAN");
                         return;
-                }
 
                 double dt = CONFIG["integrator_step"].as<double>();
                 double major = 0.;
@@ -179,5 +195,4 @@ namespace MPCPlanner
                 for (auto &obstacle : obstacles)
                         propagatePredictionUncertainty(obstacle.prediction);
         }
-
 }

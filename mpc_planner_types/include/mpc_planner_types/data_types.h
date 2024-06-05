@@ -97,14 +97,19 @@ namespace MPCPlanner
         std::vector<double> y;
         std::vector<double> psi;
 
+        std::vector<double> v;
+        std::vector<double> s;
+
         ReferencePath(int length = 10);
         void clear();
 
         bool pointInPath(int point_num, double other_x, double other_y) const;
 
         bool empty() const { return x.empty(); }
-        // friend std::ostream &operator<<(std::ostream &out, const ReferencePath &path);
+        bool hasVelocity() const { return !v.empty(); }
+        bool hasDistance() const { return !s.empty(); }
     };
+
     typedef ReferencePath Boundary;
 
     struct Trajectory

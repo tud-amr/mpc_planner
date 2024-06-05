@@ -6,26 +6,37 @@ n_discs: 1
 solver_settings:
   # solver: "acados" # acados or forces
   solver: "forces" # acados or forces
-  floating_license: false
+  floating_license: true
   enable_timeout: true
   init: 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
   use_sqp: false
+  tolstat: 1e-3
 
+recording:
+  enable: false
+  # folder: "/home/r2c1/Documents/publications/multi-mpc-2023/results/data"
+  folder: "/home/r2c1/tmpc_revision/experiments/data"
+  file: "GMPCC"
+  timestamp: true
+  num_experiments: 30
+
+debug_limits: false
 debug_output: false
+debug_visuals: false
 
 enable_output: true
 control_frequency: 20
 deceleration_at_infeasible: 3.0
-max_obstacles: 7
+max_obstacles: 5
 robot_radius: 0.325
 robot:
   length: 0.65
   width: 0.65
   com_to_back: 0.0
-obstacle_radius: 0.3
+obstacle_radius: 0.35
 
 linearized_constraints:
-  add_halfspaces: 2  # For road constraints
+  add_halfspaces: 0 #2  # For road constraints
 
 scenario_constraints:
   parallel_solvers: 1
@@ -37,13 +48,15 @@ road:
 shift_previous_solution_forward: false
 
 contouring:
+  use_ca_mpc: true
   num_segments: 3
   preview: 0.0
-  add_road_constraints: false
+  add_road_constraints: true
 
 t-mpc:
   use_t-mpc++: true
   enable_constraints: true
+  highlight_selected: true
 
 probabilistic:
   enable: true
@@ -60,6 +73,8 @@ weights:
   preview: 0.0
   lag: 0.1
   slack: 10000.
+  terminal_angle: 100.0 # 0.0
+  terminal_contouring: 10.0 # 0.0
 
 visualization:
   draw_every: 5 # stages

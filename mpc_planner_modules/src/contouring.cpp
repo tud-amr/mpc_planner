@@ -18,6 +18,9 @@ namespace MPCPlanner
   {
     LOG_INITIALIZE("Contouring");
     _n_segments = CONFIG["contouring"]["num_segments"].as<int>();
+    _add_road_constraints = CONFIG["contouring"]["add_road_constraints"].as<bool>();
+    _two_way_road = CONFIG["road"]["two_way"].as<bool>();
+    _use_ca_mpc = CONFIG["contouring"]["use_ca_mpc"].as<bool>();
 
     LOG_INITIALIZED();
   }
@@ -33,9 +36,14 @@ namespace MPCPlanner
     double closest_s;
     _spline->findClosestPoint(state.getPos(), _closest_segment, closest_s);
 
+    if (module_data.path.get() == nullptr && _spline.get() != nullptr)
+      module_data.path = _spline;
+
     state.set("spline", closest_s); // We need to initialize the spline state here
 
-    if (CONFIG["contouring"]["add_road_constraints"].as<bool>())
+    module_data.current_path_segment = _closest_segment;
+
+    if (_add_road_constraints)
       constructRoadConstraints(data, module_data);
   }
 
@@ -44,60 +52,71 @@ namespace MPCPlanner
     (void)data;
     (void)module_data;
 
-    _solver->setParameter(k, "contour", CONFIG["weights"]["contour"].as<double>());
-    _solver->setParameter(k, "lag", CONFIG["weights"]["lag"].as<double>());
-
-    // Add condition
-    if (_solver->hasParameter("preview"))
-      _solver->setParameter(k, "preview", CONFIG["weights"]["preview"].as<double>());
-
-    /** @todo: Handling of parameters when the spline parameters go beyond the splines defined */
-    for (int i = 0; i < _n_segments; i++)
+    // Retrieve weights once
+    static double contouring_weight, lag_weight, preview_weight, reference_velocity, velocity_weight;
+    static double terminal_angle_weight, terminal_contouring_weight;
+    if (k == 0)
     {
-      int index = _closest_segment + i;
-      double ax, bx, cx, dx;
-      double ay, by, cy, dy;
-      double start;
+      contouring_weight = CONFIG["weights"]["contour"].as<double>();
 
-      if (index < _spline->numSegments())
+      preview_weight = CONFIG["weights"]["preview"].as<double>();
+      velocity_weight = CONFIG["weights"]["velocity"].as<double>();
+      terminal_angle_weight = CONFIG["weights"]["terminal_angle"].as<double>();
+      terminal_contouring_weight = CONFIG["weights"]["terminal_contouring"].as<double>();
+
+      if (_use_ca_mpc)
       {
-        _spline->getParameters(index,
-                               ax, bx, cx, dx,
-                               ay, by, cy, dy);
-
-        start = _spline->getSegmentStart(index);
+        reference_velocity = CONFIG["weights"]["reference_velocity"].as<double>();
       }
       else
       {
-        // If we are beyond the spline, we should use the last spline
-        _spline->getParameters(_spline->numSegments() - 1,
-                               ax, bx, cx, dx,
-                               ay, by, cy, dy);
+        lag_weight = CONFIG["weights"]["lag"].as<double>();
+      }
+    }
 
-        start = _spline->getSegmentStart(_spline->numSegments() - 1);
+    {
+      setForcesParameterContour(k, _solver->_params, contouring_weight);
+      setForcesParameterVelocity(k, _solver->_params, velocity_weight);
+      setForcesParameterTerminalAngle(k, _solver->_params, terminal_angle_weight);
+      setForcesParameterTerminalContouring(k, _solver->_params, terminal_contouring_weight);
 
-        // We should use very small splines at the end location
-        // x = d_x
-        // y = d_y
-        ax = 0.;
-        bx = 0.;
-        cx = 0.;
-        ay = 0.;
-        by = 0.;
-        cy = 0.;
-        start = _spline->parameterLength();
+      if (_use_ca_mpc)
+      {
+        setForcesParameterReferenceVelocity(k, _solver->_params, reference_velocity);
+      }
+      else
+      {
+        setForcesParameterLag(k, _solver->_params, lag_weight);
       }
 
-      /** @note: We use the fast loading interface here as we need to load many parameters */
-      setForcesParameterSplineAx(k, _solver->_params, ax, i);
-      setForcesParameterSplineBx(k, _solver->_params, bx, i);
-      setForcesParameterSplineCx(k, _solver->_params, cx, i);
-      setForcesParameterSplineDx(k, _solver->_params, dx, i);
+      if (preview_weight > 0.)
+        _solver->setParameter(k, "preview", preview_weight);
+    }
 
-      setForcesParameterSplineAy(k, _solver->_params, ay, i);
-      setForcesParameterSplineBy(k, _solver->_params, by, i);
-      setForcesParameterSplineCy(k, _solver->_params, cy, i);
-      setForcesParameterSplineDy(k, _solver->_params, dy, i);
+    double ax, bx, cx, dx;
+    double ay, by, cy, dy;
+    double start;
+
+    for (int i = 0; i < _n_segments; i++)
+    {
+      int index = _closest_segment + i;
+
+      _spline->getParameters(index,
+                             ax, bx, cx, dx,
+                             ay, by, cy, dy);
+
+      start = _spline->getSegmentStart(index);
+
+      /** @note: We use the fast loading interface here as we need to load many parameters */
+      setForcesParameterSplineXA(k, _solver->_params, ax, i);
+      setForcesParameterSplineXB(k, _solver->_params, bx, i);
+      setForcesParameterSplineXC(k, _solver->_params, cx, i);
+      setForcesParameterSplineXD(k, _solver->_params, dx, i);
+
+      setForcesParameterSplineYA(k, _solver->_params, ay, i);
+      setForcesParameterSplineYB(k, _solver->_params, by, i);
+      setForcesParameterSplineYC(k, _solver->_params, cy, i);
+      setForcesParameterSplineYD(k, _solver->_params, dy, i);
 
       // Distance where this spline starts
       setForcesParameterSplineStart(k, _solver->_params, start, i);
@@ -108,13 +127,17 @@ namespace MPCPlanner
   {
     if (data_name == "reference_path")
     {
-      LOG_INFO("Received Reference Path");
+      LOG_MARK("Received Reference Path");
 
       // Construct a spline from the given points
-      _spline = std::make_unique<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y);
+      if (data.reference_path.s.empty())
+        _spline = std::make_shared<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y);
+      else
+        _spline = std::make_shared<RosTools::Spline2D>(data.reference_path.x, data.reference_path.y, data.reference_path.s);
 
-      if (!data.left_bound.empty() && !data.right_bound.empty())
+      if (_add_road_constraints && (!data.left_bound.empty() && !data.right_bound.empty()))
       {
+
         // Add bounds
         _bound_left = std::make_unique<RosTools::Spline2D>(
             data.left_bound.x,
@@ -127,8 +150,6 @@ namespace MPCPlanner
 
         // Update the road width
         CONFIG["road"]["width"] = RosTools::distance(_bound_left->getPoint(0), _bound_right->getPoint(0));
-        if (CONFIG["road"]["two_way"].as<bool>())
-          CONFIG["road"]["width"] = CONFIG["road"]["width"].as<double>() / 2.;
       }
 
       _closest_segment = -1;
@@ -151,7 +172,7 @@ namespace MPCPlanner
       return false;
 
     // Check if we reached the end of the spline
-    return RosTools::distance(state.getPos(), _spline->getPoint(_spline->parameterLength())) < 0.1;
+    return RosTools::distance(state.getPos(), _spline->getPoint(_spline->parameterLength())) < 1.0;
 
     // int index = _closest_segment + _n_segments - 1;
     // return index >= _spline->numSegments();
@@ -170,13 +191,20 @@ namespace MPCPlanner
   void Contouring::constructRoadConstraintsFromCenterline(const RealTimeData &data, ModuleData &module_data)
   {
     /** @brief If bounds are not supplied construct road constraints based on a set width*/
-    module_data.static_obstacles.resize(_solver->N);
+    if (module_data.static_obstacles.empty())
+    {
+      module_data.static_obstacles.resize(_solver->N);
+      for (size_t k = 0; k < module_data.static_obstacles.size(); k++)
+        module_data.static_obstacles[k].reserve(2);
+    }
 
     // OLD VERSION:
-    bool two_way = CONFIG["road"]["two_way"].as<bool>();
+    bool two_way = _two_way_road;
     double road_width_half = CONFIG["road"]["width"].as<double>() / 2.;
     for (int k = 1; k < _solver->N; k++)
     {
+      module_data.static_obstacles[k].clear();
+
       double cur_s = _solver->getEgoPrediction(k, "spline");
 
       // This is the final point and the normal vector of the path
@@ -209,10 +237,16 @@ namespace MPCPlanner
   void Contouring::constructRoadConstraintsFromBounds(const RealTimeData &data, ModuleData &module_data)
   {
     /** @todo */
-    module_data.static_obstacles.resize(_solver->N);
+    if (module_data.static_obstacles.empty())
+    {
+      module_data.static_obstacles.resize(_solver->N);
+      for (size_t k = 0; k < module_data.static_obstacles.size(); k++)
+        module_data.static_obstacles[k].reserve(2);
+    }
 
     for (int k = 1; k < _solver->N; k++)
     {
+      module_data.static_obstacles[k].clear();
       double cur_s = _solver->getEgoPrediction(k, "spline");
 
       // Left
@@ -232,15 +266,23 @@ namespace MPCPlanner
     if (_spline.get() == nullptr)
       return;
 
+    if (data.reference_path.empty())
+      return;
+
     PROFILE_SCOPE("Contouring::Visualize");
+    LOG_MARK("Contouring::Visualize");
 
     visualizeReferencePath(data, module_data);
-    visualizeCurrentSegment(data, module_data);
-
     visualizeRoadConstraints(data, module_data);
 
-    visualizeDebugRoadBoundary(data, module_data);
-    visualizeDebugGluedSplines(data, module_data);
+    if (CONFIG["debug_visuals"].as<bool>())
+    {
+      visualizeCurrentSegment(data, module_data);
+      visualizeDebugRoadBoundary(data, module_data);
+      visualizeDebugGluedSplines(data, module_data);
+      visualizeAllSplineIndices(data, module_data);
+      visualizeTrackedSection(data, module_data);
+    }
   }
 
   void Contouring::visualizeCurrentSegment(const RealTimeData &data, const ModuleData &module_data)
@@ -257,30 +299,45 @@ namespace MPCPlanner
     publisher_current.publish();
   }
 
+  void Contouring::visualizeTrackedSection(const RealTimeData &data, const ModuleData &module_data)
+  {
+    (void)data;
+    (void)module_data;
+
+    // Visualize the current points
+    auto &publisher = VISUALS.getPublisher(_name + "/tracked_path");
+    auto &line = publisher.getNewLine();
+
+    line.setColorInt(10);
+    line.setScale(0.3, 0.3, 0.3);
+
+    /** @todo visualize each section*/
+    for (int i = _closest_segment; i < _closest_segment + _n_segments; i++)
+    {
+      double s_start = _spline->getSegmentStart(i);
+      for (double s = s_start + 1.0; s < _spline->getSegmentStart(i + 1); s += 1.0)
+      {
+        if (s > 0)
+          line.addLine(_spline->getPoint(s - 1.0), _spline->getPoint(s));
+      }
+    }
+
+    publisher.publish();
+  }
+
   // Move to data visualization
   void Contouring::visualizeReferencePath(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)module_data;
-    visualizePathPoints(data.reference_path, _name + "/points", true);
+
+    visualizePathPoints(data.reference_path, _name + "/path", false);
     visualizeSpline(*_spline, _name + "/path", true);
-
-    if (!data.left_bound.empty())
-    {
-
-      visualizePathPoints(data.left_bound, _name + "/boundary_points", false);
-      visualizePathPoints(data.right_bound, _name + "/boundary_points", true);
-    }
-    if (_bound_left != nullptr)
-    {
-      visualizeSpline(*_bound_left, _name + "/boundary_path", false);
-      visualizeSpline(*_bound_right, _name + "/boundary_path", true);
-    }
   }
 
   void Contouring::visualizeRoadConstraints(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)data;
-    if (module_data.static_obstacles.empty())
+    if (module_data.static_obstacles.empty() || (!_add_road_constraints))
       return;
 
     for (int k = 1; k < _solver->N; k++)
@@ -299,13 +356,12 @@ namespace MPCPlanner
   void Contouring::visualizeDebugRoadBoundary(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)module_data;
-    LOG_MARK("Constructing road constraints.");
     auto &publisher = VISUALS.getPublisher(_name + "/road_boundary_points");
     auto &points = publisher.getNewPointMarker("CUBE");
     points.setScale(0.15, 0.15, 0.15);
 
     // OLD VERSION:
-    bool two_way = CONFIG["road"]["two_way"].as<bool>();
+    bool two_way = _two_way_road;
     double road_width_half = CONFIG["road"]["width"].as<double>() / 2.;
     for (int k = 1; k < _solver->N; k++)
     {
@@ -410,9 +466,29 @@ namespace MPCPlanner
     publisher.publish();
   }
 
+  void Contouring::visualizeAllSplineIndices(const RealTimeData &data, const ModuleData &module_data)
+  {
+    (void)data;
+    (void)module_data;
+
+    // Plot how the optimization joins the splines together to debug its internal contouring error computation
+    auto &publisher = VISUALS.getPublisher(_name + "/spline_variables");
+    auto &points = publisher.getNewPointMarker("CUBE");
+    points.setScale(0.15, 0.15, 0.15);
+
+    for (int k = 0; k < _solver->N; k++)
+    {
+      double cur_s = _solver->getEgoPrediction(k, "spline");
+      Eigen::Vector2d path_point = _spline->getPoint(cur_s);
+      points.addPointMarker(path_point);
+    }
+
+    publisher.publish();
+  }
+
   void Contouring::reset()
   {
-    _spline.reset(nullptr);
+    _spline.reset();
     _closest_segment = 0;
   }
 

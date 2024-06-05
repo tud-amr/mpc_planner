@@ -61,6 +61,8 @@ namespace MPCPlanner
         x.reserve(length);
         y.reserve(length);
         psi.reserve(length);
+        v.reserve(length);
+        s.reserve(length);
     }
 
     void ReferencePath::clear()
@@ -68,22 +70,14 @@ namespace MPCPlanner
         x.clear();
         y.clear();
         psi.clear();
+        v.clear();
+        s.clear();
     }
 
     bool ReferencePath::pointInPath(int point_num, double other_x, double other_y) const
     {
         return (x[point_num] == other_x && y[point_num] == other_y);
     }
-
-    // friend std::ostream &ReferencePath::operator<<(std::ostream &out, const ReferencePath &path)
-    // {
-    //     out << "Path:\n";
-    //     for (size_t i = 0; i < path.x.size(); i++)
-    //     {
-    //         out << "(" << path.x[i] << ", " << path.y[i] << ", " << path.psi[i] << ")" << std::endl;
-    //     }
-    //     return out;
-    // }
 
     Trajectory::Trajectory(double dt, int length) : dt(dt)
     {
@@ -108,6 +102,14 @@ namespace MPCPlanner
 
     void FixedSizeTrajectory::add(const Eigen::Vector2d &p)
     {
+        // On jump, erase the trajectory
+        if (std::sqrt((p - positions.back()).transpose() * (p - positions.back())) > 5.0)
+        {
+            positions.clear();
+            positions.push_back(p);
+            return;
+        }
+
         if ((int)positions.size() < _size)
         {
             positions.push_back(p);

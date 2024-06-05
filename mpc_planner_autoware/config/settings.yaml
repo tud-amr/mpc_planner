@@ -1,7 +1,10 @@
 name: "autoware"
-N: 20
+N: 25
 integrator_step: 0.2
 n_discs: 3
+
+use_simulated_obstacles: true # Autoware only
+recorded_simulation: true
 
 solver_settings:
   # solver: "acados" # acados or forces
@@ -10,12 +13,24 @@ solver_settings:
   enable_timeout: true
   init: 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
   use_sqp: false
+  tolstat: 1e-3
+
+recording:
+  enable: false
+  folder: "/home/r2c1/Documents/publications/rss-2024/results/data"
+  file: none #experiment_method
+  timestamp: false
+  num_experiments: 26
+  enable_timeout: true
+  timeout: 40.0
 
 debug_output: false
+debug_limits: false
+debug_visuals: false
 
 enable_output: true
-control_frequency: 20
-deceleration_at_infeasible: 1.0
+control_frequency: 10
+deceleration_at_infeasible: 4.0
 max_obstacles: 4
 max_obstacle_distance: 100.
 robot_radius: 1.125
@@ -26,25 +41,34 @@ robot:
   length: 4.8
   com_to_back: 0.95
   width: 2.25
-obstacle_radius: 1.0 #1.0 #0.4
+obstacle_radius: 0.8 #1.0 #0.4
 
 linearized_constraints:
-  add_halfspaces: 2 # For road constraints
+  add_halfspaces: 0 #2 # For road constraints
 
 road:
   two_way: false
-  width: 10.0
+  width: 7.0
 
 shift_previous_solution_forward: false # Was true
 
 contouring:
+<<<<<<< HEAD
   num_segments: 6
   preview: 2.0 # [s], use 0.0 to disable preview
   add_road_constraints: true
+=======
+  use_ca_mpc: true
+  num_segments: 8 #6
+  preview: 0.0 # [s], use 0.0 to disable preview
+  use_map_bounds: true # Autoware only
+  add_road_constraints: false
+>>>>>>> main
 
 t-mpc:
   use_t-mpc++: true
   enable_constraints: true
+  highlight_selected: true
 
 probabilistic:
   enable: true
@@ -52,15 +76,20 @@ probabilistic:
   propagate_uncertainty: true
 
 weights:
-  goal: 10.
-  velocity: 0.05 #0.5
-  acceleration: 0.2
-  angular_velocity: 5.0 # Note: Large increase to improve smoothness of steering #0.25 #0.05
-  reference_velocity: 3.0 #1.5
-  contour: 0.05 #0.01
-  lag: 0.02 #0.2
-  preview: 5.0
-  slack: 1000.
+  acceleration: 13.0
+  angular_velocity: 13.6
+  contour: 0.1 #4.0
+  reference_velocity: 2.5
+  slack: 10000.0
+  terminal_angle: 100.0
+  terminal_contouring: 1.0
+  velocity: 1.0
+  goal: 0.0
+  lag: 0.0
+  preview: 0.0
+
+visualization:
+  draw_every: 5 # stages
 
 # Copied from Prius: https://github.com/oscardegroot/lmpcc/blob/prius/lmpcc/cfg/PredictiveController_Prius.cfg
 # Variable weights are not normalized
@@ -74,6 +103,3 @@ weights:
 #   contour: 0.03
 #   lag: 0.2
 #   slack: -1.
-
-visualization:
-  draw_every: 5 # stages

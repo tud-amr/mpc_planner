@@ -21,6 +21,8 @@ namespace MPCPlanner
     void visualize(const RealTimeData &data, const ModuleData &module_data) override;
 
   private:
+    double _robot_radius, _risk;
+    int _n_discs;
   };
 }
 #endif // __ELLIPSOID_CONSTRAINTS_H_

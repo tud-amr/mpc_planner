@@ -68,7 +68,7 @@ def generate_forces_solver(modules, settings, model, skip_solver_generation):
             solver.nh[i] = 0  # No constraints here
 
     # Equalities are specified on all stages
-    solver.eq = lambda z, p: solver_model.discrete_dynamics(z, model, settings["integrator_step"])
+    solver.eq = lambda z, p: model.discrete_dynamics(z, p, settings) #solver_model.discrete_dynamics(z, p, model, settings)
     solver.E = np.concatenate([np.zeros((model.nx, model.nu)), np.eye(model.nx)], axis=1)
 
     # Initial stage (k = 0) specifies the states
@@ -105,6 +105,7 @@ def generate_forces_solver(modules, settings, model, skip_solver_generation):
         options.maxit = 500  # Maximum number of iterations
         options.mu0 = 20
         options.init = solver_settings["init"]  # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
+        options.nlp.TolStat = solver_settings["tolstat"]
     else:
         options.solvemethod = "SQP_NLP"
         options.sqp_nlp.maxqps = 1

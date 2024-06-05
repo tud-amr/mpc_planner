@@ -13,6 +13,7 @@
 #include <ros_tools/logging.h>
 #include <ros_tools/convertions.h>
 #include <ros_tools/profiling.h>
+#include <ros_tools/math.h>
 
 using namespace MPCPlanner;
 using namespace rclcpp;
@@ -28,7 +29,6 @@ AutowarePlanner::AutowarePlanner()
     : Node("autoware_planner")
 {
   STATIC_NODE_POINTER.init(this);
-  STATIC_NODE_POINTER.init(this);
 
   LOG_INFO("Started Autoware Planner");
 
@@ -41,6 +41,10 @@ AutowarePlanner::AutowarePlanner()
 
   // Initialize the planner
   _planner = std::make_unique<Planner>();
+
+  _can_timeout = CONFIG["recording"]["enable"].as<bool>() &&
+                 CONFIG["recording"]["enable_timeout"].as<bool>() &&
+                 CONFIG["recorded_simulation"].as<bool>();
 
   // Initialize the ROS interface
   initializeSubscribersAndPublishers();
@@ -78,6 +82,10 @@ void AutowarePlanner::initializeSubscribersAndPublishers()
       std::bind(&AutowarePlanner::pathCallback, this, std::placeholders::_1));
 
   _obstacle_sim_sub = this->create_subscription<mpc_planner_msgs::msg::ObstacleArray>(
+      "~/input/simulated_obstacles", 1,
+      std::bind(&AutowarePlanner::simulatedObstacleCallback, this, std::placeholders::_1));
+
+  _obstacle_sub = this->create_subscription<TrackedObjects>(
       "~/input/obstacles", 1,
       std::bind(&AutowarePlanner::obstacleCallback, this, std::placeholders::_1));
 
@@ -93,6 +101,8 @@ void AutowarePlanner::initializeSubscribersAndPublishers()
   // Pedestrian simulator
   _ped_reset_pub = this->create_publisher<std_msgs::msg::Empty>(
       "/pedestrian_simulator/reset", 1);
+  _ped_reset_to_start_pub = this->create_publisher<std_msgs::msg::Empty>(
+      "/pedestrian_simulator/reset_to_start", 1);
   _ped_horizon_pub =
       this->create_publisher<std_msgs::msg::Int32>("/pedestrian_simulator/horizon", 1);
   _ped_integrator_step_pub = this->create_publisher<std_msgs::msg::Float32>(
@@ -100,6 +110,16 @@ void AutowarePlanner::initializeSubscribersAndPublishers()
   _ped_clock_frequency_pub = this->create_publisher<std_msgs::msg::Float32>(
       "/pedestrian_simulator/clock_frequency", 1);
   _ped_start_client = this->create_client<std_srvs::srv::Empty>("/pedestrian_simulator/start");
+
+  auto qos_profile = rclcpp::QoS(rclcpp::KeepLast(1)).reliable().durability(rclcpp::DurabilityPolicy::TransientLocal);
+
+  _trigger_goal_pub = this->create_publisher<std_msgs::msg::Empty>(
+      "/planning/mpc_planner_plugin/trigger_goal", 1);
+  _autoware_position_pub = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>(
+      "/initialpose", qos_profile);
+  _change_operation_mode_client = this->create_client<autoware_adapi_v1_msgs::srv::ChangeOperationMode>(
+      "/api/operation_mode/change_to_autonomous");
+
   LOG_INITIALIZED();
 }
 
@@ -154,24 +174,95 @@ void AutowarePlanner::startEnvironment()
   if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), result) == rclcpp::FutureReturnCode::SUCCESS)
   {
     LOG_INFO("Environment ready.");
+
+    _experiment_timer = std::make_unique<RosTools::Timer>(CONFIG["recording"]["timeout"].as<double>());
+
+    // Set the vehicle pose if in simulation mode
+    if (CONFIG["recorded_simulation"].as<bool>())
+    {
+      std_msgs::msg::Empty empty_msg;
+      _ped_reset_to_start_pub->publish(empty_msg);
+
+      startExperiment();
+    }
+
     return;
   }
   LOG_ERROR("This should not print");
+}
+
+void AutowarePlanner::startExperiment()
+{
+  _starting = true;
+  // Publish the autoware start pose
+  geometry_msgs::msg::PoseWithCovarianceStamped msg;
+  msg.header.frame_id = "map";
+  msg.header.stamp = this->get_clock()->now();
+  msg.pose.pose.position.x = 94092.53125;
+  msg.pose.pose.position.y = 61841.9140625;
+  msg.pose.pose.orientation.z = -0.5400307619190068;
+  msg.pose.pose.orientation.w = 0.8416452793078429;
+
+  _autoware_position_pub->publish(msg);
+
+  // Give some time for the spawn
+  rclcpp::sleep_for(std::chrono::nanoseconds(static_cast<int64_t>(1.0 * 1e9)));
+
+  _autoware_position_pub->publish(msg);
+
+  rclcpp::sleep_for(std::chrono::nanoseconds(static_cast<int64_t>(1.0 * 1e9)));
+
+  std_msgs::msg::Empty empty_msg;
+  _trigger_goal_pub->publish(empty_msg);
+
+  _experiment_timer->start();
+
+  _starting = false;
+}
+
+void AutowarePlanner::changeAutowareModeToAuto()
+{
+  LOG_INFO("Changing autoware mode to autonomous");
+  while (!_change_operation_mode_client->wait_for_service(1s))
+  {
+    if (!rclcpp::ok())
+    {
+      LOG_WARN("Interrupted while waiting for the service. Exiting.");
+      return;
+    }
+  }
+
+  auto request = std::make_shared<autoware_adapi_v1_msgs::srv::ChangeOperationMode::Request>();
+  auto result_future = _change_operation_mode_client->async_send_request(request);
 }
 
 void AutowarePlanner::Loop()
 {
   LOG_DEBUG("============= Loop =============");
 
+  _data.planning_start_time = std::chrono::system_clock::now();
+
   BENCHMARKERS.getBenchmarker("loop").start();
 
   if (CONFIG["debug_output"].as<bool>())
     _state.print();
 
+  if (CONFIG["recorded_simulation"].as<bool>())
+  {
+    checkCollisions();
+  }
+
+  if (_can_timeout && _experiment_timer->hasFinished())
+  {
+    LOG_WARN("Timeout reached. Resetting simulation.");
+    reset(false);
+  }
+
   if (_planner->isObjectiveReached(_state, _data))
   {
     LOG_SUCCESS("Planner completed its task.");
-    _planner->reset(_state, _data); // Remove previous planner instructions
+
+    reset(true);
   }
 
   auto output = _planner->solveMPC(_state, _data);
@@ -191,6 +282,7 @@ void AutowarePlanner::Loop()
   _data.past_trajectory.add(_state.getPos());
   _planner->visualize(_state, _data);
   visualize();
+  _planner->saveData(_state, _data);
 
   LOG_DEBUG("============= End Loop =============");
 }
@@ -212,11 +304,58 @@ void AutowarePlanner::stateCallback(nav_msgs::msg::Odometry::SharedPtr msg)
 void AutowarePlanner::steeringCallback(SteeringReport::SharedPtr msg)
 {
   LOG_MARK("Steering callback");
-  _state.set("delta", msg->steering_tire_angle /*/ 15.06*/);
+  _state.set("delta", msg->steering_tire_angle / 15.06);
 }
 
-void AutowarePlanner::obstacleCallback(mpc_planner_msgs::msg::ObstacleArray::SharedPtr msg)
+void AutowarePlanner::obstacleCallback(TrackedObjects::SharedPtr msg)
 {
+  LOG_MARK("Obstacle callback");
+
+  if (CONFIG["use_simulated_obstacles"].as<bool>())
+  {
+    LOG_WARN_THROTTLE(10000, "Ignoring real obstacles because use_simulated_obstacles is true");
+    return;
+  }
+  _data.dynamic_obstacles.clear();
+
+  for (auto &obstacle : msg->objects)
+  {
+    // Save the obstacle
+    double angle = RosTools::quaternionToAngle(obstacle.kinematics.pose_with_covariance.pose);
+    _data.dynamic_obstacles.emplace_back(
+        obstacle.object_id.uuid[0],
+        Eigen::Vector2d(obstacle.kinematics.pose_with_covariance.pose.position.x,
+                        obstacle.kinematics.pose_with_covariance.pose.position.y),
+        angle,
+        CONFIG["obstacle_radius"].as<double>(),
+        ObstacleType::DYNAMIC);
+
+    auto &dynamic_obstacle = _data.dynamic_obstacles.back();
+
+    // Rotate the velocity from the body frame to the global frame
+    Eigen::Vector2d vel = Eigen::Vector2d(obstacle.kinematics.twist_with_covariance.twist.linear.x, 0.);
+    vel = RosTools::rotationMatrixFromHeading(-angle) * vel;
+
+    dynamic_obstacle.prediction = getConstantVelocityPrediction(
+        dynamic_obstacle.position,
+        vel,
+        CONFIG["integrator_step"].as<double>(),
+        CONFIG["N"].as<int>());
+  }
+  removeDistantObstacles(_data.dynamic_obstacles, _state);
+  ensureObstacleSize(_data.dynamic_obstacles, _state);
+
+  if (CONFIG["probabilistic"]["propagate_uncertainty"].as<bool>())
+    propagatePredictionUncertainty(_data.dynamic_obstacles);
+
+  _planner->onDataReceived(_data, "dynamic obstacles");
+}
+
+void AutowarePlanner::simulatedObstacleCallback(mpc_planner_msgs::msg::ObstacleArray::SharedPtr msg)
+{
+  if (!CONFIG["use_simulated_obstacles"].as<bool>()) // Real objects take precedence
+    return;
+
   LOG_MARK("Obstacle callback");
 
   _data.dynamic_obstacles.clear();
@@ -287,51 +426,38 @@ void AutowarePlanner::pathCallback(PathWithLaneId::SharedPtr msg)
     _data.reference_path.x.push_back(point.point.pose.position.x);
     _data.reference_path.y.push_back(point.point.pose.position.y);
     _data.reference_path.psi.push_back(0.0);
+
+    _data.reference_path.v.push_back(point.point.longitudinal_velocity_mps);
+    _data.reference_path.s.push_back(point.point.heading_rate_rps); // For now: saved here
   }
 
-  if (!msg->left_bound.empty())
+  if (CONFIG["contouring"]["use_map_bounds"].as<bool>())
   {
-    for (auto &point : msg->left_bound) // Left
+    if (!msg->left_bound.empty())
     {
-      _data.left_bound.x.push_back(point.x);
-      _data.left_bound.y.push_back(point.y);
-    }
-    for (auto &point : msg->right_bound) // Right
-    {
-      _data.right_bound.x.push_back(point.x);
-      _data.right_bound.y.push_back(point.y);
+      for (auto &point : msg->left_bound) // Left
+      {
+        _data.left_bound.x.push_back(point.x);
+        _data.left_bound.y.push_back(point.y);
+      }
+      for (auto &point : msg->right_bound) // Right
+      {
+        _data.right_bound.x.push_back(point.x);
+        _data.right_bound.y.push_back(point.y);
+      }
     }
   }
 
   _planner->onDataReceived(_data, "reference_path");
 }
 
-// bool AutowarePlanner::isPathTheSame(PathWithLaneId::SharedPtr msg)
-// {
-//   // Check if the path is the same
-//   if (_data.reference_path.x.size() != msg->points.size())
-//   {
-//     return false;
-//   }
-
-//   // Check up to the first two points
-//   int num_points = std::min(2, (int)_data.reference_path.x.size());
-//   for (int i = 0; i < num_points; i++)
-//   {
-//     if (!_data.reference_path.pointInPath(i,
-//                                           msg->points[i].point.pose.position.x,
-//                                           msg->points[i].point.pose.position.y))
-//     {
-//       return false;
-//     }
-//   }
-//   return true;
-// }
-
 void AutowarePlanner::autowareStatusCallback(OperationModeState::SharedPtr msg)
 {
   // Ensures that the planner knows whether its outputs will be executed or not
   CONFIG["enable_output"] = msg->mode == msg->AUTONOMOUS;
+
+  if (msg->mode != msg->AUTONOMOUS && CONFIG["recorded_simulation"].as<bool>())
+    changeAutowareModeToAuto();
 }
 
 // void AutowarePlanner::actuate()
@@ -430,6 +556,31 @@ void AutowarePlanner::visualize()
     prev = _data.past_trajectory.positions[i];
   }
   traj_publisher.publish();
+}
+
+void AutowarePlanner::reset(bool success)
+{
+  _planner->reset(_state, _data, success); // Remove previous planner instructions
+
+  // Put the vehicle back at the start
+  if (CONFIG["recorded_simulation"].as<bool>())
+    startExperiment();
+}
+
+void AutowarePlanner::checkCollisions()
+{
+  double intrusion = 0.;
+  for (auto &obstacle : _data.dynamic_obstacles)
+  {
+    double dist = RosTools::distance(obstacle.position, _state.getPos()) - (obstacle.radius + CONFIG["robot_radius"].as<double>());
+    // LOG_VALUE("distance", dist);
+    if (dist < 0.)
+    {
+      intrusion = std::max(intrusion, -dist);
+      LOG_WARN("Collision: Intrusion = " << intrusion);
+    }
+  }
+  _data.intrusion = intrusion;
 }
 
 void AutowarePlanner::resetSimulationCallback(const rclcpp::Parameter &p)
