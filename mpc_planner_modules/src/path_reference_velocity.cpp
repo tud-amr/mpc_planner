@@ -1,7 +1,7 @@
 
 #include <mpc_planner_modules/path_reference_velocity.h>
 
-#include <mpc_planner_generated.h>
+#include <mpc_planner_parameters.h>
 #include <mpc_planner_util/parameters.h>
 
 #include <ros_tools/visuals.h>
@@ -54,7 +54,7 @@ namespace MPCPlanner
     }
 
     // Set the parameters for velocity tracking
-    // setForcesParameterVelocity(k, _solver->_params, velocity_weight);
+    // setSolverParameterVelocity(k, _solver->_params, velocity_weight);
 
     if (data.reference_path.hasVelocity()) // Use a spline-based velocity reference
     {
@@ -77,20 +77,20 @@ namespace MPCPlanner
           d = 0.;
         }
 
-        setForcesParameterSplineVA(k, _solver->_params, a, i);
-        setForcesParameterSplineVB(k, _solver->_params, b, i);
-        setForcesParameterSplineVC(k, _solver->_params, c, i);
-        setForcesParameterSplineVD(k, _solver->_params, d, i);
+        setSolverParameterSplineVA(k, _solver->_params, a, i);
+        setSolverParameterSplineVB(k, _solver->_params, b, i);
+        setSolverParameterSplineVC(k, _solver->_params, c, i);
+        setSolverParameterSplineVD(k, _solver->_params, d, i);
       }
     }
     else // Use a constant velocity reference
     {
       for (int i = 0; i < _n_segments; i++)
       {
-        setForcesParameterSplineVA(k, _solver->_params, 0., i);
-        setForcesParameterSplineVB(k, _solver->_params, 0., i);
-        setForcesParameterSplineVC(k, _solver->_params, 0., i);
-        setForcesParameterSplineVD(k, _solver->_params, reference_velocity, i); // v = d
+        setSolverParameterSplineVA(k, _solver->_params, 0., i);
+        setSolverParameterSplineVB(k, _solver->_params, 0., i);
+        setSolverParameterSplineVC(k, _solver->_params, 0., i);
+        setSolverParameterSplineVD(k, _solver->_params, reference_velocity, i); // v = d
       }
     }
   }

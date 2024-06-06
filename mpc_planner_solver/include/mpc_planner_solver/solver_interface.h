@@ -1,99 +1,111 @@
 #ifndef __MPC_PLANNER_SOLVER_H__
 #define __MPC_PLANNER_SOLVER_H__
 
-#include <mpc_planner_solver/state.h>
+#ifdef MPC_PLANNER_ROS // ACADOS_SOLVER
 
-#include <mpc_planner_util/load_yaml.hpp>
+#include <mpc_planner_solver/acados_solver_interface.h>
 
-#include <memory>
+#else
 
-#include <Solver.h>
-#include <Solver_memory.h>
+#include <mpc_planner_solver/forces_solver_interface.h>
 
-#include <Eigen/Dense>
+#endif
 
-extern "C"
-{
-	extern solver_int32_default Solver_adtool2forces(Solver_float *x,				 /* primal vars                                         */
-													 Solver_float *y,				 /* eq. constraint multiplers                           */
-													 Solver_float *l,				 /* ineq. constraint multipliers                        */
-													 Solver_float *p,				 /* parameters                                          */
-													 Solver_float *f,				 /* objective function (scalar)                         */
-													 Solver_float *nabla_f,			 /* gradient of objective function                      */
-													 Solver_float *c,				 /* dynamics                                            */
-													 Solver_float *nabla_c,			 /* Jacobian of the dynamics (column major)             */
-													 Solver_float *h,				 /* inequality constraints                              */
-													 Solver_float *nabla_h,			 /* Jacobian of inequality constraints (column major)   */
-													 Solver_float *hess,			 /* Hessian (column major)                              */
-													 solver_int32_default stage,	 /* stage number (0 indexed)                            */
-													 solver_int32_default iteration, /* iteration number of solver                          */
-													 solver_int32_default threadID /* Id of caller thread 								   */);
-}
+#endif
 
-namespace MPCPlanner
-{
-	class Solver
-	{
+// #include <mpc_planner_solver/state.h>
 
-	protected:
-		char *_solver_memory;
-		Solver_mem *_solver_memory_handle;
+// #include <mpc_planner_util/load_yaml.hpp>
 
-	public:
-		int _solver_id;
+// #include <memory>
 
-		Solver_params _params;
-		Solver_output _output;
-		Solver_info _info;
+// #include <Solver.h>
+// #include <Solver_memory.h>
 
-		int N;			   // Horizon length
-		unsigned int nu;   // Number of control variables
-		unsigned int nx;   // Differentiable variables
-		unsigned int nvar; // Total variable count
-		unsigned int npar; // Parameters per iteration
-		double dt;
+// #include <Eigen/Dense>
 
-		YAML::Node _config, _parameter_map, _model_map;
+// extern "C"
+// {
+// 	extern solver_int32_default Solver_adtool2forces(Solver_float *x,				 /* primal vars                                         */
+// 													 Solver_float *y,				 /* eq. constraint multiplers                           */
+// 													 Solver_float *l,				 /* ineq. constraint multipliers                        */
+// 													 Solver_float *p,				 /* parameters                                          */
+// 													 Solver_float *f,				 /* objective function (scalar)                         */
+// 													 Solver_float *nabla_f,			 /* gradient of objective function                      */
+// 													 Solver_float *c,				 /* dynamics                                            */
+// 													 Solver_float *nabla_c,			 /* Jacobian of the dynamics (column major)             */
+// 													 Solver_float *h,				 /* inequality constraints                              */
+// 													 Solver_float *nabla_h,			 /* Jacobian of inequality constraints (column major)   */
+// 													 Solver_float *hess,			 /* Hessian (column major)                              */
+// 													 solver_int32_default stage,	 /* stage number (0 indexed)                            */
+// 													 solver_int32_default iteration, /* iteration number of solver                          */
+// 													 solver_int32_default threadID /* Id of caller thread 								   */);
+// }
 
-		Solver(int solver_id = 0);
-		void reset();
-		~Solver();
+// namespace MPCPlanner
+// {
+// 	class Solver
+// 	{
 
-		/** @brief Copy data from another solver. Does not copy solver generic parameters like the horizon N*/
-		Solver &operator=(const Solver &rhs);
+// 	protected:
+// 		char *_solver_memory;
+// 		Solver_mem *_solver_memory_handle;
 
-		char *getSolverMemory() const;
-		void copySolverMemory(const Solver &other);
+// 	public:
+// 		int _solver_id;
 
-		void setEgoPrediction(unsigned int k, std::string &&var_name, double value);
-		double getEgoPrediction(unsigned int k, std::string &&var_name);
-		void setEgoPredictionPosition(unsigned int k, const Eigen::Vector2d &value);
-		Eigen::Vector2d getEgoPredictionPosition(unsigned int k);
+// 		Solver_params _params;
+// 		Solver_output _output;
+// 		Solver_info _info;
 
-		/** @brief Set and get a solver parameter at index index of stage k */
-		bool hasParameter(std::string &&parameter);
-		void setParameter(int k, std::string &&parameter, double value);
-		void setParameter(int k, std::string &parameter, double value);
-		double getParameter(int k, std::string &&parameter);
+// 		int N;			   // Horizon length
+// 		unsigned int nu;   // Number of control variables
+// 		unsigned int nx;   // Differentiable variables
+// 		unsigned int nvar; // Total variable count
+// 		unsigned int npar; // Parameters per iteration
+// 		double dt;
 
-		void setXinit(std::string &&state_name, double value);
-		void setXinit(const State &state);
+// 		YAML::Node _config, _parameter_map, _model_map;
 
-		void initializeWithState(const State &initial_state);
-		void initializeWithBraking(const State &initial_state);
-		void initializeWarmstart(const State &state, bool shift_previous_solution_forward);
-		void loadWarmstart();
+// 		Solver(int solver_id = 0);
+// 		void reset();
+// 		~Solver();
 
-		void setReinitialize(bool reinitialize);
+// 		/** @brief Copy data from another solver. Does not copy solver generic parameters like the horizon N*/
+// 		Solver &operator=(const Solver &rhs);
 
-		/** @brief Solve the optimization */
-		int solve();
-		double getOutput(int k, std::string &&state_name) const;
+// 		char *getSolverMemory() const;
+// 		void copySolverMemory(const Solver &other);
 
-		// Debugging utilities
-		std::string explainExitFlag(int exitflag);
-		void printIfBoundLimited() const;
-		void printParameters(int k);
-	};
-}
-#endif // __MPC_PLANNER_SOLVER_H__
+// 		void setEgoPrediction(unsigned int k, std::string &&var_name, double value);
+// 		double getEgoPrediction(unsigned int k, std::string &&var_name);
+// 		void setEgoPredictionPosition(unsigned int k, const Eigen::Vector2d &value);
+// 		Eigen::Vector2d getEgoPredictionPosition(unsigned int k);
+
+// 		/** @brief Set and get a solver parameter at index index of stage k */
+// 		bool hasParameter(std::string &&parameter);
+// 		void setParameter(int k, std::string &&parameter, double value);
+// 		void setParameter(int k, std::string &parameter, double value);
+// 		double getParameter(int k, std::string &&parameter);
+
+// 		void setXinit(std::string &&state_name, double value);
+// 		void setXinit(const State &state);
+
+// 		void initializeWithState(const State &initial_state);
+// 		void initializeWithBraking(const State &initial_state);
+// 		void initializeWarmstart(const State &state, bool shift_previous_solution_forward);
+// 		void loadWarmstart();
+
+// 		void setReinitialize(bool reinitialize);
+
+// 		/** @brief Solve the optimization */
+// 		int solve();
+// 		double getOutput(int k, std::string &&state_name) const;
+
+// 		// Debugging utilities
+// 		std::string explainExitFlag(int exitflag);
+// 		void printIfBoundLimited() const;
+// 		void printParameters(int k);
+// 	};
+// }
+// #endif // __MPC_PLANNER_SOLVER_H__

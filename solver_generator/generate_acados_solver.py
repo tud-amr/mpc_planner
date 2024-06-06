@@ -1,4 +1,4 @@
-import os
+import os, shutil
 
 import numpy as np
 import casadi as cd
@@ -6,8 +6,8 @@ import casadi as cd
 from acados_template import AcadosModel
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
 
-from util.files import solver_name, solver_path, default_solver_path
-from util.logging import print_value, print_success, print_header, print_warning
+from util.files import solver_name, solver_path, default_solver_path, default_acados_solver_path, acados_solver_path
+from util.logging import print_value, print_success, print_header, print_warning, print_path
 from util.parameters import Parameters, AcadosParameters
 
 from solver_definition import define_parameters, objective, constraints, constraint_lower_bounds, constraint_upper_bounds
@@ -39,6 +39,13 @@ def create_acados_model(settings, model, modules):
 
     # Constraints
     constr = cd.vertcat(*constraints(modules, z, p, model, settings, 1))
+    print(constr)
+    print(type(constr))
+    print(constr.shape)
+    if constr.shape[0] == 0:
+        constr = cd.SX()
+
+    # print(constr.shape)
 
     # stage cost
     cost_stage = objective(modules, z, p, model, settings, 1)
@@ -137,15 +144,15 @@ def generate_acados_solver(modules, settings, model, skip_solver_generation):
     ocp.solver_options.sim_method_num_steps = 3
 
     # nlp solver options
-    # ocp.solver_options.nlp_solver_type = 'SQP'
-    ocp.solver_options.nlp_solver_type = "SQP_RTI"  # RTI gives out better solutions
+    ocp.solver_options.nlp_solver_type = "SQP"
+    # ocp.solver_options.nlp_solver_type = "SQP_RTI"  # RTI gives out better solutions
     ocp.solver_options.nlp_solver_max_iter = 20
     ocp.solver_options.hessian_approx = "EXACT"
 
     # qp solver options
-    # ocp.solver_options.qp_solver = 'FULL_CONDENSING_HPIPM'
+    # ocp.solver_options.qp_solver = "FULL_CONDENSING_HPIPM"
     ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
-    ocp.solver_options.qp_solver_iter_max = 10  # 100
+    ocp.solver_options.qp_solver_iter_max = 100
 
     # code generation options
     ocp.code_export_directory = f"{os.path.dirname(os.path.abspath(__file__))}/acados/test"
@@ -163,8 +170,17 @@ def generate_acados_solver(modules, settings, model, skip_solver_generation):
     else:
         print_header("Generating solver")
         solver = AcadosOcpSolver(acados_ocp=ocp, json_file=json_file_name)
+
         simulator = AcadosSimSolver(ocp, json_file=json_file_name)
         print_header("Output")
+
+        if os.path.exists(acados_solver_path(settings)) and os.path.isdir(acados_solver_path(settings)):
+            shutil.rmtree(acados_solver_path(settings))
+
+        # print_path("Move", default_acados_solver_path(settings))
+        # print_path("To", acados_solver_path(settings))
+
+        shutil.move(default_acados_solver_path(settings), acados_solver_path(settings))  # Move the solver to this directory
 
     return solver, simulator
 

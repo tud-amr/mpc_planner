@@ -2,7 +2,7 @@
 
 #include <costmap_2d/costmap_2d_ros.h>
 
-#include <mpc_planner_generated.h>
+#include <mpc_planner_parameters.h>
 
 #include <mpc_planner_util/parameters.h>
 #include <mpc_planner_util/data_visualization.h>
@@ -156,13 +156,13 @@ namespace MPCPlanner
     int constraint_counter = 0; // Necessary for now to map the disc and obstacle index to a single index
     for (int d = 0; d < _n_discs; d++)
     {
-      setForcesParameterEgoDiscOffset(k, _solver->_params, data.robot_area[d].offset, d);
+      setSolverParameterEgoDiscOffset(k, _solver->_params, data.robot_area[d].offset, d);
 
       for (int i = 0; i < _max_constraints; i++)
       {
-        setForcesParameterDecompA1(k, _solver->_params, _a1[d][k](i), constraint_counter); // These are filled from k = 1 - N
-        setForcesParameterDecompA2(k, _solver->_params, _a2[d][k](i), constraint_counter);
-        setForcesParameterDecompB(k, _solver->_params, _b[d][k](i), constraint_counter);
+        setSolverParameterDecompA1(k, _solver->_params, _a1[d][k](i), constraint_counter); // These are filled from k = 1 - N
+        setSolverParameterDecompA2(k, _solver->_params, _a2[d][k](i), constraint_counter);
+        setSolverParameterDecompB(k, _solver->_params, _b[d][k](i), constraint_counter);
         constraint_counter++;
       }
     }

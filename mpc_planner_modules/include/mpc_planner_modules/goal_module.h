@@ -15,6 +15,8 @@ namespace MPCPlanner
 
     virtual void setParameters(const RealTimeData &data, const ModuleData &module_data, int k) override;
 
+    bool isObjectiveReached(const State &state, const RealTimeData &data) override;
+
     // Testing
     bool isDataReady(const RealTimeData &data, std::string &missing_data) override;
 

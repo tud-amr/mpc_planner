@@ -1,6 +1,6 @@
 #include "mpc_planner_modules/contouring.h"
 
-#include <mpc_planner_generated.h>
+#include <mpc_planner_parameters.h>
 
 #include <mpc_planner_util/parameters.h>
 #include <mpc_planner_util/data_visualization.h>
@@ -75,18 +75,18 @@ namespace MPCPlanner
     }
 
     {
-      setForcesParameterContour(k, _solver->_params, contouring_weight);
-      setForcesParameterVelocity(k, _solver->_params, velocity_weight);
-      setForcesParameterTerminalAngle(k, _solver->_params, terminal_angle_weight);
-      setForcesParameterTerminalContouring(k, _solver->_params, terminal_contouring_weight);
+      setSolverParameterContour(k, _solver->_params, contouring_weight);
+      setSolverParameterVelocity(k, _solver->_params, velocity_weight);
+      setSolverParameterTerminalAngle(k, _solver->_params, terminal_angle_weight);
+      setSolverParameterTerminalContouring(k, _solver->_params, terminal_contouring_weight);
 
       if (_use_ca_mpc)
       {
-        setForcesParameterReferenceVelocity(k, _solver->_params, reference_velocity);
+        setSolverParameterReferenceVelocity(k, _solver->_params, reference_velocity);
       }
       else
       {
-        setForcesParameterLag(k, _solver->_params, lag_weight);
+        setSolverParameterLag(k, _solver->_params, lag_weight);
       }
 
       if (preview_weight > 0.)
@@ -108,18 +108,18 @@ namespace MPCPlanner
       start = _spline->getSegmentStart(index);
 
       /** @note: We use the fast loading interface here as we need to load many parameters */
-      setForcesParameterSplineXA(k, _solver->_params, ax, i);
-      setForcesParameterSplineXB(k, _solver->_params, bx, i);
-      setForcesParameterSplineXC(k, _solver->_params, cx, i);
-      setForcesParameterSplineXD(k, _solver->_params, dx, i);
+      setSolverParameterSplineXA(k, _solver->_params, ax, i);
+      setSolverParameterSplineXB(k, _solver->_params, bx, i);
+      setSolverParameterSplineXC(k, _solver->_params, cx, i);
+      setSolverParameterSplineXD(k, _solver->_params, dx, i);
 
-      setForcesParameterSplineYA(k, _solver->_params, ay, i);
-      setForcesParameterSplineYB(k, _solver->_params, by, i);
-      setForcesParameterSplineYC(k, _solver->_params, cy, i);
-      setForcesParameterSplineYD(k, _solver->_params, dy, i);
+      setSolverParameterSplineYA(k, _solver->_params, ay, i);
+      setSolverParameterSplineYB(k, _solver->_params, by, i);
+      setSolverParameterSplineYC(k, _solver->_params, cy, i);
+      setSolverParameterSplineYD(k, _solver->_params, dy, i);
 
       // Distance where this spline starts
-      setForcesParameterSplineStart(k, _solver->_params, start, i);
+      setSolverParameterSplineStart(k, _solver->_params, start, i);
     }
   }
 

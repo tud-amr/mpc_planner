@@ -1,8 +1,12 @@
 
 #include <mpc_planner_modules/goal_module.h>
 
-#include <ros_tools/visuals.h>
 #include <mpc_planner_util/parameters.h>
+
+#include <mpc_planner_parameters.h>
+
+#include <ros_tools/visuals.h>
+#include <ros_tools/math.h>
 
 namespace MPCPlanner
 {
@@ -27,11 +31,9 @@ namespace MPCPlanner
         if (k == 0)
             LOG_MARK("Goal Module::setParameters()");
 
-        // Set the parameters for the solver
-        _solver->setParameter(k, "goal_x", data.goal(0));
-        _solver->setParameter(k, "goal_y", data.goal(1));
-
-        _solver->setParameter(k, "goal_weight", CONFIG["weights"]["goal"].as<double>());
+        setSolverParameterGoalX(k, _solver->_params, data.goal(0));
+        setSolverParameterGoalY(k, _solver->_params, data.goal(1));
+        setSolverParameterGoalWeight(k, _solver->_params, CONFIG["weights"]["goal"].as<double>());
     }
 
     bool GoalModule::isDataReady(const RealTimeData &data, std::string &missing_data)
@@ -40,6 +42,17 @@ namespace MPCPlanner
             missing_data += "Goal ";
 
         return data.goal_received;
+    }
+
+    bool GoalModule::isObjectiveReached(const State &state, const RealTimeData &data)
+    {
+        (void)data;
+
+        if (!data.goal_received)
+            return false;
+
+        // Check if we reached the goal
+        return RosTools::distance(state.getPos(), data.goal) < 1.0;
     }
 
     void GoalModule::visualize(const RealTimeData &data, const ModuleData &module_data)

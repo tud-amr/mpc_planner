@@ -15,7 +15,7 @@ class GoalObjective(Objective):
         pass
 
     def define_parameters(self, params):
-        params.add("goal_weight", add_to_rqt_reconfigure=True)
+        params.add("goal_weight", add_to_rqt_reconfigure=True, rqt_config_name=lambda p: f'["weights"]["goal"]')
         params.add("goal_x")
         params.add("goal_y")
 

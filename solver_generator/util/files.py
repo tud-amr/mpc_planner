@@ -51,6 +51,14 @@ def solver_path(settings):
     return os.path.join(get_solver_package_path(), f"{solver_name(settings)}")
 
 
+def default_acados_solver_path(settings):
+    return os.path.join(get_package_path("solver_generator"), f"acados")
+
+
+def acados_solver_path(settings):
+    return os.path.join(get_solver_package_path(), f"acados")
+
+
 def parameter_map_path():
     return os.path.join(save_config_path(), f"parameter_map.yaml")
 
@@ -76,6 +84,13 @@ def generated_include_file(settings):
     os.makedirs(include_path, exist_ok=True)
     print_path("Generated Header", f"{include_path}mpc_planner_generated.h/cpp", tab=True, end="")
     return f"{include_path}mpc_planner_generated.h", f"{include_path}mpc_planner_generated.cpp"
+
+
+def generated_parameter_include_file(settings):
+    include_path = os.path.join(solver_path(settings), f"include/")
+    os.makedirs(include_path, exist_ok=True)
+    print_path("Generated Header", f"{include_path}mpc_planner_parameters.h/cpp", tab=True, end="")
+    return f"{include_path}mpc_planner_parameters.h", f"{include_path}mpc_planner_parameters.cpp"
 
 
 def solver_name(settings):

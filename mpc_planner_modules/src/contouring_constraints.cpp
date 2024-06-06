@@ -1,6 +1,6 @@
 #include "mpc_planner_modules/contouring_constraints.h"
 
-#include <mpc_planner_generated.h>
+#include <mpc_planner_parameters.h>
 
 #include <mpc_planner_util/parameters.h>
 
@@ -104,15 +104,15 @@ namespace MPCPlanner
       }
 
       // Boundary
-      setForcesParameterWidthRightA(k, _solver->_params, ra, i);
-      setForcesParameterWidthRightB(k, _solver->_params, rb, i);
-      setForcesParameterWidthRightC(k, _solver->_params, rc, i);
-      setForcesParameterWidthRightD(k, _solver->_params, rd, i);
+      setSolverParameterWidthRightA(k, _solver->_params, ra, i);
+      setSolverParameterWidthRightB(k, _solver->_params, rb, i);
+      setSolverParameterWidthRightC(k, _solver->_params, rc, i);
+      setSolverParameterWidthRightD(k, _solver->_params, rd, i);
 
-      setForcesParameterWidthLeftA(k, _solver->_params, la, i);
-      setForcesParameterWidthLeftB(k, _solver->_params, lb, i);
-      setForcesParameterWidthLeftC(k, _solver->_params, lc, i);
-      setForcesParameterWidthLeftD(k, _solver->_params, ld, i);
+      setSolverParameterWidthLeftA(k, _solver->_params, la, i);
+      setSolverParameterWidthLeftB(k, _solver->_params, lb, i);
+      setSolverParameterWidthLeftC(k, _solver->_params, lc, i);
+      setSolverParameterWidthLeftD(k, _solver->_params, ld, i);
     }
 
     if (k == 1)

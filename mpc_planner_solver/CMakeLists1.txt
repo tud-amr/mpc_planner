@@ -17,28 +17,60 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}
-  INCLUDE_DIRS include include/${PROJECT_NAME} Solver/include
-  LIBRARIES ${PROJECT_NAME}
+  INCLUDE_DIRS
+  include
+  include/${PROJECT_NAME}
+  Solver/include
+  acados/test
+  ../../../../../Documents/acados/include
+  ../../../../../Documents/acados/include/blasfeo/include
+  ../../../../../Documents/acados/include/hpipm/include
+  LIBRARIES
+  ${PROJECT_NAME}
+  ${PROJECT_SOURCE_DIR}/acados/test/libacados_ocp_solver_Solver.so
+  ${PROJECT_SOURCE_DIR}/../../../../../Documents/acados/lib/libacados.so
+  ${PROJECT_SOURCE_DIR}/../../../../../Documents/acados/lib/libblasfeo.so
+  ${PROJECT_SOURCE_DIR}/../../../../../Documents/acados/lib/libhpipm.so
 )
 
 include_directories(
   include
   Solver/include
+  acados/test
+  ../../../../../Documents/acados/include
+  ../../../../../Documents/acados/include/blasfeo/include
+  ../../../../../Documents/acados/include/hpipm/include
   ${catkin_INCLUDE_DIRS}
 )
 
 add_library(${PROJECT_NAME} SHARED
-  src/solver_interface.cpp
+
+  # src/solver_interface.cpp
+
+  # src/forces_solver_interface.cpp
+  # Solver/include/mpc_planner_generated.cpp
+  # Solver/Solver_interface.c
+  # Solver/Solver_model.c
+  Solver/include/mpc_planner_parameters.cpp
+
   src/state.cpp
-  Solver/Solver_interface.c
-  Solver/Solver_model.c
-  Solver/include/mpc_planner_generated.cpp
+  src/acados_solver_interface.cpp
 )
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${PROJECT_SOURCE_DIR}/Solver/lib/libSolver.so
+)
+
+add_executable(test_acados src/test_acados.cpp)
+target_link_libraries(test_acados
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+
+  ${PROJECT_SOURCE_DIR}/acados/test/libacados_ocp_solver_Solver.so
+  ${PROJECT_SOURCE_DIR}/../../../../../Documents/acados/lib/libacados.so
+  ${PROJECT_SOURCE_DIR}/../../../../../Documents/acados/lib/libblasfeo.so
+  ${PROJECT_SOURCE_DIR}/../../../../../Documents/acados/lib/libhpipm.so
 )
 
 add_definitions(-DMPC_PLANNER_ROS)
