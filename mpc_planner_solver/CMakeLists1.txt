@@ -15,62 +15,78 @@ find_package(catkin REQUIRED COMPONENTS
   ${DEPENDENCIES}
 )
 
+set(acados_path ${PROJECT_SOURCE_DIR}/../../../../../Documents/acados)
+set(acados_lib_path ${acados_path}/lib)
+set(acados_include_path ${acados_path}/include)
+
+# Print acados_include_path
+set(acados_LIBRARIES
+  ${PROJECT_SOURCE_DIR}/acados/test/libacados_ocp_solver_Solver.so # Generated files
+  ${acados_lib_path}/libacados.so
+  ${acados_lib_path}/libblasfeo.so
+  ${acados_lib_path}/libhpipm.so
+)
+
+set(acados_INCLUDE_DIRS
+  acados/test # Generated files
+  ${acados_include_path}
+  ${acados_include_path}/blasfeo/include
+  ${acados_include_path}/hpipm/include
+)
+
+set(acados_SOURCES
+  src/acados_solver_interface.cpp
+)
+
+set(forces_LIBRARIES
+  ${PROJECT_SOURCE_DIR}/Solver/lib/libSolver.so
+)
+
+set(forces_INCLUDE_DIRS
+  ${PROJECT_SOURCE_DIR}/Solver/include
+)
+
+set(forces_SOURCES
+  src/forces_solver_interface.cpp
+  Solver/include/mpc_planner_generated.cpp
+  Solver/Solver_interface.c # Generated solver files
+  Solver/Solver_model.c
+)
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}
   INCLUDE_DIRS
   include
   include/${PROJECT_NAME}
-  Solver/include
-  acados/test
-  ../../../../../Documents/acados/include
-  ../../../../../Documents/acados/include/blasfeo/include
-  ../../../../../Documents/acados/include/hpipm/include
+  ${acados_INCLUDE_DIRS}
+  ${forces_INCLUDE_DIRS}
   LIBRARIES
   ${PROJECT_NAME}
-  ${PROJECT_SOURCE_DIR}/acados/test/libacados_ocp_solver_Solver.so
-  ${PROJECT_SOURCE_DIR}/../../../../../Documents/acados/lib/libacados.so
-  ${PROJECT_SOURCE_DIR}/../../../../../Documents/acados/lib/libblasfeo.so
-  ${PROJECT_SOURCE_DIR}/../../../../../Documents/acados/lib/libhpipm.so
+  ${acados_LIBRARIES}
+  ${forces_LIBRARIES}
 )
 
 include_directories(
   include
-  Solver/include
-  acados/test
-  ../../../../../Documents/acados/include
-  ../../../../../Documents/acados/include/blasfeo/include
-  ../../../../../Documents/acados/include/hpipm/include
+  ${acados_INCLUDE_DIRS}
+  ${forces_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
 )
 
+add_definitions(-DACADOS_SOLVER)
+
 add_library(${PROJECT_NAME} SHARED
-
-  # src/solver_interface.cpp
-
-  # src/forces_solver_interface.cpp
-  # Solver/include/mpc_planner_generated.cpp
-  # Solver/Solver_interface.c
-  # Solver/Solver_model.c
   Solver/include/mpc_planner_parameters.cpp
-
   src/state.cpp
-  src/acados_solver_interface.cpp
+
+  ${acados_SOURCES}
+
+  # ${forces_SOURCES}
 )
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
-  ${PROJECT_SOURCE_DIR}/Solver/lib/libSolver.so
-)
-
-add_executable(test_acados src/test_acados.cpp)
-target_link_libraries(test_acados
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-
-  ${PROJECT_SOURCE_DIR}/acados/test/libacados_ocp_solver_Solver.so
-  ${PROJECT_SOURCE_DIR}/../../../../../Documents/acados/lib/libacados.so
-  ${PROJECT_SOURCE_DIR}/../../../../../Documents/acados/lib/libblasfeo.so
-  ${PROJECT_SOURCE_DIR}/../../../../../Documents/acados/lib/libhpipm.so
+  ${forces_LIBRARIES}
+  ${acados_LIBRARIES}
 )
 
 add_definitions(-DMPC_PLANNER_ROS)

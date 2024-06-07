@@ -98,7 +98,7 @@ namespace MPCPlanner
   void PathReferenceVelocity::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)module_data;
-    if (data.reference_path.empty())
+    if (data.reference_path.empty() || data.reference_path.s.empty())
       return;
 
     if (!CONFIG["debug_visuals"].as<bool>())

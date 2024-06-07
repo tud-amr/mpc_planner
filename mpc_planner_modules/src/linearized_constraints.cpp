@@ -204,7 +204,7 @@ namespace MPCPlanner
   void LinearizedConstraints::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)module_data;
-    if (!CONFIG["debug_visuals"].as<bool>())
+    if (_use_guidance && !CONFIG["debug_visuals"].as<bool>())
       return;
 
     PROFILE_FUNCTION();

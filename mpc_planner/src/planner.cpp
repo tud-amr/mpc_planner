@@ -111,6 +111,10 @@ namespace MPCPlanner
                 }
             }
 
+            _warmstart = Trajectory();
+            for (int k = 1; k < _solver->N; k++)
+                _warmstart.add(_solver->getEgoPrediction(k, "x"), _solver->getEgoPrediction(k, "y"));
+
             _solver->loadWarmstart();
 
             std::chrono::duration<double> used_time = std::chrono::system_clock::now() - data.planning_start_time;
@@ -182,6 +186,9 @@ namespace MPCPlanner
             module->visualize(data, _module_data);
 
         visualizeTrajectory(_output.trajectory, "planned_trajectory", true, 0.2);
+
+        if (CONFIG["debug_visuals"].as<bool>())
+            visualizeTrajectory(_warmstart, "warmstart_trajectory", true, 0.2);
 
         visualizeObstacles(data.dynamic_obstacles, "obstacles", true, 1.0);
         visualizeObstaclePredictions(data.dynamic_obstacles, "obstacle_predictions", true);

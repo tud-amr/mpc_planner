@@ -22,6 +22,10 @@ namespace MPCPlanner
         npar = _config["npar"].as<unsigned int>();
         dt = CONFIG["integrator_step"].as<double>();
 
+        _num_iterations = CONFIG["solver_settings"]["acados"]["iterations"].as<int>();
+        if (CONFIG["solver_settings"]["acados"]["solver_type"].as<std::string>() == "SQP")
+            _num_iterations = 1;
+
         // allocate the array and fill it accordingly
         double *new_time_steps = NULL;
         int status = Solver_acados_create_with_discretization(_acados_ocp_capsule, N, new_time_steps);
@@ -58,6 +62,14 @@ namespace MPCPlanner
         }
     }
 
+    Solver &Solver::operator=(const Solver &rhs)
+    {
+        _params = rhs._params;
+        _output = rhs._output;
+
+        return *this;
+    }
+
     void Solver::reset()
     {
         _params = AcadosParameters();
@@ -67,9 +79,9 @@ namespace MPCPlanner
 
     int Solver::solve()
     {
-        int status;
+        int status = 1;
 
-        // _params.printParameters();
+        // _params.printParameters(_parameter_map);
 
         // Set initial state
         ocp_nlp_constraints_model_set(_nlp_config, _nlp_dims, _nlp_in, 0, "idxbx", _params.getIdxbx0());
@@ -77,9 +89,14 @@ namespace MPCPlanner
         ocp_nlp_constraints_model_set(_nlp_config, _nlp_dims, _nlp_in, 0, "ubx", _params.xinit);
 
         // Set parameters
-        for (int ii = 0; ii <= N; ii++)
+        for (int k = 0; k <= N; k++)
         {
-            Solver_acados_update_params(_acados_ocp_capsule, ii, &_params.all_parameters[ii * NP], NP);
+            if (k == N)
+                Solver_acados_update_params(_acados_ocp_capsule, k, &_params.all_parameters[(N - 1) * SOLVER_NP], SOLVER_NP); // Insert the second to last set of parameters
+            else if (k == 0)
+                Solver_acados_update_params(_acados_ocp_capsule, k, &_params.all_parameters[SOLVER_NP], SOLVER_NP); // Insert the second to last set of parameters
+            else
+                Solver_acados_update_params(_acados_ocp_capsule, k, &_params.all_parameters[k * SOLVER_NP], SOLVER_NP);
         }
 
         _info = AcadosInfo();
@@ -87,22 +104,28 @@ namespace MPCPlanner
         // solve ocp in loop
         int rti_phase = 0;
 
-        for (int ii = 0; ii < _info.NTIMINGS; ii++)
+        // bool warmstart_qp = true;
+        // ocp_nlp_solver_opts_set(_nlp_config, _nlp_opts, "warm_start_first_qp", &warmstart_qp);
+        // ocp_nlp_solver_opts_update(_nlp_config, _nlp_dims, _nlp_opts);
+        ocp_nlp_solver_reset_qp_memory(_nlp_solver, _nlp_in, _nlp_out);
+        ocp_nlp_precompute(_nlp_solver, _nlp_in, _nlp_out);
+        for (int iteration = 0; iteration < _num_iterations; iteration++)
         {
             ocp_nlp_solver_opts_set(_nlp_config, _nlp_opts, "rti_phase", &rti_phase);
-
             status = Solver_acados_solve(_acados_ocp_capsule);
 
             ocp_nlp_get(_nlp_config, _nlp_solver, "time_tot", &_info.elapsed_time);
+            _info.solvetime += _info.elapsed_time;
             _info.min_time = MIN(_info.elapsed_time, _info.min_time);
         }
 
-        /* print solution and statistics */
-        for (int ii = 0; ii <= _nlp_dims->N; ii++)
-            ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, ii, "x", &_output.xtraj[ii * NX]);
-        for (int ii = 0; ii < _nlp_dims->N; ii++)
-            ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, ii, "u", &_output.utraj[ii * NU]);
+        ocp_nlp_get(_nlp_config, _nlp_solver, "nlp_res", &_info.nlp_res);
 
+        // Get output
+        for (int k = 0; k <= _nlp_dims->N; k++)
+            ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, k, "x", &_output.xtraj[k * NX]);
+        for (int k = 0; k < _nlp_dims->N; k++)
+            ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, k, "u", &_output.utraj[k * NU]);
         // _output.print();
 
         if (status == ACADOS_SUCCESS)
@@ -122,9 +145,9 @@ namespace MPCPlanner
         // _info.print();
 
         // Map to FORCES output
-        if (status == 0) // Success
+        if (status == 0 || status == 2) // Success (max iterations = success for now)
             status = 1;
-        else
+        else if (status == 1)
             status = 0;
 
         return status;
@@ -212,7 +235,7 @@ namespace MPCPlanner
 
     void Solver::initializeWithState(const State &initial_state)
     {
-        for (int k = 0; k < N; k++) // For all timesteps
+        for (int k = 0; k <= N; k++) // For all timesteps
         {
             for (YAML::const_iterator it = _model_map.begin(); it != _model_map.end(); ++it) // For all inputs and states
             {
@@ -259,14 +282,16 @@ namespace MPCPlanner
         {
             /** @note warmstart shifting the previous output by one time step */
             // [initial_state, x_2, x_3, ..., x_N-1, x_N-1]
-            for (int k = 0; k < N; k++) // For all timesteps
+            for (int k = 0; k <= N; k++) // For all timesteps
             {
                 for (YAML::const_iterator it = _model_map.begin(); it != _model_map.end(); ++it) // For all inputs and states
                 {
                     if (k == 0) // Load the current state at k = 0
                         setEgoPrediction(0, it->first.as<std::string>(), initial_state.get(it->first.as<std::string>()));
                     else if (k == N - 1) // extrapolate with the terminal state at k = N-1
-                        setEgoPrediction(k, it->first.as<std::string>(), getOutput(k, it->first.as<std::string>()));
+                        setEgoPrediction(N - 1, it->first.as<std::string>(), getOutput(N - 1, it->first.as<std::string>()));
+                    else if (k == N)
+                        setEgoPrediction(N, it->first.as<std::string>(), getOutput(N - 1, it->first.as<std::string>()));
                     else // use x_{k+1} to initialize x_{k} (note that both have the initial state)
                         setEgoPrediction(k, it->first.as<std::string>(), getOutput(k + 1, it->first.as<std::string>()));
                 }
@@ -277,12 +302,14 @@ namespace MPCPlanner
 
             /** @note warmstart maintaining the previous output */
             // [initial_state, x_1, x_2, ..., x_N-1, x_N]
-            for (int k = 0; k < N; k++) // For all timesteps
+            for (int k = 0; k <= N; k++) // For all timesteps
             {
                 for (YAML::const_iterator it = _model_map.begin(); it != _model_map.end(); ++it) // For all inputs and states
                 {
                     if (k == 0) // Load the current state at k = 0
                         setEgoPrediction(0, it->first.as<std::string>(), initial_state.get(it->first.as<std::string>()));
+                    else if (k == N)
+                        setEgoPrediction(N, it->first.as<std::string>(), getOutput(N - 1, it->first.as<std::string>()));
                     else // use x_{k+1} to initialize x_{k} (note that both have the initial state)
                         setEgoPrediction(k, it->first.as<std::string>(), getOutput(k, it->first.as<std::string>()));
                 }
@@ -307,9 +334,9 @@ namespace MPCPlanner
     {
         switch (exitflag)
         {
-        case 0:
+        case 1: // We swap 0 and 1 for consistency with Forces Pro
             return "Success";
-        case 1:
+        case 0:
             return "Failure (no more information)";
         case 2:
             return "Failure (maximum number of iterations reached)";
@@ -343,442 +370,4 @@ namespace MPCPlanner
             }
         }
     }
-    /*
-    void setSolverParameterAcceleration(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        (void)index;
-        params.all_parameters[k * 169 + 0] = value;
-    }
-    void setSolverParameterAngularVelocity(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        (void)index;
-        params.all_parameters[k * 169 + 1] = value;
-    }
-    void setSolverParameterContour(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        (void)index;
-        params.all_parameters[k * 169 + 2] = value;
-    }
-    void setSolverParameterReferenceVelocity(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        (void)index;
-        params.all_parameters[k * 169 + 3] = value;
-    }
-    void setSolverParameterVelocity(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        (void)index;
-        params.all_parameters[k * 169 + 4] = value;
-    }
-    void setSolverParameterLag(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        (void)index;
-        params.all_parameters[k * 169 + 5] = value;
-    }
-    void setSolverParameterTerminalAngle(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        (void)index;
-        params.all_parameters[k * 169 + 6] = value;
-    }
-    void setSolverParameterTerminalContouring(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        (void)index;
-        params.all_parameters[k * 169 + 7] = value;
-    }
-    void setSolverParameterSplineXA(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 8] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 17] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 26] = value;
-    }
-    void setSolverParameterSplineXB(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 9] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 18] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 27] = value;
-    }
-    void setSolverParameterSplineXC(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 10] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 19] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 28] = value;
-    }
-    void setSolverParameterSplineXD(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 11] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 20] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 29] = value;
-    }
-    void setSolverParameterSplineYA(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 12] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 21] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 30] = value;
-    }
-    void setSolverParameterSplineYB(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 13] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 22] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 31] = value;
-    }
-    void setSolverParameterSplineYC(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 14] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 23] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 32] = value;
-    }
-    void setSolverParameterSplineYD(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 15] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 24] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 33] = value;
-    }
-    void setSolverParameterSplineStart(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 16] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 25] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 34] = value;
-    }
-    void setSolverParameterSplineVA(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 35] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 39] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 43] = value;
-    }
-    void setSolverParameterSplineVB(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 36] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 40] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 44] = value;
-    }
-    void setSolverParameterSplineVC(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 37] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 41] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 45] = value;
-    }
-    void setSolverParameterSplineVD(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 38] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 42] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 46] = value;
-    }
-    void setSolverParameterLinConstraintA1(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 47] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 50] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 53] = value;
-        else if (index == 3)
-            params.all_parameters[k * 169 + 56] = value;
-        else if (index == 4)
-            params.all_parameters[k * 169 + 59] = value;
-        else if (index == 5)
-            params.all_parameters[k * 169 + 62] = value;
-        else if (index == 6)
-            params.all_parameters[k * 169 + 65] = value;
-        else if (index == 7)
-            params.all_parameters[k * 169 + 68] = value;
-        else if (index == 8)
-            params.all_parameters[k * 169 + 71] = value;
-        else if (index == 9)
-            params.all_parameters[k * 169 + 74] = value;
-        else if (index == 10)
-            params.all_parameters[k * 169 + 77] = value;
-        else if (index == 11)
-            params.all_parameters[k * 169 + 80] = value;
-    }
-    void setSolverParameterLinConstraintA2(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 48] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 51] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 54] = value;
-        else if (index == 3)
-            params.all_parameters[k * 169 + 57] = value;
-        else if (index == 4)
-            params.all_parameters[k * 169 + 60] = value;
-        else if (index == 5)
-            params.all_parameters[k * 169 + 63] = value;
-        else if (index == 6)
-            params.all_parameters[k * 169 + 66] = value;
-        else if (index == 7)
-            params.all_parameters[k * 169 + 69] = value;
-        else if (index == 8)
-            params.all_parameters[k * 169 + 72] = value;
-        else if (index == 9)
-            params.all_parameters[k * 169 + 75] = value;
-        else if (index == 10)
-            params.all_parameters[k * 169 + 78] = value;
-        else if (index == 11)
-            params.all_parameters[k * 169 + 81] = value;
-    }
-    void setSolverParameterLinConstraintB(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 49] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 52] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 55] = value;
-        else if (index == 3)
-            params.all_parameters[k * 169 + 58] = value;
-        else if (index == 4)
-            params.all_parameters[k * 169 + 61] = value;
-        else if (index == 5)
-            params.all_parameters[k * 169 + 64] = value;
-        else if (index == 6)
-            params.all_parameters[k * 169 + 67] = value;
-        else if (index == 7)
-            params.all_parameters[k * 169 + 70] = value;
-        else if (index == 8)
-            params.all_parameters[k * 169 + 73] = value;
-        else if (index == 9)
-            params.all_parameters[k * 169 + 76] = value;
-        else if (index == 10)
-            params.all_parameters[k * 169 + 79] = value;
-        else if (index == 11)
-            params.all_parameters[k * 169 + 82] = value;
-    }
-    void setSolverParameterEgoDiscRadius(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        (void)index;
-        params.all_parameters[k * 169 + 83] = value;
-    }
-    void setSolverParameterEgoDiscOffset(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        (void)index;
-        params.all_parameters[k * 169 + 84] = value;
-    }
-    void setSolverParameterEllipsoidObstX(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 85] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 92] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 99] = value;
-        else if (index == 3)
-            params.all_parameters[k * 169 + 106] = value;
-        else if (index == 4)
-            params.all_parameters[k * 169 + 113] = value;
-        else if (index == 5)
-            params.all_parameters[k * 169 + 120] = value;
-        else if (index == 6)
-            params.all_parameters[k * 169 + 127] = value;
-        else if (index == 7)
-            params.all_parameters[k * 169 + 134] = value;
-        else if (index == 8)
-            params.all_parameters[k * 169 + 141] = value;
-        else if (index == 9)
-            params.all_parameters[k * 169 + 148] = value;
-        else if (index == 10)
-            params.all_parameters[k * 169 + 155] = value;
-        else if (index == 11)
-            params.all_parameters[k * 169 + 162] = value;
-    }
-    void setSolverParameterEllipsoidObstY(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 86] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 93] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 100] = value;
-        else if (index == 3)
-            params.all_parameters[k * 169 + 107] = value;
-        else if (index == 4)
-            params.all_parameters[k * 169 + 114] = value;
-        else if (index == 5)
-            params.all_parameters[k * 169 + 121] = value;
-        else if (index == 6)
-            params.all_parameters[k * 169 + 128] = value;
-        else if (index == 7)
-            params.all_parameters[k * 169 + 135] = value;
-        else if (index == 8)
-            params.all_parameters[k * 169 + 142] = value;
-        else if (index == 9)
-            params.all_parameters[k * 169 + 149] = value;
-        else if (index == 10)
-            params.all_parameters[k * 169 + 156] = value;
-        else if (index == 11)
-            params.all_parameters[k * 169 + 163] = value;
-    }
-    void setSolverParameterEllipsoidObstPsi(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 87] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 94] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 101] = value;
-        else if (index == 3)
-            params.all_parameters[k * 169 + 108] = value;
-        else if (index == 4)
-            params.all_parameters[k * 169 + 115] = value;
-        else if (index == 5)
-            params.all_parameters[k * 169 + 122] = value;
-        else if (index == 6)
-            params.all_parameters[k * 169 + 129] = value;
-        else if (index == 7)
-            params.all_parameters[k * 169 + 136] = value;
-        else if (index == 8)
-            params.all_parameters[k * 169 + 143] = value;
-        else if (index == 9)
-            params.all_parameters[k * 169 + 150] = value;
-        else if (index == 10)
-            params.all_parameters[k * 169 + 157] = value;
-        else if (index == 11)
-            params.all_parameters[k * 169 + 164] = value;
-    }
-    void setSolverParameterEllipsoidObstMajor(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 88] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 95] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 102] = value;
-        else if (index == 3)
-            params.all_parameters[k * 169 + 109] = value;
-        else if (index == 4)
-            params.all_parameters[k * 169 + 116] = value;
-        else if (index == 5)
-            params.all_parameters[k * 169 + 123] = value;
-        else if (index == 6)
-            params.all_parameters[k * 169 + 130] = value;
-        else if (index == 7)
-            params.all_parameters[k * 169 + 137] = value;
-        else if (index == 8)
-            params.all_parameters[k * 169 + 144] = value;
-        else if (index == 9)
-            params.all_parameters[k * 169 + 151] = value;
-        else if (index == 10)
-            params.all_parameters[k * 169 + 158] = value;
-        else if (index == 11)
-            params.all_parameters[k * 169 + 165] = value;
-    }
-    void setSolverParameterEllipsoidObstMinor(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 89] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 96] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 103] = value;
-        else if (index == 3)
-            params.all_parameters[k * 169 + 110] = value;
-        else if (index == 4)
-            params.all_parameters[k * 169 + 117] = value;
-        else if (index == 5)
-            params.all_parameters[k * 169 + 124] = value;
-        else if (index == 6)
-            params.all_parameters[k * 169 + 131] = value;
-        else if (index == 7)
-            params.all_parameters[k * 169 + 138] = value;
-        else if (index == 8)
-            params.all_parameters[k * 169 + 145] = value;
-        else if (index == 9)
-            params.all_parameters[k * 169 + 152] = value;
-        else if (index == 10)
-            params.all_parameters[k * 169 + 159] = value;
-        else if (index == 11)
-            params.all_parameters[k * 169 + 166] = value;
-    }
-    void setSolverParameterEllipsoidObstChi(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 90] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 97] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 104] = value;
-        else if (index == 3)
-            params.all_parameters[k * 169 + 111] = value;
-        else if (index == 4)
-            params.all_parameters[k * 169 + 118] = value;
-        else if (index == 5)
-            params.all_parameters[k * 169 + 125] = value;
-        else if (index == 6)
-            params.all_parameters[k * 169 + 132] = value;
-        else if (index == 7)
-            params.all_parameters[k * 169 + 139] = value;
-        else if (index == 8)
-            params.all_parameters[k * 169 + 146] = value;
-        else if (index == 9)
-            params.all_parameters[k * 169 + 153] = value;
-        else if (index == 10)
-            params.all_parameters[k * 169 + 160] = value;
-        else if (index == 11)
-            params.all_parameters[k * 169 + 167] = value;
-    }
-    void setSolverParameterEllipsoidObstR(int k, Solver::AcadosParameters &params, const double value, int index)
-    {
-        if (index == 0)
-            params.all_parameters[k * 169 + 91] = value;
-        else if (index == 1)
-            params.all_parameters[k * 169 + 98] = value;
-        else if (index == 2)
-            params.all_parameters[k * 169 + 105] = value;
-        else if (index == 3)
-            params.all_parameters[k * 169 + 112] = value;
-        else if (index == 4)
-            params.all_parameters[k * 169 + 119] = value;
-        else if (index == 5)
-            params.all_parameters[k * 169 + 126] = value;
-        else if (index == 6)
-            params.all_parameters[k * 169 + 133] = value;
-        else if (index == 7)
-            params.all_parameters[k * 169 + 140] = value;
-        else if (index == 8)
-            params.all_parameters[k * 169 + 147] = value;
-        else if (index == 9)
-            params.all_parameters[k * 169 + 154] = value;
-        else if (index == 10)
-            params.all_parameters[k * 169 + 161] = value;
-        else if (index == 11)
-            params.all_parameters[k * 169 + 168] = value;
-    }*/
 }

@@ -27,6 +27,7 @@ from scenario_constraints import ScenarioConstraintModule
 
 # Import solver models that you want to use
 from solver_model import ContouringSecondOrderUnicycleModel, ContouringSecondOrderUnicycleModelWithSlack
+from solver_model import ContouringSecondOrderUnicycleModelCurvatureAware
 
 
 def configuration_basic(settings):
@@ -37,12 +38,14 @@ def configuration_basic(settings):
     base_module = modules.add_module(MPCBaseModule(settings))
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
+    # base_module.weigh_variable(var_name="slack", weight_names="slack", rqt_max_value=10000.0)
 
-    modules.add_module(GoalModule(settings))
-    # modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
-    # modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    # modules.add_module(GoalModule(settings))
+    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
 
-    # modules.add_module(EllipsoidConstraintModule(settings))
+    modules.add_module(EllipsoidConstraintModule(settings))
+    # modules.add_module(LinearizedConstraintModule(settings))
 
     return model, modules
 
@@ -109,3 +112,4 @@ model, modules = configuration_basic(settings)
 # model, modules = configuration_tmpc(settings)
 
 generate_solver(modules, model, settings)
+exit(0)

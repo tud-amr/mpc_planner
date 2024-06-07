@@ -177,7 +177,7 @@ def generate_cpp_code(settings, model):
 
     header_file.write(f"void loadForcesWarmstart({forces_solver_name}_params& params, const {forces_solver_name}_output& output);\n")
     cpp_file.write(f"void loadForcesWarmstart({forces_solver_name}_params& params, const {forces_solver_name}_output& output){{\n")
-    if not settings["solver_settings"]["use_sqp"]:
+    if not settings["solver_settings"]["forces"]["use_sqp"]:
         cpp_file.write(f"\t\tfor (int i = 0; i < {model.nu}; i++){{\n")
         cpp_file.write(f"\t\t\tparams.z_init_{add_zero_below_10(0, N)}[i] = params.x0[i];\n\t\t}}\n")
 
@@ -189,7 +189,7 @@ def generate_cpp_code(settings, model):
 
     header_file.write("\tvoid setForcesReinitialize(Solver_params& params, const bool value);\n")
     cpp_file.write("\tvoid setForcesReinitialize(Solver_params& params, const bool value){\n")
-    if settings["solver_settings"]["use_sqp"]:
+    if settings["solver_settings"]["forces"]["use_sqp"]:
         cpp_file.write(f"\t\tparams.reinitialize = value;\n")
     cpp_file.write("\t}\n")
 
@@ -216,19 +216,17 @@ def generate_parameter_cpp_code(settings, model):
     header_file.write("#ifndef __MPC_PLANNER_PARAMETERS_H__\n")
     header_file.write("#define __MPC_PLANNER_PARAMETERS_H__\n\n")
 
-    header_file.write("namespace MPCPlanner{\n\n")
     if settings["solver_settings"]["solver"] == "acados":  # Forward declare
+        header_file.write("namespace MPCPlanner{\n\n")
         header_file.write("struct AcadosParameters;\n")
-    else:
-        header_file.write("struct Solver_params;\n")
-
     cpp_file.write("#include <mpc_planner_parameters.h>\n\n")
 
     if settings["solver_settings"]["solver"] == "acados":
         cpp_file.write("#include <mpc_planner_solver/solver_interface.h>\n")
         param_name = "AcadosParameters"
     else:
-        cpp_file.write("#include <Solver.h>\n\n")
+        header_file.write("#include <Solver.h>\n\n")
+        header_file.write("namespace MPCPlanner{\n\n")
         param_name = "Solver_params"
 
     cpp_file.write("namespace MPCPlanner{\n\n")

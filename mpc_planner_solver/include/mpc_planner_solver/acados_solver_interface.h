@@ -20,7 +20,6 @@
 #define NX SOLVER_NX
 #define NZ SOLVER_NZ
 #define NU SOLVER_NU
-#define NP SOLVER_NP
 #define NBX SOLVER_NBX
 #define NBX0 SOLVER_NBX0
 #define NBU SOLVER_NBU
@@ -52,15 +51,15 @@ namespace MPCPlanner
     struct AcadosParameters
     {
         double xinit[NX]; // Initial state
-        // double u0[NU];    // Initial input
+        // double u0[NU];    // Initial isolver_nput
         double x0[(NU + NX) * (SOLVER_N + 1)]; // Warmstart: [u0, x0 | u1 x1 | ... | uN xN]
 
-        double all_parameters[NP * SOLVER_N]; // NP parameters for all stages
+        double all_parameters[SOLVER_NP * SOLVER_N]; // SOLVER_NP parameters for all stages
 
         double solver_timeout{0.}; // Not functional!
 
         int *getIdxbx0() { return idxbx0; }
-        double *getU0() { return x0; } // Note: should only read the first input from this!
+        double *getU0() { return x0; } // Note: should only read the first isolver_nput from this!
 
         AcadosParameters()
         {
@@ -74,27 +73,26 @@ namespace MPCPlanner
             for (int i = 0; i < (NU + NX) * (SOLVER_N + 1); i++)
                 x0[i] = 0.;
 
-            for (int i = 0; i < NP * SOLVER_N; i++)
+            for (int i = 0; i < SOLVER_NP * SOLVER_N; i++)
                 all_parameters[i] = 0.;
         }
 
-        void printParameters()
+        void printParameters(YAML::Node &parameter_map)
         {
-            std::cout << "Parameters:\n";
+            LOG_HEADER("Parameters");
             for (int k = 0; k < SOLVER_N; k++)
             {
-                for (int i = 0; i < NP; i++)
+                LOG_HEADER(k);
+
+                for (YAML::const_iterator it = parameter_map.begin(); it != parameter_map.end(); ++it)
                 {
-                    std::cout << all_parameters[k * SOLVER_N + i] << ", ";
+                    LOG_VALUE(it->first.as<std::string>(), all_parameters[k * SOLVER_NP + it->second.as<int>()]);
                 }
-                std::cout << "\n";
             }
         }
 
     private:
         int idxbx0[NBX0]; // Indices of initial conditions
-        // double lbx0[NBX0]; // Initial conditions? (lb / ub)
-        // double ubx0[NBX0];
     };
 
     class Solver
@@ -103,26 +101,28 @@ namespace MPCPlanner
         struct AcadosInfo
         {
 
-            int NTIMINGS;
             double min_time;
             double kkt_norm_inf;
             double elapsed_time;
             int sqp_iter;
+            double nlp_res;
+            double solvetime;
 
             double pobj{0.}; // TODO
 
             AcadosInfo()
             {
-                NTIMINGS = 1;
                 min_time = 1e12;
             }
 
             void print() const
             {
-                LOG_INFO("Solver info:");
+                LOG_HEADER("Solver Info");
                 LOG_VALUE("SQP iterations", sqp_iter);
-                LOG_VALUE("Minimum time for solve", min_time * 1000);
+                LOG_VALUE("Minimum time for solve [ms]", min_time * 1000);
                 LOG_VALUE("KKT", kkt_norm_inf);
+                LOG_VALUE("Solve Time [ms]", solvetime * 1000.);
+                LOG_VALUE("NLP Residuals", nlp_res);
             }
         };
 
@@ -174,9 +174,14 @@ namespace MPCPlanner
 
         YAML::Node _config, _parameter_map, _model_map;
 
+        int _num_iterations;
+
     public:
         Solver(int solver_id = 0);
         ~Solver();
+
+        /** @brief Copy data from another solver. Does not copy solver generic parameters like the horizon N*/
+        Solver &operator=(const Solver &rhs);
 
         void reset();
 
@@ -210,41 +215,6 @@ namespace MPCPlanner
         std::string explainExitFlag(int exitflag) const;
         void printIfBoundLimited() const;
     };
-    /*
-    void setForcesParameterAcceleration(int k, Solver::AcadosParameters &params, const double value, int index = 0);
-    void setForcesParameterAngularVelocity(int k, Solver::AcadosParameters &params, const double value, int index = 0);
-    void setForcesParameterContour(int k, Solver::AcadosParameters &params, const double value, int index = 0);
-    void setForcesParameterReferenceVelocity(int k, Solver::AcadosParameters &params, const double value, int index = 0);
-    void setForcesParameterVelocity(int k, Solver::AcadosParameters &params, const double value, int index = 0);
-    void setForcesParameterLag(int k, Solver::AcadosParameters &params, const double value, int index = 0);
-    void setForcesParameterTerminalAngle(int k, Solver::AcadosParameters &params, const double value, int index = 0);
-    void setForcesParameterTerminalContouring(int k, Solver::AcadosParameters &params, const double value, int index = 0);
-    void setForcesParameterSplineXA(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterSplineXB(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterSplineXC(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterSplineXD(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterSplineYA(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterSplineYB(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterSplineYC(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterSplineYD(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterSplineStart(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterSplineVA(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterSplineVB(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterSplineVC(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterSplineVD(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterLinConstraintA1(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterLinConstraintA2(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterLinConstraintB(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterEgoDiscRadius(int k, Solver::AcadosParameters &params, const double value, int index = 0);
-    void setForcesParameterEgoDiscOffset(int k, Solver::AcadosParameters &params, const double value, int index = 0);
-    void setForcesParameterEllipsoidObstX(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterEllipsoidObstY(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterEllipsoidObstPsi(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterEllipsoidObstMajor(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterEllipsoidObstMinor(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterEllipsoidObstChi(int k, Solver::AcadosParameters &params, const double value, int index);
-    void setForcesParameterEllipsoidObstR(int k, Solver::AcadosParameters &params, const double value, int index);
-    */
 }
 
 #endif // ACADOS_SOLVER_INTERFACE_H

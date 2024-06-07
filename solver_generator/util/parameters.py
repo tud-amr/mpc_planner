@@ -73,7 +73,7 @@ class Parameters:
         map["num parameters"] = self._param_idx
         write_to_yaml(file_path, self._params)
 
-    def get_p(self):
+    def get_p(self) -> float:
         return self._p
 
     def get(self, parameter):

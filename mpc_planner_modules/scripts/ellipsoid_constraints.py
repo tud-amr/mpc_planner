@@ -59,7 +59,7 @@ class EllipsoidConstraint:
         upper_bound = []
         for obs in range(self.max_obstacles):
             for disc in range(self.n_discs):
-                upper_bound.append(np.Inf)
+                upper_bound.append(np.inf)
         return upper_bound
 
     def get_constraints(self, model, params, settings, stage_idx):
@@ -72,7 +72,6 @@ class EllipsoidConstraint:
             psi = model.get("psi")
         except:
             psi = 0.0
-        # slack = model.get('slack')
 
         rotation_car = rotation_matrix(psi)
 
@@ -97,25 +96,24 @@ class EllipsoidConstraint:
             # Compute ellipse matrix
             obst_major *= cd.sqrt(chi)
             obst_minor *= cd.sqrt(chi)
-            ab = np.array(
-                [
-                    [1.0 / ((obst_major + (r_disc + obst_r)) ** 2), 0],
-                    [0, 1.0 / ((obst_minor + (r_disc + obst_r)) ** 2)],
-                ]
-            )
+            ab = cd.SX(2, 2)
+            ab[0, 0] = 1.0 / ((obst_major + r_disc + obst_r) * (obst_major + r_disc + obst_r))
+            ab[0, 1] = 0.0
+            ab[1, 0] = 0.0
+            ab[1, 1] = 1.0 / ((obst_minor + r_disc + obst_r) * (obst_minor + r_disc + obst_r))
 
-            obstacle_rotation = rotation_matrix(obst_psi)
-            obstacle_ellipse_matrix = obstacle_rotation.transpose().dot(ab).dot(obstacle_rotation)
+            obstacle_rotation = cd.SX(rotation_matrix(obst_psi))
+            obstacle_ellipse_matrix = obstacle_rotation.T @ ab @ obstacle_rotation
 
             for disc_it in range(self.n_discs):
                 # Get and compute the disc position
                 disc_x = params.get(f"ego_disc_{disc_it}_offset")
                 disc_relative_pos = np.array([disc_x, 0])
-                disc_pos = pos + rotation_car.dot(disc_relative_pos)
+                disc_pos = pos + rotation_car @ disc_relative_pos
 
                 # construct the constraint and append it
-                disc_to_obstacle = disc_pos - obstacle_cog
-                c_disc_obstacle = disc_to_obstacle.transpose().dot(obstacle_ellipse_matrix).dot(disc_to_obstacle)
+                disc_to_obstacle = cd.SX(disc_pos - obstacle_cog)
+                c_disc_obstacle = disc_to_obstacle.T @ obstacle_ellipse_matrix @ disc_to_obstacle
                 constraints.append(c_disc_obstacle)  # + slack)
 
         return constraints

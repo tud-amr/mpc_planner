@@ -5,14 +5,14 @@
   <arg name="gui" default="false" />
   <arg name="project_name" default="" />
   
-  <!-- <arg name="roadmap_map" value="maps/straight.xml"/> -->
-  <arg name="roadmap_map" value="maps/open_space/24.xml"/>
+  <arg name="roadmap_map" value="maps/straight.xml"/>
+  <!-- <arg name="roadmap_map" value="maps/open_space/24.xml"/> -->
 
-  <!-- <arg name="pedestrian_scenario" default="random_social/12_corridor.xml" /> -->
+  <arg name="pedestrian_scenario" default="random_social/8_corridor.xml" />
   <!-- <arg name="pedestrian_scenario" default="static/8_corridor.xml" /> -->
-  <arg name="pedestrian_scenario" default="open_space/24.xml" />
+  <!-- <arg name="pedestrian_scenario" default="open_space/24.xml" /> -->
   <!-- <arg name="pedestrian_scenario" default="crossing/2_leftstack.xml" /> -->
-  <!-- <arg name="pedestrian_scenario" default="static/1_dynamic.xml" /> -->
+  <!-- <arg name="pedestrian_scenario" default="static/1_offset_small.xml" /> -->
 
   <!-- <arg name="pedestrian_scenario" default="new_safe_horizon/8_gaussian.xml" /> -->
 
@@ -30,6 +30,7 @@
 
   <include file="$(find pedestrian_simulator)/launch/ros1_simulation.launch">
     <arg name="pedestrian_scenario" value="$(arg pedestrian_scenario)"/>
+    <arg name="static" value="false"/>
   </include>
 
   <node pkg="pedestrian_simulator" type="collision_checker_node" name="collision_checker_node" output="screen"/>

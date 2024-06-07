@@ -15,7 +15,7 @@ import solver_model
 
 
 def parse_constraint_bounds(bounds):
-    large_value = 1e8  # Acados does not support inf
+    large_value = 1e15  # Acados does not support inf
     for i in range(len(bounds)):
         if bounds[i] == np.inf:
             bounds[i] = large_value
@@ -39,13 +39,10 @@ def create_acados_model(settings, model, modules):
 
     # Constraints
     constr = cd.vertcat(*constraints(modules, z, p, model, settings, 1))
-    print(constr)
-    print(type(constr))
-    print(constr.shape)
-    if constr.shape[0] == 0:
-        constr = cd.SX()
 
-    # print(constr.shape)
+    if constr.shape[0] == 0:
+        print("No constraints specified")
+        constr = cd.SX()
 
     # stage cost
     cost_stage = objective(modules, z, p, model, settings, 1)
@@ -99,14 +96,15 @@ def generate_acados_solver(modules, settings, model, skip_solver_generation):
 
     # Set state bound
     nx = model.nx
-    ocp.constraints.lbx = np.array([model.lower_bound[model.nu : model.get_nvar()]]).flatten()
-    ocp.constraints.ubx = np.array([model.upper_bound[model.nu : model.get_nvar()]]).flatten()
+    nu = model.nu
+    ocp.constraints.lbx = np.array([model.lower_bound[nu : model.get_nvar()]]).flatten()
+    ocp.constraints.ubx = np.array([model.upper_bound[nu : model.get_nvar()]]).flatten()
     ocp.constraints.idxbx = np.array(range(model.nx))
 
     # Set control input bound
-    ocp.constraints.lbu = np.array([model.lower_bound[: model.nu]]).flatten()
-    ocp.constraints.ubu = np.array([model.upper_bound[: model.nu]]).flatten()
-    ocp.constraints.idxbu = np.array(range(model.nu))
+    ocp.constraints.lbu = np.array([model.lower_bound[:nu]]).flatten()
+    ocp.constraints.ubu = np.array([model.upper_bound[:nu]]).flatten()
+    ocp.constraints.idxbu = np.array(range(nu))
 
     # Set path constraints bound
     nc = ocp.model.con_h_expr.shape[0]
@@ -114,45 +112,60 @@ def generate_acados_solver(modules, settings, model, skip_solver_generation):
     ocp.constraints.uh = parse_constraint_bounds(constraint_upper_bounds(modules))
 
     # Slack for constraints
-    # ns = nc + nx
-    # ocp.constraints.idxsh = np.array(range(nc))
+    add_constraint_slack = True
+    value = 1.0e2  # 1.0e5
+
+    ns = nx + nu
+    if add_constraint_slack:
+        ns += nc
+        ocp.constraints.idxsh = np.array(range(nc))
+        # ocp.constraints.idxsh_e = np.array(range(nc))
+
+    ocp.constraints.idxsbx = np.array(range(nx))
+    ocp.constraints.idxsbu = np.array(range(nu))
 
     # Slack for state bounds
-    ocp.constraints.idxsbx = np.array(range(nx))
-    ocp.cost.zl = 1e2 * np.ones((model.nx,))
-    ocp.cost.zu = 1e2 * np.ones((model.nx,))
-    ocp.cost.Zl = 1e0 * np.ones((model.nx,))
-    ocp.cost.Zu = 1e0 * np.ones((model.nx,))
+    ocp.cost.zl = value * np.ones((ns,))
+    ocp.cost.zu = value * np.ones((ns,))
+    ocp.cost.Zl = value * np.ones((ns,))
+    ocp.cost.Zu = value * np.ones((ns,))
 
     # ocp.constraints.idxsbx_e = np.array(range(nx))
-    # ocp.constraints.idxsh_e = np.array([0])
-    # ocp.cost.zl_e = 1e2 * np.ones(nx)
-    # ocp.cost.zu_e = 1e2 * np.ones(nx)
-    # ocp.cost.Zu_e = 1.0 * np.ones(nx)
-    # ocp.cost.Zl_e = 1.0 * np.ones(nx)
+    # ocp.cost.zl_e = value * np.ones(ns)
+    # ocp.cost.zu_e = value * np.ones(ns)
+    # ocp.cost.Zu_e = value * np.ones(ns)
+    # ocp.cost.Zl_e = value * np.ones(ns)
 
     ocp.parameter_values = np.zeros(model_acados.p.size()[0])
 
     # horizon
     ocp.solver_options.tf = settings["N"] * settings["integrator_step"]
-    ocp.solver_options.tol = 1e-3
+    ocp.solver_options.tol = 1e-2
 
     # Solver options
     # integrator option
     ocp.solver_options.integrator_type = "ERK"
     ocp.solver_options.sim_method_num_stages = 4
-    ocp.solver_options.sim_method_num_steps = 3
+    ocp.solver_options.sim_method_num_steps = 5  # Number of divisions over the time horizon (ERK applied on each)
 
     # nlp solver options
-    ocp.solver_options.nlp_solver_type = "SQP"
-    # ocp.solver_options.nlp_solver_type = "SQP_RTI"  # RTI gives out better solutions
-    ocp.solver_options.nlp_solver_max_iter = 20
+    ocp.solver_options.nlp_solver_type = settings["solver_settings"]["acados"]["solver_type"]
+    ocp.solver_options.nlp_solver_max_iter = 50
     ocp.solver_options.hessian_approx = "EXACT"
+    # ocp.solver_options.levenberg_marquardt = 1e-1
+    ocp.solver_options.globalization = "MERIT_BACKTRACKING"
+    # ocp.solver_options.eps_sufficient_descent = 1e-1
+    ocp.solver_options.qp_tol = 1e-3  # Important!
 
     # qp solver options
+    # Full Condensing: Suitable for small to medium-sized systems, leading to a dense QP with only control inputs as decision variables.
+    # Offers efficiency for smaller problems but faces scalability and memory issues for larger systems.
+    # Partial Condensing: Suitable for larger systems, providing a balance between problem size and computational complexity.
+    # It allows for controlled reduction in problem size, making it more scalable and flexible but potentially more complex to implement.
+    # ocp.solver_options.qp_solver = "FULL_CONDENSING_QPOASES"
     # ocp.solver_options.qp_solver = "FULL_CONDENSING_HPIPM"
     ocp.solver_options.qp_solver = "PARTIAL_CONDENSING_HPIPM"
-    ocp.solver_options.qp_solver_iter_max = 100
+    # ocp.solver_options.qp_solver_iter_max = 100
 
     # code generation options
     ocp.code_export_directory = f"{os.path.dirname(os.path.abspath(__file__))}/acados/test"
@@ -176,9 +189,6 @@ def generate_acados_solver(modules, settings, model, skip_solver_generation):
 
         if os.path.exists(acados_solver_path(settings)) and os.path.isdir(acados_solver_path(settings)):
             shutil.rmtree(acados_solver_path(settings))
-
-        # print_path("Move", default_acados_solver_path(settings))
-        # print_path("To", acados_solver_path(settings))
 
         shutil.move(default_acados_solver_path(settings), acados_solver_path(settings))  # Move the solver to this directory
 

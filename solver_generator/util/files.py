@@ -89,7 +89,7 @@ def generated_include_file(settings):
 def generated_parameter_include_file(settings):
     include_path = os.path.join(solver_path(settings), f"include/")
     os.makedirs(include_path, exist_ok=True)
-    print_path("Generated Header", f"{include_path}mpc_planner_parameters.h/cpp", tab=True, end="")
+    print_path("Generated Parameter Header", f"{include_path}mpc_planner_parameters.h/cpp", tab=True, end="")
     return f"{include_path}mpc_planner_parameters.h", f"{include_path}mpc_planner_parameters.cpp"
 
 
