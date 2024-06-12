@@ -3,8 +3,8 @@ guidance_planner:
     output: false
     visuals: false
 
-  T: 6.0 # Time horizon [s]
-  N: 30  # Discrete time steps [#]
+  T: 4.0 # Time horizon [s]
+  N: 20  # Discrete time steps [#]
   seed: 1 # Seed of the visibility-PRM. -1 = random
 
   homotopy:

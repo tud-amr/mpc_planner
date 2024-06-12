@@ -70,6 +70,7 @@ namespace local_planner
 
         void startEnvironment();
 
+        void rotateToGoal(geometry_msgs::Twist &cmd_vel);
         void loop(geometry_msgs::Twist &cmd_vel);
 
         void stateCallback(const nav_msgs::Odometry::ConstPtr &msg);
@@ -98,6 +99,7 @@ namespace local_planner
 
         // Other
         bool done_{false};
+        bool _rotate_to_goal{false};
 
         std::unique_ptr<Planner> _planner;
 

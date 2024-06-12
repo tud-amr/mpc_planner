@@ -149,6 +149,26 @@ namespace MPCPlanner
 
   void DecompConstraints::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
   {
+
+    if (k == 0) // Dummies
+    {
+      for (int d = 0; d < _n_discs; d++)
+      {
+        setSolverParameterEgoDiscOffset(k, _solver->_params, data.robot_area[d].offset, d);
+
+        int constraint_counter = 0;
+        for (int i = 0; i < _max_constraints; i++)
+        {
+          setSolverParameterDecompA1(k, _solver->_params, _dummy_a1, constraint_counter); // These are filled from k = 1 - N
+          setSolverParameterDecompA2(k, _solver->_params, _dummy_a2, constraint_counter);
+          setSolverParameterDecompB(k, _solver->_params, _dummy_b, constraint_counter);
+          constraint_counter++;
+        }
+      }
+
+      return;
+    }
+
     if (k == 1)
       LOG_MARK("DecompConstraints::setParameters");
 

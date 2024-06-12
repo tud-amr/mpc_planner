@@ -50,6 +50,11 @@ def test_acados_solver_generation():
 
     settings = load_test_settings()
     settings["name"] = "test_solver"
+    settings["max_obstacles"] = 12
+    settings["N"] = 20
+    settings["integrator_step"] = 0.2
+    settings["contouring"] = dict()
+    settings["contouring"]["num_segments"] = 8
 
     solver_settings = settings["solver_settings"]
     solver_settings["solver"] = "acados"
@@ -59,8 +64,8 @@ def test_acados_solver_generation():
     solver, simulator = generate_solver(modules, model, settings)
     ocp = solver.acados_ocp
     assert ocp.model.name == "Solver"
-    assert len(ocp.constraints.lh) == 8
-    assert len(ocp.constraints.uh) == 8
+    assert len(ocp.constraints.lh) == 12
+    assert len(ocp.constraints.uh) == 12
 
     ocp_model = ocp.model
 

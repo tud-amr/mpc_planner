@@ -17,6 +17,39 @@ If you find this repository useful for your research, please consider citing one
 
 
 
+## Installation (Acados)
+In any folder, clone and build Acados:
+
+```bash
+git clone https://github.com/acados/acados.git
+cd acados
+git submodule update --recursive --init
+mkdir -p build
+cd build
+cmake -DACADOS_WITH_QPOASES=ON -DACADOS_SILENT=ON ..
+make install -j4
+```
+
+In `~/.bashrc` add environment variables:
+
+```bash
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:<path_to_acados>/lib"
+export ACADOS_SOURCE_DIR="<path_to_acados>"
+```
+
+In `<catkin_ws>/src/mpc_planner`, set up the poetry environment:
+
+```bash
+poetry install
+```
+
+Then generate a solver (e.g., for `jackalsimulator`)
+
+```bash
+poetry run python mpc_planner_jackalsimulator/scripts/generate_jackalsimulator_solver.py
+```
+
+
 
 ## Installation (Solver Generation)
 The NMPC solver is generated with Forces Pro. For now it is assumed that your Forces directory is placed at `~/forces_pro_client/`. A poetry environment is provided with the solver generation. The environment requires `python 3.8.10`. We recommend to install this version with `pyenv`.

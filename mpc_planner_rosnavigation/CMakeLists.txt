@@ -38,6 +38,11 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+catkin_install_python(PROGRAMS
+  scripts/goal_publisher.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 add_library(${PROJECT_NAME}
   src/ros1_rosnavigation.cpp
 )

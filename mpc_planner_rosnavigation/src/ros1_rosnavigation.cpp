@@ -124,7 +124,10 @@ namespace local_planner
         path->poses = global_plan_;
         pathCallback(path);
 
-        loop(cmd_vel);
+        if (_rotate_to_goal)
+            rotateToGoal(cmd_vel);
+        else
+            loop(cmd_vel);
 
         return true;
     }
@@ -211,6 +214,8 @@ namespace local_planner
             {
                 LOG_INFO_THROTTLE(3, "Waiting for pedestrian simulator to start");
                 ros::Duration(1.0).sleep();
+
+                _reset_simulation_pub.publish(std_msgs::Empty());
             }
         }
         _enable_output = CONFIG["enable_output"].as<bool>();
@@ -230,9 +235,46 @@ namespace local_planner
         {
             LOG_SUCCESS("Goal Reached!");
             done_ = true;
+            reset();
         }
 
         return goal_reached;
+    }
+
+    void ROSNavigationPlanner::rotateToGoal(geometry_msgs::Twist &cmd_vel)
+    {
+        LOG_INFO_THROTTLE(1500, "Rotating to the goal");
+        if (!_data.goal_received)
+        {
+            LOG_INFO("Waiting for the goal");
+            return;
+        }
+        double goal_angle = 0.;
+
+        if (_data.reference_path.x.size() > 2)
+            goal_angle = std::atan2(_data.reference_path.y[2] - _state.get("y"), _data.reference_path.x[2] - _state.get("x"));
+        else
+            goal_angle = std::atan2(_data.goal(1) - _state.get("y"), _data.goal(0) - _state.get("x"));
+
+        double angle_diff = goal_angle - _state.get("psi");
+
+        if (angle_diff > M_PI)
+            angle_diff -= 2 * M_PI;
+
+        geometry_msgs::Twist cmd;
+        if (std::abs(angle_diff) > M_PI / 4.)
+        {
+            cmd_vel.linear.x = 0.0;
+            if (_enable_output)
+                cmd_vel.angular.z = 1.5 * RosTools::sgn(angle_diff);
+            else
+                cmd_vel.angular.z = 0.;
+        }
+        else
+        {
+            LOG_SUCCESS("Robot rotated and is ready to follow the path");
+            _rotate_to_goal = false;
+        }
     }
 
     void ROSNavigationPlanner::loop(geometry_msgs::Twist &cmd_vel)
@@ -251,7 +293,6 @@ namespace local_planner
             reset(false);
             cmd_vel.linear.x = 0.;
             cmd_vel.angular.z = 0.;
-            LOG_HOOK();
             return;
         }
 
@@ -350,10 +391,11 @@ namespace local_planner
     {
         LOG_MARK("Goal callback");
 
-        reset();
         _data.goal(0) = msg->pose.position.x;
         _data.goal(1) = msg->pose.position.y;
         _data.goal_received = true;
+
+        _rotate_to_goal = true;
     }
 
     bool ROSNavigationPlanner::isPathTheSame(const nav_msgs::Path::ConstPtr &msg)
@@ -496,6 +538,7 @@ namespace local_planner
         ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()).sleep();
 
         done_ = false;
+        _rotate_to_goal = false;
 
         _timeout_timer.start();
     }
