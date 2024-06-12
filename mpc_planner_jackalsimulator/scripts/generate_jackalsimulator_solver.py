@@ -106,10 +106,10 @@ def configuration_lmpcc(settings):
 
 settings = load_settings()
 
-model, modules = configuration_basic(settings)
+# model, modules = configuration_basic(settings)
 # model, modules = configuration_safe_horizon(settings)
 # model, modules = configuration_lmpcc(settings)
-# model, modules = configuration_tmpc(settings)
+model, modules = configuration_tmpc(settings)
 
 generate_solver(modules, model, settings)
 exit(0)

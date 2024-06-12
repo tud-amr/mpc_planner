@@ -219,7 +219,7 @@ def generate_parameter_cpp_code(settings, model):
     if settings["solver_settings"]["solver"] == "acados":  # Forward declare
         header_file.write("namespace MPCPlanner{\n\n")
         header_file.write("struct AcadosParameters;\n")
-    cpp_file.write("#include <mpc_planner_parameters.h>\n\n")
+    cpp_file.write("#include <mpc_planner_solver/mpc_planner_parameters.h>\n\n")
 
     if settings["solver_settings"]["solver"] == "acados":
         cpp_file.write("#include <mpc_planner_solver/solver_interface.h>\n")
@@ -418,6 +418,63 @@ def generate_ros2_rqtreconfigure(settings):
     rqt_header.write("};\n")
     rqt_header.write("#endif // __GENERATED_ROS2_RECONFIGURE_H\n")
     rqt_header.close()
+    print_success(" -> generated")
+
+
+def generate_solver_cmake(settings):
+    path = f"{get_package_path('mpc_planner_solver')}/solver.cmake"
+    print_path("Module CMake", path, end="", tab=True)
+    solver_cmake = open(path, "w")
+
+    if settings["solver_settings"]["solver"] == "acados":
+        solver_cmake.write("add_definitions(-DACADOS_SOLVER)\n")
+        solver_cmake.write('string(REPLACE ":" ";" LIBRARY_DIRS $ENV{LD_LIBRARY_PATH})\n')
+        solver_cmake.write("find_library(acados_LIBRARY libacados.so PATHS ${LIBRARY_DIRS})\n")
+        solver_cmake.write("find_library(blasfeo_LIBRARY libblasfeo.so PATHS ${LIBRARY_DIRS})\n")
+        solver_cmake.write("find_library(hpipm_LIBRARY libhpipm.so PATHS ${LIBRARY_DIRS})\n")
+
+        solver_cmake.write("# Get the acados path from the LD_LIBRARY_PATH\n")
+        solver_cmake.write("get_filename_component(acados_path ${acados_LIBRARY} DIRECTORY)\n")
+        solver_cmake.write("set(acados_path ${acados_path}/..)\n")
+        solver_cmake.write("set(acados_include_path ${acados_path}/include)\n")
+        solver_cmake.write("# Print acados_include_path\n")
+        solver_cmake.write("set(solver_LIBRARIES\n")
+        solver_cmake.write("    ${PROJECT_SOURCE_DIR}/acados/test/libacados_ocp_solver_Solver.so # Generated files\n")
+        solver_cmake.write("    ${acados_LIBRARY}\n")
+        solver_cmake.write("    ${blasfeo_LIBRARY}\n")
+        solver_cmake.write("    ${hpipm_LIBRARY}\n")
+        solver_cmake.write(")\n")
+        solver_cmake.write("set(solver_INCLUDE_DIRS\n")
+        solver_cmake.write("    acados/test # Generated files\n")
+        solver_cmake.write("    ${acados_include_path}\n")
+        solver_cmake.write("    ${acados_include_path}/blasfeo/include\n")
+        solver_cmake.write("    ${acados_include_path}/hpipm/include\n")
+        solver_cmake.write(")\n")
+        solver_cmake.write("set(solver_SOURCES\n")
+        solver_cmake.write("    src/acados_solver_interface.cpp\n")
+        solver_cmake.write(")\n")
+    else:
+        solver_cmake.write("set(solver_LIBRARIES\n")
+        solver_cmake.write("    ${PROJECT_SOURCE_DIR}/Solver/lib/libSolver.so\n")
+        solver_cmake.write(")\n")
+        solver_cmake.write("set(solver_INCLUDE_DIRS\n")
+        solver_cmake.write("    ${PROJECT_SOURCE_DIR}/Solver/include\n")
+        solver_cmake.write(")\n")
+        solver_cmake.write("set(solver_SOURCES\n")
+        solver_cmake.write("    src/forces_solver_interface.cpp\n")
+        solver_cmake.write("    Solver/include/mpc_planner_generated.cpp\n")
+        solver_cmake.write("    Solver/Solver_interface.c\n")
+        solver_cmake.write("    Solver/Solver_model.c\n")
+        solver_cmake.write(")\n")
+    solver_cmake.close()
+
+    path = f"{get_package_path('mpc_planner_solver')}/mpc_planner_solver-extras.cmake"
+    print_path("Module CMake", path, end="", tab=True)
+    extra_solver_cmake = open(path, "w")
+    if settings["solver_settings"]["solver"] == "acados":
+        extra_solver_cmake.write("add_definitions(-DACADOS_SOLVER)\n")
+    extra_solver_cmake.close()
+
     print_success(" -> generated")
 
 

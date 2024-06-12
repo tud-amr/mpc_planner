@@ -108,6 +108,8 @@ namespace MPCPlanner
             double nlp_res;
             double solvetime;
 
+            int qp_status;
+
             double pobj{0.}; // TODO
 
             AcadosInfo()
@@ -115,7 +117,7 @@ namespace MPCPlanner
                 min_time = 1e12;
             }
 
-            void print() const
+            void print(Solver_solver_capsule *acados_ocp_capsule) const
             {
                 LOG_HEADER("Solver Info");
                 LOG_VALUE("SQP iterations", sqp_iter);
@@ -123,6 +125,7 @@ namespace MPCPlanner
                 LOG_VALUE("KKT", kkt_norm_inf);
                 LOG_VALUE("Solve Time [ms]", solvetime * 1000.);
                 LOG_VALUE("NLP Residuals", nlp_res);
+                Solver_acados_print_stats(acados_ocp_capsule);
             }
         };
 
@@ -148,9 +151,9 @@ namespace MPCPlanner
                 d_print_exp_tran_mat(NU, SOLVER_N, utraj, NU);
             }
         };
+        Solver_solver_capsule *_acados_ocp_capsule;
 
     private:
-        Solver_solver_capsule *_acados_ocp_capsule;
         ocp_nlp_config *_nlp_config;
         ocp_nlp_dims *_nlp_dims;
         ocp_nlp_in *_nlp_in;

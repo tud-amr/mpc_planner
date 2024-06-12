@@ -87,10 +87,11 @@ def generated_include_file(settings):
 
 
 def generated_parameter_include_file(settings):
-    include_path = os.path.join(solver_path(settings), f"include/")
+    include_path = os.path.join(get_package_path("mpc_planner_solver"), f"include/mpc_planner_solver/")
+    src_path = os.path.join(get_package_path("mpc_planner_solver"), f"src/")
     os.makedirs(include_path, exist_ok=True)
     print_path("Generated Parameter Header", f"{include_path}mpc_planner_parameters.h/cpp", tab=True, end="")
-    return f"{include_path}mpc_planner_parameters.h", f"{include_path}mpc_planner_parameters.cpp"
+    return f"{include_path}mpc_planner_parameters.h", f"{src_path}mpc_planner_parameters.cpp"
 
 
 def solver_name(settings):

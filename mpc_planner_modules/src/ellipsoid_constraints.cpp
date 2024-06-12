@@ -32,12 +32,28 @@ namespace MPCPlanner
   {
     (void)module_data;
 
-    if (k == 1)
-      LOG_MARK("EllipsoidConstraints::setParameters");
-
     setSolverParameterEgoDiscRadius(k, _solver->_params, _robot_radius);
     for (int d = 0; d < _n_discs; d++)
       setSolverParameterEgoDiscOffset(k, _solver->_params, data.robot_area[d].offset, d);
+
+    if (k == 0) // Dummies
+    {
+      // LOG_INFO("Setting parameters for k = 0");
+      for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
+      {
+        setSolverParameterEllipsoidObstX(0, _solver->_params, -10., i);
+        setSolverParameterEllipsoidObstY(0, _solver->_params, -10., i);
+        setSolverParameterEllipsoidObstPsi(0, _solver->_params, 0., i);
+        setSolverParameterEllipsoidObstR(0, _solver->_params, 0.1, i);
+        setSolverParameterEllipsoidObstMajor(0, _solver->_params, 0., i);
+        setSolverParameterEllipsoidObstMinor(0, _solver->_params, 0., i);
+        setSolverParameterEllipsoidObstChi(0, _solver->_params, 1., i);
+      }
+      return;
+    }
+
+    if (k == 1)
+      LOG_MARK("EllipsoidConstraints::setParameters");
 
     for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
     {

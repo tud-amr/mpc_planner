@@ -151,6 +151,20 @@ namespace MPCPlanner
   {
     (void)module_data;
     int constraint_counter = 0; // Necessary for now to map the disc and obstacle index to a single index
+
+    if (k == 0)
+    {
+      for (int i = 0; i < _max_obstacles + _n_other_halfspaces; i++)
+      {
+
+        setSolverParameterLinConstraintA1(0, _solver->_params, 1., constraint_counter);
+        setSolverParameterLinConstraintA2(0, _solver->_params, 0., constraint_counter);
+        setSolverParameterLinConstraintB(0, _solver->_params, 50., constraint_counter);
+        constraint_counter++;
+      }
+      return;
+    }
+
     for (int d = 0; d < _n_discs; d++)
     {
       if (!_use_guidance)

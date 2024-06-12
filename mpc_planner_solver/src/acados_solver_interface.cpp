@@ -66,6 +66,8 @@ namespace MPCPlanner
     {
         _params = rhs._params;
         _output = rhs._output;
+        // *_acados_ocp_capsule = *rhs._acados_ocp_capsule;
+        Solver_acados_reset(_acados_ocp_capsule, 1);
 
         return *this;
     }
@@ -93,8 +95,6 @@ namespace MPCPlanner
         {
             if (k == N)
                 Solver_acados_update_params(_acados_ocp_capsule, k, &_params.all_parameters[(N - 1) * SOLVER_NP], SOLVER_NP); // Insert the second to last set of parameters
-            else if (k == 0)
-                Solver_acados_update_params(_acados_ocp_capsule, k, &_params.all_parameters[SOLVER_NP], SOLVER_NP); // Insert the second to last set of parameters
             else
                 Solver_acados_update_params(_acados_ocp_capsule, k, &_params.all_parameters[k * SOLVER_NP], SOLVER_NP);
         }
@@ -102,13 +102,14 @@ namespace MPCPlanner
         _info = AcadosInfo();
 
         // solve ocp in loop
-        int rti_phase = 0;
+        int rti_phase = 0; // 1 = prep, 2 = feedback, 0 = both
 
         // bool warmstart_qp = true;
         // ocp_nlp_solver_opts_set(_nlp_config, _nlp_opts, "warm_start_first_qp", &warmstart_qp);
         // ocp_nlp_solver_opts_update(_nlp_config, _nlp_dims, _nlp_opts);
-        ocp_nlp_solver_reset_qp_memory(_nlp_solver, _nlp_in, _nlp_out);
+
         ocp_nlp_precompute(_nlp_solver, _nlp_in, _nlp_out);
+
         for (int iteration = 0; iteration < _num_iterations; iteration++)
         {
             ocp_nlp_solver_opts_set(_nlp_config, _nlp_opts, "rti_phase", &rti_phase);
@@ -117,15 +118,25 @@ namespace MPCPlanner
             ocp_nlp_get(_nlp_config, _nlp_solver, "time_tot", &_info.elapsed_time);
             _info.solvetime += _info.elapsed_time;
             _info.min_time = MIN(_info.elapsed_time, _info.min_time);
+
+            ocp_nlp_get(_nlp_config, _nlp_solver, "qp_status", &_info.qp_status);
+
+            if (_info.qp_status != 0)
+                break;
         }
 
         ocp_nlp_get(_nlp_config, _nlp_solver, "nlp_res", &_info.nlp_res);
 
+        // Compute and retrieve the cost
+        ocp_nlp_eval_cost(_nlp_solver, _nlp_in, _nlp_out);
+        ocp_nlp_get(_nlp_config, _nlp_solver, "cost_value", &_info.pobj);
+
         // Get output
         for (int k = 0; k <= _nlp_dims->N; k++)
-            ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, k, "x", &_output.xtraj[k * NX]);
+            ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, k, "x", &_output.xtraj[k * nx]);
         for (int k = 0; k < _nlp_dims->N; k++)
-            ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, k, "u", &_output.utraj[k * NU]);
+            ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, k, "u", &_output.utraj[k * nu]);
+
         // _output.print();
 
         if (status == ACADOS_SUCCESS)
@@ -134,18 +145,20 @@ namespace MPCPlanner
         }
         else
         {
-            LOG_MARK("Solver_acados_solve() failed with status " << status);
+            Solver_acados_reset(_acados_ocp_capsule, 1);
+            ocp_nlp_solver_reset_qp_memory(_nlp_solver, _nlp_in, _nlp_out);
+
+            LOG_WARN(explainExitFlag(status));
         }
 
         // Get INFO
         ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, 0, "kkt_norm_inf", &_info.kkt_norm_inf);
         ocp_nlp_get(_nlp_config, _nlp_solver, "sqp_iter", &_info.sqp_iter);
 
-        // Solver_acados_print_stats(_acados_ocp_capsule);
-        // _info.print();
+        // _info.print(_acados_ocp_capsule);
 
         // Map to FORCES output
-        if (status == 0 || status == 2) // Success (max iterations = success for now)
+        if (status == 0) // || status == 2) // Success (max iterations = success for now)
             status = 1;
         else if (status == 1)
             status = 0;
@@ -224,10 +237,10 @@ namespace MPCPlanner
     void Solver::loadWarmstart()
     {
         // Load from x0 into traj_x and traj_u
-        for (int i = 0; i < N; i++)
+        for (int k = 0; k < N; k++)
         {
-            ocp_nlp_out_set(_nlp_config, _nlp_dims, _nlp_out, i, "x", &_params.x0[nvar * i + nu]);
-            ocp_nlp_out_set(_nlp_config, _nlp_dims, _nlp_out, i, "u", &_params.x0[nvar * i]);
+            ocp_nlp_out_set(_nlp_config, _nlp_dims, _nlp_out, k, "x", &_params.x0[nvar * k + nu]);
+            ocp_nlp_out_set(_nlp_config, _nlp_dims, _nlp_out, k, "u", &_params.x0[nvar * k]);
         }
 
         ocp_nlp_out_set(_nlp_config, _nlp_dims, _nlp_out, N, "x", &_params.x0[nvar * N + nu]);
@@ -237,9 +250,15 @@ namespace MPCPlanner
     {
         for (int k = 0; k <= N; k++) // For all timesteps
         {
+            // LOG_HEADER(k);
             for (YAML::const_iterator it = _model_map.begin(); it != _model_map.end(); ++it) // For all inputs and states
             {
-                setEgoPrediction(k, it->first.as<std::string>(), initial_state.get(it->first.as<std::string>()));
+                if (_model_map[it->first.as<std::string>()][0].as<std::string>() == "x") // Set states to initial state
+                    setEgoPrediction(k, it->first.as<std::string>(), initial_state.get(it->first.as<std::string>()));
+                else
+                    setEgoPrediction(k, it->first.as<std::string>(), 0.);
+
+                // LOG_VALUE(it->first.as<std::string>(), getEgoPrediction(k, it->first.as<std::string>()));
             }
         }
     }
@@ -304,14 +323,26 @@ namespace MPCPlanner
             // [initial_state, x_1, x_2, ..., x_N-1, x_N]
             for (int k = 0; k <= N; k++) // For all timesteps
             {
+                // LOG_HEADER(k);
                 for (YAML::const_iterator it = _model_map.begin(); it != _model_map.end(); ++it) // For all inputs and states
                 {
                     if (k == 0) // Load the current state at k = 0
-                        setEgoPrediction(0, it->first.as<std::string>(), initial_state.get(it->first.as<std::string>()));
+                    {
+                        if (_model_map[it->first.as<std::string>()][0].as<std::string>() == "x") // Set states to initial state
+                            setEgoPrediction(0, it->first.as<std::string>(), initial_state.get(it->first.as<std::string>()));
+                        else // For inputs use the previous inputs
+                            setEgoPrediction(0, it->first.as<std::string>(), getOutput(0, it->first.as<std::string>()));
+                    }
                     else if (k == N)
+                    {
                         setEgoPrediction(N, it->first.as<std::string>(), getOutput(N - 1, it->first.as<std::string>()));
-                    else // use x_{k+1} to initialize x_{k} (note that both have the initial state)
+                    }
+                    else // use x_{k+1} to initialize x_{k}
+                    {
                         setEgoPrediction(k, it->first.as<std::string>(), getOutput(k, it->first.as<std::string>()));
+                    }
+
+                    // LOG_VALUE(it->first.as<std::string>(), getEgoPrediction(k, it->first.as<std::string>()));
                 }
             }
         }
@@ -343,9 +374,25 @@ namespace MPCPlanner
         case 3:
             return "Failure (minimum step size reached)";
         case 4:
-            return "Failure (QP Failure)";
+            break;
         default:
             return "Unknown exit code";
+        }
+
+        switch (_info.qp_status)
+        {
+        case 1:
+            return "QP Failure: No more information on QP failure";
+        case 2:
+            return "QP Failure: Max Iterations";
+        case 3:
+            return "QP Failure: Minimal Step Reached";
+        case 4:
+            return "QP Failure: NAN in solution";
+        case 5:
+            return "QP Failure: Inconsistent Equality Constraints";
+        default:
+            return "QP Failure: UNKNOWN";
         }
     }
 
