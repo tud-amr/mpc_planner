@@ -1,2 +1,2 @@
 [run]
-omit = */mpc_planner_modules/*
+omit = */mpc_planner_modules/*, */acados/*

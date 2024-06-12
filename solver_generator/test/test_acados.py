@@ -37,6 +37,7 @@ def solver_configuration(settings):
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
 
     modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
+
     modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
 
     modules.add_module(EllipsoidConstraintModule(settings))
@@ -55,4 +56,16 @@ def test_acados_solver_generation():
 
     model, modules = solver_configuration(settings)
 
-    generate_solver(modules, model, settings)
+    solver, simulator = generate_solver(modules, model, settings)
+    ocp = solver.acados_ocp
+    assert ocp.model.name == "Solver"
+    assert len(ocp.constraints.lh) == 8
+    assert len(ocp.constraints.uh) == 8
+
+    ocp_model = ocp.model
+
+    assert ocp_model.x.shape[0] == 5
+    assert ocp_model.u.shape[0] == 2
+    p = np.zeros((ocp_model.p.shape[0], 1))
+    z = np.zeros((ocp_model.x.shape[0] + ocp_model.u.shape[0], 1))
+    solver.get_cost()
