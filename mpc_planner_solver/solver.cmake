@@ -9,13 +9,13 @@ set(acados_path ${acados_path}/..)
 set(acados_include_path ${acados_path}/include)
 # Print acados_include_path
 set(solver_LIBRARIES
-    ${PROJECT_SOURCE_DIR}/acados/test/libacados_ocp_solver_Solver.so # Generated files
+    ${PROJECT_SOURCE_DIR}/acados/Solver/libacados_ocp_solver_Solver.so # Generated files
     ${acados_LIBRARY}
     ${blasfeo_LIBRARY}
     ${hpipm_LIBRARY}
 )
 set(solver_INCLUDE_DIRS
-    acados/test # Generated files
+    acados/Solver # Generated files
     ${acados_include_path}
     ${acados_include_path}/blasfeo/include
     ${acados_include_path}/hpipm/include

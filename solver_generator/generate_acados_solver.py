@@ -112,29 +112,30 @@ def generate_acados_solver(modules, settings, model, skip_solver_generation):
     ocp.constraints.uh = parse_constraint_bounds(constraint_upper_bounds(modules))
 
     # Slack for constraints
-    # add_constraint_slack = True
-    # value = 1.0e2  # 1.0e5
+    add_slack = False
+    if add_slack:
+        add_constraint_slack = True
+        value = 1.0e2  # 1.0e5
 
-    # ns = nx + nu
-    # if add_constraint_slack:
-    #     ns += nc
-    #     ocp.constraints.idxsh = np.array(range(nc))
-    #     # ocp.constraints.idxsh_e = np.array(range(nc))
+        ns = nx + nu
+        if add_constraint_slack:
+            ns += nc
+            ocp.constraints.idxsh = np.array(range(nc))
 
-    # ocp.constraints.idxsbx = np.array(range(nx))
-    # ocp.constraints.idxsbu = np.array(range(nu))
+        ocp.constraints.idxsbx = np.array(range(nx))
+        ocp.constraints.idxsbu = np.array(range(nu))
 
-    # Slack for state bounds
-    # ocp.cost.zl = value * np.ones((ns,))
-    # ocp.cost.zu = value * np.ones((ns,))
-    # ocp.cost.Zl = value * np.ones((ns,))
-    # ocp.cost.Zu = value * np.ones((ns,))
+        # Slack for state bounds
+        ocp.cost.zl = value * np.ones((ns,))
+        ocp.cost.zu = value * np.ones((ns,))
+        ocp.cost.Zl = value * np.ones((ns,))
+        ocp.cost.Zu = value * np.ones((ns,))
 
-    # ocp.constraints.idxsbx_e = np.array(range(nx))
-    # ocp.cost.zl_e = value * np.ones(ns)
-    # ocp.cost.zu_e = value * np.ones(ns)
-    # ocp.cost.Zu_e = value * np.ones(ns)
-    # ocp.cost.Zl_e = value * np.ones(ns)
+        ocp.constraints.idxsbx_e = np.array(range(nx))
+        ocp.cost.zl_e = value * np.ones(ns)
+        ocp.cost.zu_e = value * np.ones(ns)
+        ocp.cost.Zu_e = value * np.ones(ns)
+        ocp.cost.Zl_e = value * np.ones(ns)
 
     ocp.parameter_values = np.zeros(model_acados.p.size()[0])
 
@@ -172,7 +173,7 @@ def generate_acados_solver(modules, settings, model, skip_solver_generation):
     # ocp.solver_options.qp_solver.warm_start_first_qp = 0
 
     # code generation options
-    ocp.code_export_directory = f"{os.path.dirname(os.path.abspath(__file__))}/acados/test"
+    ocp.code_export_directory = f"{os.path.dirname(os.path.abspath(__file__))}/acados/{model_acados.name}"
     ocp.solver_options.print_level = 0
 
     # Generate the solver

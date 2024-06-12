@@ -148,7 +148,7 @@ namespace MPCPlanner
             Solver_acados_reset(_acados_ocp_capsule, 1);
             ocp_nlp_solver_reset_qp_memory(_nlp_solver, _nlp_in, _nlp_out);
 
-            LOG_WARN(explainExitFlag(status));
+            // LOG_WARN(explainExitFlag(status));
         }
 
         // Get INFO
