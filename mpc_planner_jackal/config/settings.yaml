@@ -1,6 +1,6 @@
 name: "jackal"
 N: 30
-integrator_step: 0.1
+integrator_step: 0.2
 n_discs: 1
 
 solver_settings:

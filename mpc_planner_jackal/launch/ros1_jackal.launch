@@ -7,7 +7,7 @@
   <!-- <arg name="roadmap" default="maps/mobile_robotics_lab/straight.xml"/> -->
   <arg name="roadmap" default="maps/mobile_robotics_lab/diagonal.xml"/>
 
-  <arg name="jackal_name" default="jackal1"/>
+  <arg name="jackal_name" default="jackal3"/>
 
   <rosparam command="load" file="$(find mpc_planner_jackal)/config/guidance_planner.yaml"/>
   <node pkg="mpc_planner_jackal" type="jackal_planner" name="jackal_planner" respawn="false" output="screen">
@@ -23,23 +23,14 @@
   </node>
 
   <!-- <include file="$(find vicon_util)/launch/spoof_vicon.launch">
-<<<<<<< HEAD
-      <arg name="topics" default="[jackal3, dynamic_object1, dynamic_object2, dynamic_object3, dynamic_object4, dynamic_object5, rectangle2x1_1]"/>
-=======
-      <arg name="topics" default="[jackal1, dynamic_object1, dynamic_object2, dynamic_object3, dynamic_object4, dynamic_object5, rectangle2x1_1]"/>
->>>>>>> main
+      <arg name="topics" default="[$(arg jackal_name), dynamic_object1, dynamic_object2, dynamic_object3, dynamic_object4, dynamic_object5, rectangle2x1_1]"/>
       <arg name="message_types" default="[geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped]"/>
   </include> -->
 
   <!-- Start the vicon bridge -->
 <include file="$(find vicon_bridge)/launch/vicon.launch">
-<<<<<<< HEAD
-      <arg name="object_names" value="[jackal3, dynamic_object1, dynamic_object2, dynamic_object3, dynamic_object4, dynamic_object5, rectangle2x1_1]"/>
-      <arg name="object_msg_types" default="[geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseStamped]"/>
-=======
       <arg name="object_names" value="[$(arg jackal_name), dynamic_object1, dynamic_object2, dynamic_object3, dynamic_object4, dynamic_object5, dingo1]"/>
       <arg name="object_msg_types" default="[geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/PoseWithCovarianceStamped]"/>
->>>>>>> main
       <arg name="object_frame_ids" default="[map, map, map, map, map, map, map]"/>
       <arg name="object_publish_topics" default="[/vicon/$(arg jackal_name), /vicon/dynamic_object1, /vicon/dynamic_object2, /vicon/dynamic_object3, /vicon/dynamic_object4, /vicon/dynamic_object5, /vicon/dingo1]"/>
       <arg name="object_frequency_divider" default="[2, 2, 2, 2, 2, 2, 2]"/>
@@ -49,8 +40,11 @@
   <include file="$(find vicon_util)/launch/bundle_obstacles.launch">
     <arg name="run_ekfs" value="true"/>
     <arg name="visualize_scene" value="true"/>
-    <arg name="robot_topic" value="jackal1"/>
-    <arg name="dynamic_object_topics" default="[$(arg jackal_name), dynamic_object1, dynamic_object2]"/>
+    <arg name="robot_topic" value="$(arg jackal_name)"/>
+    <!-- 5 Objects -->
+    <arg name="dynamic_object_topics" default="[$(arg jackal_name), dynamic_object1, dynamic_object2, dynamic_object3, dynamic_object4, dynamic_object5]"/>
+    <!-- 2 Objects -->
+    <!-- <arg name="dynamic_object_topics" default="[$(arg jackal_name), dynamic_object1, dynamic_object2]"/>  -->
     <arg name="dynamic_object_radius" default="0.4"/>
     <arg name="static_object_topics" default="[]"/>
     <arg name="static_object_radius" default="0.3"/>
