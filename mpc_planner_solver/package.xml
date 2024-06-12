@@ -7,13 +7,12 @@
   <maintainer email="groot.oscar.de@gmail.com">r2c1</maintainer>
   <license>TODO: License declaration</license>
 
-  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>catkin</buildtool_depend>
 
   <depend>mpc_planner_util</depend>
-
-  <test_depend>ament_cmake_gtest</test_depend>
+  <depend>decomp_util</depend>
 
   <export>
-    <build_type>ament_cmake</build_type>
+    <build_type>catkin</build_type>
   </export>
 </package>

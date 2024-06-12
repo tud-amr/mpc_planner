@@ -7,20 +7,26 @@
   <maintainer email="groot.oscar.de@gmail.com">r2c1</maintainer>
   <license>TODO: License declaration</license>
 
-  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>mpc_planner</build_depend>
-  <build_depend>mpc_planner_solver</build_depend>
-  <build_depend>mpc_planner_util</build_depend>
-  <build_depend>mpc_planner_types</build_depend>
-  <build_depend>ros_tools</build_depend>
+  <depend>roscpp</depend>
+  <depend>mpc_planner</depend>
+  <depend>mpc_planner_solver</depend>
+  <depend>mpc_planner_util</depend>
+  <depend>mpc_planner_types</depend>
+  <depend>mpc_planner_msgs</depend>
+  <depend>ros_tools</depend>
+  <depend>dynamic_reconfigure</depend>
 
-  <exec_depend>nav_msgs</exec_depend>
+  <depend>nav_msgs</depend>
 
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
+  <exec_depend>dingo_simulator</exec_depend>
+  <exec_depend>dingo_desktop</exec_depend>
+  <exec_depend>dingo</exec_depend>
+  <exec_depend>roadmap</exec_depend>
+  <exec_depend>pedestrian_simulator</exec_depend>
 
   <export>
-    <build_type>ament_cmake</build_type>
+    <build_type>catkin</build_type>
   </export>
 </package>
