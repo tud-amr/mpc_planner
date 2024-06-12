@@ -103,9 +103,6 @@ namespace MPCPlanner
                 {
                     for (auto &module : _modules)
                     {
-                        // if (k == 0 && module->type == ModuleType::CONSTRAINT)
-                        // continue;
-
                         module->setParameters(data, _module_data, k);
                     }
                 }

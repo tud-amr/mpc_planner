@@ -216,11 +216,10 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
 
         _planner->saveData(_state, _data);
     }
-    // if (output.success)
-    // {
+
     _planner->visualize(_state, _data);
     visualize();
-    // }
+
     LOG_DEBUG("============= End Loop =============");
 }
 

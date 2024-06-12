@@ -65,9 +65,11 @@ namespace MPCPlanner
     Solver &Solver::operator=(const Solver &rhs)
     {
         _params = rhs._params;
-        _output = rhs._output;
+        ocp_nlp_solver_reset_qp_memory(_nlp_solver, _nlp_in, _nlp_out);
+
+        // _output = rhs._output;
         // *_acados_ocp_capsule = *rhs._acados_ocp_capsule;
-        Solver_acados_reset(_acados_ocp_capsule, 1);
+        // Solver_acados_reset(_acados_ocp_capsule, 0);
 
         return *this;
     }
@@ -109,10 +111,10 @@ namespace MPCPlanner
         // ocp_nlp_solver_opts_update(_nlp_config, _nlp_dims, _nlp_opts);
 
         ocp_nlp_precompute(_nlp_solver, _nlp_in, _nlp_out);
-
+        ocp_nlp_solver_opts_set(_nlp_config, _nlp_opts, "rti_phase", &rti_phase);
         for (int iteration = 0; iteration < _num_iterations; iteration++)
         {
-            ocp_nlp_solver_opts_set(_nlp_config, _nlp_opts, "rti_phase", &rti_phase);
+
             status = Solver_acados_solve(_acados_ocp_capsule);
 
             ocp_nlp_get(_nlp_config, _nlp_solver, "time_tot", &_info.elapsed_time);
@@ -121,7 +123,7 @@ namespace MPCPlanner
 
             ocp_nlp_get(_nlp_config, _nlp_solver, "qp_status", &_info.qp_status);
 
-            if (_info.qp_status != 0)
+            if (status != ACADOS_SUCCESS && _info.qp_status != 0)
                 break;
         }
 
@@ -158,7 +160,7 @@ namespace MPCPlanner
         // _info.print(_acados_ocp_capsule);
 
         // Map to FORCES output
-        if (status == 0) // || status == 2) // Success (max iterations = success for now)
+        if (status == ACADOS_SUCCESS) // || status == 2) // Success
             status = 1;
         else if (status == 1)
             status = 0;

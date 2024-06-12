@@ -307,10 +307,10 @@ namespace MPCPlanner
             {
                 LOG_MARK("Planner [" << planner.id << "]: Loading guidance into the solver and constructing constraints");
 
-                // if (planner.existing_guidance)
-                // planner.local_solver->initializeWarmstart(state, shift_forward);
-                // else
-                initializeSolverWithGuidance(planner);
+                if (CONFIG["t-mpc"]["warmstart_with_mpc_solution"].as<bool>() && planner.existing_guidance)
+                    planner.local_solver->initializeWarmstart(state, shift_forward);
+                else
+                    initializeSolverWithGuidance(planner);
 
                 planner.guidance_constraints->update(state, data, module_data); // Updates linearization of constraints
                 planner.safety_constraints->update(state, data, module_data);   // Updates collision avoidance constraints

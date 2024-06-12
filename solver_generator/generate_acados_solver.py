@@ -141,13 +141,13 @@ def generate_acados_solver(modules, settings, model, skip_solver_generation):
 
     # horizon
     ocp.solver_options.tf = settings["N"] * settings["integrator_step"]
-    ocp.solver_options.tol = 1e-3  # 1e-2
+    ocp.solver_options.tol = 1e-6  # 1e-2
 
     # Solver options
     # integrator option
     ocp.solver_options.integrator_type = "ERK"
     ocp.solver_options.sim_method_num_stages = 4
-    ocp.solver_options.sim_method_num_steps = 1  # Number of divisions over the time horizon (ERK applied on each)
+    ocp.solver_options.sim_method_num_steps = 3  # Number of divisions over the time horizon (ERK applied on each)
 
     # nlp solver options
     ocp.solver_options.nlp_solver_type = settings["solver_settings"]["acados"]["solver_type"]
@@ -158,7 +158,7 @@ def generate_acados_solver(modules, settings, model, skip_solver_generation):
     ocp.solver_options.globalization = "MERIT_BACKTRACKING"
     # ocp.solver_options.globalization = "FIXED_STEP"
     # ocp.solver_options.eps_sufficient_descent = 1e-1
-    ocp.solver_options.qp_tol = 1e-5  # Important! (1e-3)
+    ocp.solver_options.qp_tol = 1e-6  # Important! (1e-3)
 
     # qp solver options
     # Full Condensing: Suitable for small to medium-sized systems, leading to a dense QP with only control inputs as decision variables.
