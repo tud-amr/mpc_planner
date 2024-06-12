@@ -26,6 +26,9 @@ namespace MPCPlanner
     (void)state;
     (void)data;
     (void)module_data;
+
+    _dummy_x = state.get("x") + 50;
+    _dummy_y = state.get("y") + 50;
   }
 
   void EllipsoidConstraints::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
@@ -41,8 +44,8 @@ namespace MPCPlanner
       // LOG_INFO("Setting parameters for k = 0");
       for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
       {
-        setSolverParameterEllipsoidObstX(0, _solver->_params, -10., i);
-        setSolverParameterEllipsoidObstY(0, _solver->_params, -10., i);
+        setSolverParameterEllipsoidObstX(0, _solver->_params, _dummy_x, i);
+        setSolverParameterEllipsoidObstY(0, _solver->_params, _dummy_y, i);
         setSolverParameterEllipsoidObstPsi(0, _solver->_params, 0., i);
         setSolverParameterEllipsoidObstR(0, _solver->_params, 0.1, i);
         setSolverParameterEllipsoidObstMajor(0, _solver->_params, 0., i);

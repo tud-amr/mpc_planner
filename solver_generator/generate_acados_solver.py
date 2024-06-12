@@ -158,7 +158,7 @@ def generate_acados_solver(modules, settings, model, skip_solver_generation):
     ocp.solver_options.globalization = "MERIT_BACKTRACKING"
     # ocp.solver_options.globalization = "FIXED_STEP"
     # ocp.solver_options.eps_sufficient_descent = 1e-1
-    ocp.solver_options.qp_tol = 1e-3  # Important! (1e-3)
+    ocp.solver_options.qp_tol = 1e-5  # Important! (1e-3)
 
     # qp solver options
     # Full Condensing: Suitable for small to medium-sized systems, leading to a dense QP with only control inputs as decision variables.

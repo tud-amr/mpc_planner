@@ -157,9 +157,9 @@ namespace MPCPlanner
       for (int i = 0; i < _max_obstacles + _n_other_halfspaces; i++)
       {
 
-        setSolverParameterLinConstraintA1(0, _solver->_params, 1., constraint_counter);
-        setSolverParameterLinConstraintA2(0, _solver->_params, 0., constraint_counter);
-        setSolverParameterLinConstraintB(0, _solver->_params, 50., constraint_counter);
+        setSolverParameterLinConstraintA1(0, _solver->_params, _dummy_a1, constraint_counter);
+        setSolverParameterLinConstraintA2(0, _solver->_params, _dummy_a2, constraint_counter);
+        setSolverParameterLinConstraintB(0, _solver->_params, _dummy_b, constraint_counter);
         constraint_counter++;
       }
       return;
