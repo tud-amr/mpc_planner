@@ -43,6 +43,15 @@ def load_settings(setting_file_name="settings"):
     return settings
 
 
+def load_test_settings(setting_file_name="settings"):
+    path = f"{get_package_path('mpc_planner_jackalsimulator')}/config/{setting_file_name}.yaml"
+    print_path("Settings", path, end="")
+    with open(path, "r") as stream:
+        settings = yaml.safe_load(stream)
+    print_success(f" -> loaded")
+    return settings
+
+
 def default_solver_path(settings):
     return os.path.join(os.getcwd(), f"{solver_name(settings)}")
 
