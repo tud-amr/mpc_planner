@@ -78,7 +78,6 @@ jobs:
           cmake -DACADOS_WITH_QPOASES=ON ..
           make install -j4
           cd ..
-          make shared_library
           cd bin
           wget https://github.com/acados/tera_renderer/releases/download/v0.0.34/t_renderer-v0.0.34-linux
           mv t_renderer-v0.0.34-linux t_renderer
