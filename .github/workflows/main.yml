@@ -14,7 +14,10 @@ jobs:
   basic:
     runs-on: ubuntu-20.04
     permissions: write-all
-
+    env:
+      LD_LIBRARY_PATH: /home/runner/work/mpc_planner/mpc_planner/acados/lib
+      ACADOS_SOURCE_DIR: /home/runner/work/mpc_planner/mpc_planner/acados
+      
     steps:
       #----------------------------------------------
       #       check-out repo and set-up python
@@ -45,6 +48,13 @@ jobs:
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      - name: Cache Acados dependencies
+        id: cached-acados-dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            acados/
+          key: acados-${{ runner.os }}-${{ hashFiles('/home/runner/work/mpc_planner/mpc_planner/acados/build/Makefile') }}
 
       #----------------------------------------------
       # install dependencies if cache does not exist
@@ -57,6 +67,25 @@ jobs:
       #----------------------------------------------
       - name: Install library
         run: poetry install --no-interaction --no-root
+      - name: Clone Acados repository
+        if: steps.cached-acados-dependencies.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/acados/acados.git
+          cd acados
+          git submodule update --recursive --init
+          mkdir -p build
+          cd build
+          cmake -DACADOS_WITH_QPOASES=ON ..
+          make install -j4
+          cd ..
+          make shared_library
+          cd bin
+          wget https://github.com/acados/tera_renderer/releases/download/v0.0.34/t_renderer-v0.0.34-linux
+          mv t_renderer-v0.0.34-linux t_renderer
+          chmod +x t_renderer
+      - name: Link Acados and Poetry
+        run: |
+          poetry add -e /home/runner/work/mpc_planner/mpc_planner/acados/interfaces/acados_template
 
       #----------------------------------------------
       #              run test suite
