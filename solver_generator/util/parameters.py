@@ -39,6 +39,10 @@ class Parameters:
             add_to_rqt_reconfigure (bool, optional): Whether to add the parameter to the RQT Reconfigure. Defaults to False.
             rqt_config_name (function, optional): A function that returns the name of the parameter in CONFIG for the parameter in RQT Reconfigure. Defaults to lambda p: f'["weights"]["{p}"]'.
         """
+
+        if parameter in self._params.keys():
+            return
+
         self._params[parameter] = copy.deepcopy(self._param_idx)
         if bundle_name is None:
             bundle_name = parameter
@@ -69,7 +73,7 @@ class Parameters:
         map["num parameters"] = self._param_idx
         write_to_yaml(file_path, self._params)
 
-    def get_p(self):
+    def get_p(self) -> float:
         return self._p
 
     def get(self, parameter):

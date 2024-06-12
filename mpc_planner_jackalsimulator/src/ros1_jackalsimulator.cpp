@@ -142,8 +142,8 @@ void JackalPlanner::startEnvironment()
 
 bool JackalPlanner::objectiveReached()
 {
-    // return _state.get("x") > 25.; //    Straight
-    return RosTools::distance(_state.getPos(), Eigen::Vector2d(24., 24.)) < 4.0; // Diagonal
+    return _state.get("x") > 25.; //    Straight
+    // return RosTools::distance(_state.getPos(), Eigen::Vector2d(24., 24.)) < 4.0; // Diagonal
     // return RosTools::distance(_state.getPos(), Eigen::Vector2d(_data.reference_path.x.back(), _data.reference_path.y.back())) < 4.0; // Diagonal
 }
 
@@ -216,11 +216,11 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
 
         _planner->saveData(_state, _data);
     }
-    if (output.success)
-    {
-        _planner->visualize(_state, _data);
-        visualize();
-    }
+    // if (output.success)
+    // {
+    _planner->visualize(_state, _data);
+    visualize();
+    // }
     LOG_DEBUG("============= End Loop =============");
 }
 

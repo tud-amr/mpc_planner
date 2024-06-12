@@ -103,13 +103,17 @@ namespace MPCPlanner
                 {
                     for (auto &module : _modules)
                     {
-                        if (k == 0 && module->type == ModuleType::CONSTRAINT)
-                            continue;
+                        // if (k == 0 && module->type == ModuleType::CONSTRAINT)
+                        // continue;
 
                         module->setParameters(data, _module_data, k);
                     }
                 }
             }
+
+            _warmstart = Trajectory();
+            for (int k = 1; k < _solver->N; k++)
+                _warmstart.add(_solver->getEgoPrediction(k, "x"), _solver->getEgoPrediction(k, "y"));
 
             _solver->loadWarmstart();
 
@@ -182,6 +186,9 @@ namespace MPCPlanner
             module->visualize(data, _module_data);
 
         visualizeTrajectory(_output.trajectory, "planned_trajectory", true, 0.2);
+
+        if (CONFIG["debug_visuals"].as<bool>())
+            visualizeTrajectory(_warmstart, "warmstart_trajectory", true, 0.2);
 
         visualizeObstacles(data.dynamic_obstacles, "obstacles", true, 1.0);
         visualizeObstaclePredictions(data.dynamic_obstacles, "obstacle_predictions", true);

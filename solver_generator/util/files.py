@@ -43,12 +43,29 @@ def load_settings(setting_file_name="settings"):
     return settings
 
 
+def load_test_settings(setting_file_name="settings"):
+    path = f"{get_package_path('mpc_planner_jackalsimulator')}/config/{setting_file_name}.yaml"
+    print_path("Settings", path, end="")
+    with open(path, "r") as stream:
+        settings = yaml.safe_load(stream)
+    print_success(f" -> loaded")
+    return settings
+
+
 def default_solver_path(settings):
     return os.path.join(os.getcwd(), f"{solver_name(settings)}")
 
 
 def solver_path(settings):
     return os.path.join(get_solver_package_path(), f"{solver_name(settings)}")
+
+
+def default_acados_solver_path(settings):
+    return os.path.join(get_package_path("solver_generator"), f"acados")
+
+
+def acados_solver_path(settings):
+    return os.path.join(get_solver_package_path(), f"acados")
 
 
 def parameter_map_path():
@@ -76,6 +93,14 @@ def generated_include_file(settings):
     os.makedirs(include_path, exist_ok=True)
     print_path("Generated Header", f"{include_path}mpc_planner_generated.h/cpp", tab=True, end="")
     return f"{include_path}mpc_planner_generated.h", f"{include_path}mpc_planner_generated.cpp"
+
+
+def generated_parameter_include_file(settings):
+    include_path = os.path.join(get_package_path("mpc_planner_solver"), f"include/mpc_planner_solver/")
+    src_path = os.path.join(get_package_path("mpc_planner_solver"), f"src/")
+    os.makedirs(include_path, exist_ok=True)
+    print_path("Generated Parameter Header", f"{include_path}mpc_planner_parameters.h/cpp", tab=True, end="")
+    return f"{include_path}mpc_planner_parameters.h", f"{src_path}mpc_planner_parameters.cpp"
 
 
 def solver_name(settings):

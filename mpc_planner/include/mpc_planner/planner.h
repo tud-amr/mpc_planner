@@ -58,6 +58,8 @@ namespace MPCPlanner
         std::shared_ptr<ExperimentUtil> _experiment_util;
         PlannerOutput _output;
 
+        Trajectory _warmstart;
+
         ModuleData _module_data;
 
         std::unique_ptr<RosTools::Timer> _startup_timer;

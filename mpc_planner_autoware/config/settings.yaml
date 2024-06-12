@@ -53,11 +53,17 @@ road:
 shift_previous_solution_forward: false # Was true
 
 contouring:
+<<<<<<< HEAD
+  num_segments: 6
+  preview: 2.0 # [s], use 0.0 to disable preview
+  add_road_constraints: true
+=======
   use_ca_mpc: true
   num_segments: 8 #6
   preview: 0.0 # [s], use 0.0 to disable preview
   use_map_bounds: true # Autoware only
   add_road_constraints: false
+>>>>>>> main
 
 t-mpc:
   use_t-mpc++: true

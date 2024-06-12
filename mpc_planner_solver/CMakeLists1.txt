@@ -3,10 +3,6 @@ project(mpc_planner_solver)
 
 add_compile_options(-std=c++17)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-parameter)
-endif()
-
 set(DEPENDENCIES
   mpc_planner_util
 )
@@ -15,30 +11,35 @@ find_package(catkin REQUIRED COMPONENTS
   ${DEPENDENCIES}
 )
 
+include(solver.cmake)
+
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}
-  INCLUDE_DIRS include include/${PROJECT_NAME} Solver/include
-  LIBRARIES ${PROJECT_NAME}
+  INCLUDE_DIRS
+  include
+  include/${PROJECT_NAME}
+  ${solver_INCLUDE_DIRS}
+  LIBRARIES
+  ${PROJECT_NAME}
+  ${solver_LIBRARIES}
+  CFG_EXTRAS ${PROJECT_SOURCE_DIR}/mpc_planner_solver-extras.cmake # Exports definitions
 )
 
 include_directories(
   include
-  Solver/include
+  ${solver_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
 )
 
 add_library(${PROJECT_NAME} SHARED
-  src/solver_interface.cpp
+  src/mpc_planner_parameters.cpp
   src/state.cpp
-  Solver/Solver_interface.c
-  Solver/Solver_model.c
-  Solver/include/mpc_planner_generated.cpp
+  ${solver_SOURCES}
 )
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
-  ${PROJECT_SOURCE_DIR}/Solver/lib/libSolver.so
+  ${solver_LIBRARIES}
 )
 
 add_definitions(-DMPC_PLANNER_ROS)

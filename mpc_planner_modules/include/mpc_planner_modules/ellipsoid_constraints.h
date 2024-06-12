@@ -23,6 +23,8 @@ namespace MPCPlanner
   private:
     double _robot_radius, _risk;
     int _n_discs;
+
+    double _dummy_x{50.}, _dummy_y{50.};
   };
 }
 #endif // __ELLIPSOID_CONSTRAINTS_H_

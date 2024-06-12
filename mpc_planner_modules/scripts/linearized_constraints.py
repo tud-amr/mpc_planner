@@ -3,6 +3,7 @@ Linearized constraints (w.r.t to the vector from robot to obstacle)
 """
 
 import numpy as np
+import casadi as cd
 
 import sys
 import os
@@ -22,18 +23,19 @@ class LinearizedConstraintModule(ConstraintModule):
         self.module_name = "LinearizedConstraints"  # c++ name of the module
         self.import_name = "linearized_constraints.h"
 
-        self.constraints.append(LinearConstraints(n_discs=settings["n_discs"], n_constraints=settings["max_obstacles"]))
+        self.constraints.append(LinearConstraints(n_discs=settings["n_discs"], max_obstacles=settings["max_obstacles"], use_slack=False))
         self.description = "Linearized dynamic collision avoidance constraints"
 
 
 # Constraints of the form Ax <= b (+ slack)
 class LinearConstraints:
 
-    def __init__(self, n_discs, max_obstacles):
+    def __init__(self, n_discs, max_obstacles, use_slack=False):
         self.n_discs = n_discs
         self.max_obstacles = max_obstacles
         self.n_constraints = max_obstacles * n_discs
         self.nh = self.n_constraints
+        self.use_slack = use_slack
 
     def define_parameters(self, params):
 
@@ -69,6 +71,14 @@ class LinearConstraints:
         pos = np.array([pos_x, pos_y])
         psi = model.get("psi")
 
+        try:
+            if self.use_slack:
+                slack = model.get("slack")
+            else:
+                slack = 0.0
+        except:
+            slack = 0.0
+
         rotation_car = rotation_matrix(psi)
         for disc_it in range(self.n_discs):
             disc_x = params.get(f"ego_disc_{disc_it}_offset")
@@ -80,6 +90,6 @@ class LinearConstraints:
                 a2 = params.get(self.constraint_name(index, disc_it) + "_a2")
                 b = params.get(self.constraint_name(index, disc_it) + "_b")
 
-                constraints.append(a1 * disc_pos[0] + a2 * disc_pos[1] - b)
+                constraints.append(a1 * disc_pos[0] + a2 * disc_pos[1] - (b + slack))
 
         return constraints

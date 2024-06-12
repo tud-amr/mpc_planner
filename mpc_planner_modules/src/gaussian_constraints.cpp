@@ -1,6 +1,6 @@
 #include "mpc_planner_modules/gaussian_constraints.h"
 
-#include <mpc_planner_generated.h>
+#include <mpc_planner_parameters.h>
 
 #include <mpc_planner_util/parameters.h>
 
@@ -30,9 +30,9 @@ namespace MPCPlanner
   {
     (void)module_data;
 
-    setForcesParameterEgoDiscRadius(k, _solver->_params, CONFIG["robot_radius"].as<double>());
+    setSolverParameterEgoDiscRadius(k, _solver->_params, CONFIG["robot_radius"].as<double>());
     for (int d = 0; d < CONFIG["n_discs"].as<int>(); d++)
-      setForcesParameterEgoDiscOffset(k, _solver->_params, data.robot_area[d].offset, d);
+      setSolverParameterEgoDiscOffset(k, _solver->_params, data.robot_area[d].offset, d);
 
     std::vector<DynamicObstacle> copied_obstacles = data.dynamic_obstacles;
 
@@ -42,21 +42,21 @@ namespace MPCPlanner
 
       if (obstacle.prediction.type == PredictionType::GAUSSIAN)
       {
-        setForcesParameterGaussianObstX(k, _solver->_params, obstacle.prediction.modes[0][k - 1].position(0), i);
-        setForcesParameterGaussianObstY(k, _solver->_params, obstacle.prediction.modes[0][k - 1].position(1), i);
+        setSolverParameterGaussianObstX(k, _solver->_params, obstacle.prediction.modes[0][k - 1].position(0), i);
+        setSolverParameterGaussianObstY(k, _solver->_params, obstacle.prediction.modes[0][k - 1].position(1), i);
 
         if (obstacle.type == ObstacleType::DYNAMIC)
         {
-          setForcesParameterGaussianObstMajor(k, _solver->_params, obstacle.prediction.modes[0][k - 1].major_radius, i);
-          setForcesParameterGaussianObstMinor(k, _solver->_params, obstacle.prediction.modes[0][k - 1].minor_radius, i);
+          setSolverParameterGaussianObstMajor(k, _solver->_params, obstacle.prediction.modes[0][k - 1].major_radius, i);
+          setSolverParameterGaussianObstMinor(k, _solver->_params, obstacle.prediction.modes[0][k - 1].minor_radius, i);
         }
         else // Static obstacles have no uncertainty
         {
-          setForcesParameterGaussianObstMajor(k, _solver->_params, 0.001, i);
-          setForcesParameterGaussianObstMinor(k, _solver->_params, 0.001, i);
+          setSolverParameterGaussianObstMajor(k, _solver->_params, 0.001, i);
+          setSolverParameterGaussianObstMinor(k, _solver->_params, 0.001, i);
         }
-        setForcesParameterGaussianObstRisk(k, _solver->_params, CONFIG["probabilistic"]["risk"].as<double>(), i);
-        setForcesParameterGaussianObstR(k, _solver->_params, CONFIG["obstacle_radius"].as<double>(), i);
+        setSolverParameterGaussianObstRisk(k, _solver->_params, CONFIG["probabilistic"]["risk"].as<double>(), i);
+        setSolverParameterGaussianObstR(k, _solver->_params, CONFIG["obstacle_radius"].as<double>(), i);
       }
     }
   }

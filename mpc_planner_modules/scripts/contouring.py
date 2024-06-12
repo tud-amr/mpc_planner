@@ -11,6 +11,7 @@ from control_modules import ObjectiveModule, Objective
 from spline import Spline, Spline2D
 from util.math import haar_difference_without_abs
 
+
 def get_preview_state(model, settings, time_ahead):
     # Integrate the trajectory to obtain the preview point
     copied_model = copy.deepcopy(model)
@@ -49,7 +50,7 @@ class ContouringObjective:
 
         params.add("terminal_angle", add_to_rqt_reconfigure=True)
         params.add("terminal_contouring", add_to_rqt_reconfigure=True)
-    
+
         if self.enable_preview:
             params.add("preview", add_to_rqt_reconfigure=True)
 
@@ -92,7 +93,7 @@ class ContouringObjective:
         path_dx_normalized, path_dy_normalized = path.deriv_normalized(s)
 
         contour_error = path_dy_normalized * (pos_x - path_x) - path_dx_normalized * (pos_y - path_y)
-        # contour_error_squared = (pos_x - path_x) **2 + (pos_y - path_y) ** 2 
+        # contour_error_squared = (pos_x - path_x) **2 + (pos_y - path_y) ** 2
 
         cost += contour_weight * contour_error**2
 
@@ -104,7 +105,7 @@ class ContouringObjective:
             lag_error = path_dx_normalized * (pos_x - path_x) + path_dy_normalized * (pos_y - path_y)
 
             cost += lag_weight * lag_error**2
-            cost += velocity_weight * (v - reference_velocity)**2
+            cost += velocity_weight * (v - reference_velocity) ** 2
             cost += contour_weight * contour_error**2
         else:
             # CA-MPC
@@ -129,15 +130,15 @@ class ContouringObjective:
             # # Path velocity
             # s_dot = R * vt * ((R - contour_error - vn_t) + vn_t) / ((R - contour_error - vn_t)**2 + (vt_t)**2)
 
-            # Lorenzo's equations        
-            path_ddx, path_ddy = path.deriv2(s) 
-            projection_ratio = 1.0 / (1.0 - ((pos_x - path_x) * path_ddx  + (pos_y - path_y) * path_ddy))
+            # Lorenzo's equations
+            path_ddx, path_ddy = path.deriv2(s)
+            projection_ratio = 1.0 / (1.0 - ((pos_x - path_x) * path_ddx + (pos_y - path_y) * path_ddy))
             s_dot = v * (cd.cos(psi) * path_dx_normalized + cd.sin(psi) * path_dy_normalized) * projection_ratio
             # Path projection is unnecessary with CA-MPC
-            contour_error_squared = (pos_x - path_x)**2 + (pos_y - path_y)**2
+            contour_error_squared = (pos_x - path_x) ** 2 + (pos_y - path_y) ** 2
 
             cost += contour_weight * contour_error_squared
-            cost += velocity_weight * (s_dot - reference_velocity)**2 # Penalize its tracking performance
+            cost += velocity_weight * (s_dot - reference_velocity) ** 2  # Penalize its tracking performance
 
         # Terminal cost
         if True and stage_idx == settings["N"] - 1:
@@ -157,8 +158,7 @@ class ContouringObjective:
                 cost += terminal_contouring_mp * contour_weight * contour_error**2
             else:
                 cost += terminal_contouring_mp * contour_weight * contour_error_squared
-                cost += terminal_contouring_mp * velocity_weight * (s_dot - reference_velocity)**2
-
+                cost += terminal_contouring_mp * velocity_weight * (s_dot - reference_velocity) ** 2
 
         return cost
 
@@ -178,6 +178,7 @@ class ContouringModule(ObjectiveModule):
         self.objectives = []
         self.objectives.append(ContouringObjective(settings, num_segments, preview, use_ca_mpc))
 
+
 # Unused preview cost
 # if self.enable_preview and stage_idx == settings["N"] - 1:
 #     print(f"Adding preview cost at T = {self.preview} ahead")
@@ -190,7 +191,7 @@ class ContouringModule(ObjectiveModule):
 #     preview_path_dx_normalized, preview_path_dy_normalized = preview_path.deriv_normalized(self.preview)
 
 #     preview_contour_error = preview_path_dy_normalized * (preview_pos_x - preview_path_x) - \
-#     preview_path_dx_normalized * (preview_pos_y - preview_path_y)           
+#     preview_path_dx_normalized * (preview_pos_y - preview_path_y)
 
 #     # We use the existing weights here to sort of scale the contribution w.r.t. the regular contouring cost
 #     cost += preview_weight * contour_weight * preview_contour_error**2

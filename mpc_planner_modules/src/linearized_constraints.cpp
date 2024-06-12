@@ -1,6 +1,6 @@
 #include "mpc_planner_modules/linearized_constraints.h"
 
-#include <mpc_planner_generated.h>
+#include <mpc_planner_parameters.h>
 
 #include <mpc_planner_util/parameters.h>
 #include <mpc_planner_util/data_visualization.h>
@@ -151,24 +151,38 @@ namespace MPCPlanner
   {
     (void)module_data;
     int constraint_counter = 0; // Necessary for now to map the disc and obstacle index to a single index
+
+    if (k == 0)
+    {
+      for (int i = 0; i < _max_obstacles + _n_other_halfspaces; i++)
+      {
+
+        setSolverParameterLinConstraintA1(0, _solver->_params, _dummy_a1, constraint_counter);
+        setSolverParameterLinConstraintA2(0, _solver->_params, _dummy_a2, constraint_counter);
+        setSolverParameterLinConstraintB(0, _solver->_params, _dummy_b, constraint_counter);
+        constraint_counter++;
+      }
+      return;
+    }
+
     for (int d = 0; d < _n_discs; d++)
     {
       if (!_use_guidance)
-        setForcesParameterEgoDiscOffset(k, _solver->_params, data.robot_area[d].offset, d);
+        setSolverParameterEgoDiscOffset(k, _solver->_params, data.robot_area[d].offset, d);
 
       for (size_t i = 0; i < data.dynamic_obstacles.size() + _n_other_halfspaces; i++)
       {
-        setForcesParameterLinConstraintA1(k, _solver->_params, _a1[d][k](i), constraint_counter);
-        setForcesParameterLinConstraintA2(k, _solver->_params, _a2[d][k](i), constraint_counter);
-        setForcesParameterLinConstraintB(k, _solver->_params, _b[d][k](i), constraint_counter);
+        setSolverParameterLinConstraintA1(k, _solver->_params, _a1[d][k](i), constraint_counter);
+        setSolverParameterLinConstraintA2(k, _solver->_params, _a2[d][k](i), constraint_counter);
+        setSolverParameterLinConstraintB(k, _solver->_params, _b[d][k](i), constraint_counter);
         constraint_counter++;
       }
 
       for (int i = data.dynamic_obstacles.size() + _n_other_halfspaces; i < _max_obstacles + _n_other_halfspaces; i++)
       {
-        setForcesParameterLinConstraintA1(k, _solver->_params, _dummy_a1, constraint_counter);
-        setForcesParameterLinConstraintA2(k, _solver->_params, _dummy_a2, constraint_counter);
-        setForcesParameterLinConstraintB(k, _solver->_params, _dummy_b, constraint_counter);
+        setSolverParameterLinConstraintA1(k, _solver->_params, _dummy_a1, constraint_counter);
+        setSolverParameterLinConstraintA2(k, _solver->_params, _dummy_a2, constraint_counter);
+        setSolverParameterLinConstraintB(k, _solver->_params, _dummy_b, constraint_counter);
         constraint_counter++;
       }
     }
@@ -204,7 +218,7 @@ namespace MPCPlanner
   void LinearizedConstraints::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)module_data;
-    if (!CONFIG["debug_visuals"].as<bool>())
+    if (_use_guidance && !CONFIG["debug_visuals"].as<bool>())
       return;
 
     PROFILE_FUNCTION();

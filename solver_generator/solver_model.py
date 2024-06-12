@@ -5,8 +5,9 @@ from util.files import model_map_path, write_to_yaml
 
 from spline import Spline2D
 
+
 # Returns discretized dynamics of a given model (see below)
-def forces_discrete_dynamics(z, p, model, settings, nx = None, integration_step=None):
+def forces_discrete_dynamics(z, p, model, settings, nx=None, integration_step=None):
     import forcespro.nlp
 
     """
@@ -21,7 +22,7 @@ def forces_discrete_dynamics(z, p, model, settings, nx = None, integration_step=
 
     if nx is None:
         nx = model.nx
-    
+
     if integration_step is None:
         integration_step = settings["integrator_step"]
 
@@ -96,9 +97,9 @@ class DynamicsModel:
 
     def get_x(self):
         return self._z[self.nu :]
-    
+
     def get_u(self):
-        return self._z[:self.nu]
+        return self._z[: self.nu]
 
     def get_acados_x_dot(self):
         return self._x_dot
@@ -198,6 +199,32 @@ class ContouringSecondOrderUnicycleModel(DynamicsModel):
         self.states = ["x", "y", "psi", "v", "spline"]
         self.inputs = ["a", "w"]
 
+        # w = 0.8
+        self.lower_bound = [-4.0, -2.0, -2000.0, -2000.0, -np.pi * 4, -0.01, -1.0]
+        self.upper_bound = [4.0, 2.0, 2000.0, 2000.0, np.pi * 4, 3.0, 10000.0]
+
+    def continuous_model(self, x, u):
+
+        a = u[0]
+        w = u[1]
+        psi = x[2]
+        v = x[3]
+
+        return np.array([v * cd.cos(psi), v * cd.sin(psi), w, a, v])
+
+
+class ContouringSecondOrderUnicycleModelCurvatureAware(DynamicsModel):  # NOT TESTED!
+
+    def __init__(self):
+        super().__init__()
+        self.nu = 2  # number of control variables
+        self.nx = 5  # number of states
+
+        self.states = ["x", "y", "psi", "v", "spline"]
+        self.inputs = ["a", "w"]
+
+        self.do_not_use_integration_for_last_n_states(n=1)
+
         self.lower_bound = [-4.0, -0.8, -2000.0, -2000.0, -np.pi * 4, -0.01, -1.0]
         self.upper_bound = [4.0, 0.8, 2000.0, 2000.0, np.pi * 4, 3.0, 10000.0]
 
@@ -208,7 +235,38 @@ class ContouringSecondOrderUnicycleModel(DynamicsModel):
         psi = x[2]
         v = x[3]
 
-        return np.array([v * cd.cos(psi), v * cd.sin(psi), w, a, v])
+        return np.array([v * cd.cos(psi), v * cd.sin(psi), w, a])
+
+    def model_discrete_dynamics(self, z, integrated_states, **kwargs):
+
+        x = self.get_x()
+
+        pos_x = x[0]
+        pos_y = x[1]
+        s = x[-1]
+
+        # CA-MPC
+        path = Spline2D(self.params, self.settings["contouring"]["num_segments"], s)
+        path_x, path_y = path.at(s)
+        path_dx_normalized, path_dy_normalized = path.deriv_normalized(s)
+        path_ddx, path_ddy = path.deriv2(s)
+
+        # Contour = n_vec
+        contour_error = path_dy_normalized * (pos_x - path_x) - path_dx_normalized * (pos_y - path_y)
+
+        dp = np.array([integrated_states[0] - pos_x, integrated_states[1] - pos_y])
+        t_vec = np.array([path_dx_normalized, path_dy_normalized])
+        n_vec = np.array([path_dy_normalized, -path_dx_normalized])
+
+        vt_t = dp.dot(t_vec)
+        vn_t = dp.dot(n_vec)
+
+        R = 1.0 / path.get_curvature(s)  # max(R) = 1 / 0.0001
+        R = cd.fmax(R, 1e5)
+
+        theta = cd.atan2(vt_t, R - contour_error - vn_t)
+
+        return cd.vertcat(integrated_states, s + R * theta)
 
 
 class ContouringSecondOrderUnicycleModelWithSlack(DynamicsModel):
@@ -221,8 +279,8 @@ class ContouringSecondOrderUnicycleModelWithSlack(DynamicsModel):
         self.states = ["x", "y", "psi", "v", "spline", "slack"]
         self.inputs = ["a", "w"]
 
-        self.lower_bound = [-2.0, -0.8, -2000.0, -2000.0, -np.pi * 4, -0.01, -1.0, 0.0]
-        self.upper_bound = [2.0, 0.8, 2000.0, 2000.0, np.pi * 4, 3.0, 10000.0, 5000.0]
+        self.lower_bound = [-4.0, -2.0, -2000.0, -2000.0, -np.pi * 4, -3.0, -1.0, 0.0]  # v -0.01
+        self.upper_bound = [4.0, 2.0, 2000.0, 2000.0, np.pi * 4, 3.0, 10000.0, 5000.0]  # w 0.8
 
     def continuous_model(self, x, u):
 
@@ -290,6 +348,7 @@ class BicycleModel2ndOrder(DynamicsModel):
 
         return np.array([v * cd.cos(psi + beta), v * cd.sin(psi + beta), (v / lr) * cd.sin(beta), a, w, v])
 
+
 # Bicycle model with dynamic steering
 class BicycleModel2ndOrderCurvatureAware(DynamicsModel):
 
@@ -311,7 +370,7 @@ class BicycleModel2ndOrderCurvatureAware(DynamicsModel):
         # NOTE: the angle of the vehicle should not be limited to -pi, pi, as the solution will not shift when it is at the border!
         # a was 3.0
         # delta was -0.45, 0.45
-        self.lower_bound = [-3.0, -1.5, 0., -1.0e6, -1.0e6, -np.pi * 4, -0.01, -0.55, -1.0]
+        self.lower_bound = [-3.0, -1.5, 0.0, -1.0e6, -1.0e6, -np.pi * 4, -0.01, -0.55, -1.0]
         self.upper_bound = [3.0, 1.5, 1.0e2, 1.0e6, 1.0e6, np.pi * 4, 8.0, 0.55, 5000.0]
 
     def continuous_model(self, x, u):
@@ -327,17 +386,13 @@ class BicycleModel2ndOrderCurvatureAware(DynamicsModel):
         self.lr = wheel_base / 2.0
         self.lf = wheel_base / 2.0
         ratio = self.lr / (self.lr + self.lf)
-        
+
         self.width = 2.25
 
         beta = cd.arctan(ratio * cd.tan(delta))
 
-        return np.array([v * cd.cos(psi + beta),
-                        v * cd.sin(psi + beta),
-                        (v / self.lr) * cd.sin(beta),
-                        a, 
-                        w])
-    
+        return np.array([v * cd.cos(psi + beta), v * cd.sin(psi + beta), (v / self.lr) * cd.sin(beta), a, w])
+
     def model_discrete_dynamics(self, z, integrated_states, **kwargs):
 
         x = self.get_x()
@@ -350,7 +405,7 @@ class BicycleModel2ndOrderCurvatureAware(DynamicsModel):
 
         # v = np.array([vel * cd.cos(psi), vel * cd.sin(psi)])
 
-         # CA-MPC
+        # CA-MPC
         path = Spline2D(self.params, self.settings["contouring"]["num_segments"], s)
         path_x, path_y = path.at(s)
         path_dx_normalized, path_dy_normalized = path.deriv_normalized(s)
@@ -366,18 +421,18 @@ class BicycleModel2ndOrderCurvatureAware(DynamicsModel):
         vt_t = dp.dot(t_vec)
         vn_t = dp.dot(n_vec)
 
-        R = 1. / path.get_curvature(s) # max(R) = 1 / 0.0001
+        R = 1.0 / path.get_curvature(s)  # max(R) = 1 / 0.0001
         R = cd.fmax(R, 1e5)
 
         theta = cd.atan2(vt_t, R - contour_error - vn_t)
 
-        # Lorenzo's equations        
+        # Lorenzo's equations
         # R = 1. / path.get_curvature(s) # max(R) = 1 / 0.0001
         # b = (integrated_states[0] - pos_x) * path_dx_normalized + (integrated_states[1] - pos_y) * path_dy_normalized
         # l = R * (1 - ((integrated_states[0] - path_x) * path_ddx + (integrated_states[1] - path_y) * path_ddy))
         # DS = R * cd.atan2(b, l)
 
-        return cd.vertcat(integrated_states, s + R*theta)
+        return cd.vertcat(integrated_states, s + R * theta)
 
 
 # Bicycle model with dynamic steering
