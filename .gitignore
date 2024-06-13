@@ -14,16 +14,25 @@ mpc_planner_solver/config/
 mpc_planner_modules/modules.cmake
 mpc_planner_modules/include/mpc_planner_modules/modules.h
 mpc_planner_modules/include/mpc_planner_modules/definitions.h
+mpc_planner_solver/include/mpc_planner_solver/mpc_planner_parameters.h
+mpc_planner_solver/src/mpc_planner_parameters.cpp
 
 *_reconfigure.h
 */cfg/settings.cfg
 
 # Testing
 *.coverage
+*/coverage.xml
 *.pytest_cache/
 
 # Profiling
 */profiler.json
 
-# */COLCON_IGNORE
+*/COLCON_IGNORE
+*/CATKIN_IGNORE
 */scripts/*.db
+
+mpc_planner_autoware/CMakeLists1.txt
+mpc_planner_autoware/package1.xml
+
+mpc_planner_solver/acados

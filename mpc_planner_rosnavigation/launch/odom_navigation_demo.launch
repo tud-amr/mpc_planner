@@ -1,0 +1,30 @@
+<launch>
+  <arg name="recording_name" default="test"/>
+
+ <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+
+  <rosparam file="$(find mpc_planner_rosnavigation)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+  <rosparam file="$(find mpc_planner_rosnavigation)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+
+  <rosparam file="$(find mpc_planner_rosnavigation)/config/odom_nav_params/global_costmap_params.yaml" command="load" />
+  <rosparam file="$(find mpc_planner_rosnavigation)/config/odom_nav_params/local_costmap_params.yaml" command="load" />
+
+  <rosparam file="$(find jackal_navigation)/params/base_local_planner_params.yaml" command="load" />
+  <rosparam file="$(find jackal_navigation)/params/move_base_params.yaml" command="load" />
+
+  <param name="base_global_planner" type="string" value="navfn/NavfnROS" />
+  <param name="base_local_planner" value="local_planner/ROSNavigationPlanner"/>
+  <param name="recording_name" value="$(arg recording_name)"/>
+  <remap from="/input/state" to="/odometry/filtered"/>
+  <remap from="/input/goal" to="/move_base_simple/goal"/>
+  <remap from="/input/reference_path" to="roadmap/reference"/>
+  <remap from="/input/obstacles" to="/pedestrian_simulator/trajectory_predictions"/>
+  <remap from="/output/command" to="/cmd_vel"/>
+  <remap from="/output/pose" to="/pedestrian_simulator/robot_state"/>
+  <remap from="/feedback/collisions" to="/pedestrian_simulator/collision_detected"/>
+  <remap from="odom" to="odometry/filtered" />
+
+  <param name="controller_frequency" value="20.0" />
+ </node>
+
+</launch>

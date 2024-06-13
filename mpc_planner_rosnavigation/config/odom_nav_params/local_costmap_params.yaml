@@ -1,0 +1,10 @@
+local_costmap:
+   global_frame: map #odom
+   robot_base_frame: base_link
+   update_frequency: 10.0
+   publish_frequency: 10.0
+   width: 10.0 #6.0
+   height: 10.0 #6.0
+   resolution: 0.1
+   static_map: true
+   rolling_window: true

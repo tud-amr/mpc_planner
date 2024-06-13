@@ -1,0 +1,27 @@
+map_type: costmap
+origin_z: 0.0
+z_resolution: 1
+z_voxels: 1
+
+obstacle_range: 5.0 #2.5
+raytrace_range: 5.5 #5.0 #3.0
+
+publish_voxel_map: false
+transform_tolerance: 0.5
+meter_scoring: true
+
+footprint: [[-0.325, -0.325], [-0.325, 0.325], [0.325, 0.325], [0.325, -0.325]] #[[-0.21, -0.165], [-0.21, 0.165], [0.21, 0.165], [0.21, -0.165]]
+footprint_padding: 0.25
+
+plugins:
+- {name: obstacles_layer, type: "costmap_2d::ObstacleLayer"}
+- {name: inflater_layer, type: "costmap_2d::InflationLayer"}
+
+# Clearing was true
+obstacles_layer:
+  observation_sources: scan
+  scan: {sensor_frame: front_laser, data_type: LaserScan, topic: front/scan, marking: true, clearing: false, min_obstacle_height: -2.0, max_obstacle_height: 2.0, obstacle_range: 5.0, raytrace_range: 5.5} #2.5, raytrace_range: 3.0}
+  track_unknown_space: false
+
+inflater_layer:
+ inflation_radius: 0.5
