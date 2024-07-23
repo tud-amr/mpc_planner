@@ -4,10 +4,10 @@ integrator_step: 0.2
 n_discs: 1
 
 solver_settings:
-  solver: "acados" # acados or forces
+  solver: "forces" # acados or forces
   # solver: "forces" # acados or forces
   acados:
-    iterations: 2
+    iterations: 1 #2
     solver_type: SQP_RTI # SQP_RTI (default) or SQP
   forces:
     floating_license: false
@@ -28,7 +28,7 @@ debug_limits: false
 debug_visuals: false
 
 enable_output: true
-control_frequency: 20
+control_frequency: 30 #20
 deceleration_at_infeasible: 3.0
 max_obstacles: 12 # (solver)
 robot_radius: 0.325
