@@ -10,7 +10,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>mpc_planner_util</depend>
-  <depend>decomp_util</depend>
+  <!-- <depend>decomp_util</depend> -->
 
   <export>
     <build_type>catkin</build_type>
