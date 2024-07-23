@@ -28,6 +28,7 @@
 
   <!-- <exec_depend>pedestrian_simulator</exec_depend> -->
   <exec_depend>jackal_gazebo</exec_depend>
+  <exec_depend>jackal_navigation</exec_depend>
   <exec_depend>mobile_robot_state_publisher</exec_depend>
   <!-- <exec_depend>roadmap</exec_depend> -->
 
