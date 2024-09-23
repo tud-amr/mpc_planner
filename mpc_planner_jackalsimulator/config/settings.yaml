@@ -10,25 +10,25 @@ solver_settings:
     iterations: 4 #2
     solver_type: SQP_RTI # SQP_RTI (default) or SQP
   forces:
-    floating_license: false
+    floating_license: true
     enable_timeout: true
     init: 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
     use_sqp: false
   tolstat: 1e-3
 
 recording:
-  enable: false
-  folder: "/home/r2c1/Documents/publications/multi-mpc-2023/results/data"
+  enable: true
+  folder: /workspace/src/mpc_planner/data
   file: none #experiment_method
   timestamp: false
-  num_experiments: 26
+  num_experiments: 1
 
 debug_output: false
 debug_limits: false
 debug_visuals: false
 
 enable_output: true
-control_frequency: 30 #20
+control_frequency: 20 #20
 deceleration_at_infeasible: 3.0
 max_obstacles: 12 # (solver)
 robot_radius: 0.325
