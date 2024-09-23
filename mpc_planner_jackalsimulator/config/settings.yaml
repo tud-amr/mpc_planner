@@ -7,7 +7,7 @@ solver_settings:
   solver: "acados" # acados or forces
   # solver: "forces" # acados or forces
   acados:
-    iterations: 1 #2
+    iterations: 4 #2
     solver_type: SQP_RTI # SQP_RTI (default) or SQP
   forces:
     floating_license: false

@@ -30,13 +30,13 @@
 
   <include file="$(find pedestrian_simulator)/launch/ros1_simulation.launch">
     <arg name="pedestrian_scenario" value="$(arg pedestrian_scenario)"/>
-    <arg name="static" value="false"/>
+    <!-- <arg name="static" value="false"/> -->
   </include>
 
   <node pkg="pedestrian_simulator" type="collision_checker_node" name="collision_checker_node" output="screen"/>
 
   <include file="$(find jackal_gazebo)/launch/jackal_world.launch">
-    <arg name="world_name" value="corridor.world" />
+    <!-- <arg name="world_name" value="$(find jackal_gazebo)/worlds/jackal_race.world" /> -->
     <arg name="gui" value="$(arg gui)" />
   </include>
 
