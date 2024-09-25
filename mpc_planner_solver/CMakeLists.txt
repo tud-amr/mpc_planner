@@ -13,8 +13,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 include(solver.cmake)
 
-message(WARNING ${solver_INCLUDE_DIRS})
-
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}
   INCLUDE_DIRS
