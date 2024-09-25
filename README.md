@@ -16,11 +16,9 @@ This package implements robot agnostic Model Predictive Control (MPC) for motion
 
 
 <!-- Use giphy embedded from different experiments -->
-<!-- Jackal Simulator | Jackal Real-world | -->
-<!-- | ------------- | ------------- | -->
-<!-- |<img src="docs/jackalsimulator.gif" width="100%"> | <img src="docs/jackalsimulator.gif" width="100%"> | -->
- <!-- **Dingo Simulator** |  **Autoware** | -->
-<!-- | <img src="docs/dingosimulator.gif" width="100%"> | |  -->
+<p align="center">UGV Simulation</p> | <p align="center">UGV Real-World</p>  |
+| ------------- | ------------- |
+|<img src="https://imgur.com/T8JvQP9.gif" width="100%">| <img src="https://imgur.com/hSk0uHo.gif" width=100%> |
 
 <!-- - **Safe Horizon Model Predictive Control (SH-MPC)** O. de Groot, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Scenario-Based Motion Planning with Bounded Probability of Collision.” arXiv, Jul. 03, 2023. [Online]. Available: https://arxiv.org/pdf/2307.01070.pdf
 - **Scenario-based Model Predictive Contouring Control (S-MPCC)** O. de Groot, B. Brito, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Scenario-Based Trajectory Optimization in Uncertain Dynamic Environments,” IEEE RA-L, pp. 5389–5396, 2021. -->
@@ -319,7 +317,16 @@ Please see the `mpc_planner_jackalsimulator` package for an example of how to cu
 
 Launching this package simulates the Jackal robot in an environment with pedestrians.
 
-<p align="center"><img src="docs/jackalsimulator.gif" width="80%"/></p>
+<!-- <p align="center"><img src="docs/jackalsimulator.gif" width="80%"/></p> -->
+
+<p align="center">`jackalsimulator`</p> | <p align="center">`jackal`</p>  |
+| ------------- | ------------- |
+| <img src="https://imgur.com/T8JvQP9.gif" width="100%"> | <img src="https://imgur.com/hSk0uHo.gif" width=100%> |
+
+<!-- <p align="center">`rosnavigation`</p> | <p align="center">`autoware`</p> -->
+<!-- | ------------- | ------------- | -->
+<!-- | <img src="docs/dingosimulator.gif" width="100%"> | |  -->
+<!-- https://imgur.com/8Iyd2cX.gif -->
 
 ### Custom Modules
 
@@ -328,6 +335,11 @@ To implement your own module, you need to define how it is handled in the solver
 For a `Python` cost and constraint example, see [goal_module.py](mpc_planner_modules/scripts/goal_module.py) and [ellipsoid_constraints.py](mpc_planner_modules/scripts/ellipsoid_constraints.py).
 
 For a `C++` cost and constraint example see [goal_module.cpp](mpc_planner_modules/src/goal_module.cpp) and [ellipsoid_constraints.py](mpc_planner_modules/src/ellipsoid_constraints.cpp).
+
+As an example, by replacing the contouring cost with the goal module, the robot navigates to the user clicked goal instead of following a reference path.
+
+<p align="center"><img src="https://imgur.com/5EjTmYf.gif" width="60%"/></p>
+
 
 ## License
 This project is licensed under the Apache 2.0 license - see the LICENSE file for details.
@@ -340,26 +352,3 @@ If you found this repository useful, please cite the following paper:
 - [1] **Topology-Driven Model Predictive Control (T-MPC)** O. de Groot, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Topology-Driven Parallel Trajectory Optimization in Dynamic Environments.” arXiv, Jan. 11, 2024. [Online]. Available: http://arxiv.org/abs/2401.06021
 <!-- - **Safe Horizon Model Predictive Control (SH-MPC)** O. de Groot, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Scenario-Based Motion Planning with Bounded Probability of Collision.” arXiv, Jul. 03, 2023. [Online]. Available: https://arxiv.org/pdf/2307.01070.pdf
 - **Scenario-based Model Predictive Contouring Control (S-MPCC)** O. de Groot, B. Brito, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Scenario-Based Trajectory Optimization in Uncertain Dynamic Environments,” IEEE RA-L, pp. 5389–5396, 2021. -->
-
-
-## Other
-
-### ROS Support
-
-This package supports `ROS1` and `ROS2`. A script is provided to switch `CMakelists.txt` and `package.xml` files for the respective version. To switch to `ROS2`, use:
-
-```
-poetry run python switch_to_ros.py 2
-```
-
-Note:
-
-- Changes to `CMakelists.txt` and `package.xml` are saved first to the respective files ending with `1` or `2`.
-- The system level packages, e.g., `mpc_planner_jackal` still do need different control files for `ROS1` and `ROS2`, but both versions can be available in one repository.
-
-### Selecting a single system
-You can disable requirements for other packages by running:
-
-```
-python3 select_system.py mpc_planner_jackal
-```
