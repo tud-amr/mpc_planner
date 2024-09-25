@@ -261,9 +261,10 @@ def generate_parameter_cpp_code(settings, model):
 
 def generate_rqtreconfigure(settings):
     current_package = get_current_package()
+    system_name = "".join(current_package.split("_")[2:])
     path = f"{get_package_path(current_package)}/cfg/"
     os.makedirs(path, exist_ok=True)
-    path += "settings.cfg"
+    path += f"{system_name}.cfg"
     print_path("RQT Reconfigure", path, end="", tab=True)
     rqt_file = open(path, "w")
 
@@ -278,14 +279,12 @@ def generate_rqtreconfigure(settings):
         rqt_file.write(
             f'weight_params.add("{param}", double_t, 1, "{param}", 1.0, {settings["params"].rqt_param_min_values[idx]}, {settings["params"].rqt_param_max_values[idx]})\n'
         )
-    rqt_file.write(f'exit(gen.generate(PACKAGE, "{current_package}", ""))\n')
+    rqt_file.write(f'exit(gen.generate(PACKAGE, "{current_package}", "{system_name}"))\n')
     rqt_file.close()
     print_success(" -> generated")
 
-    current_package = get_current_package()
     path = f"{get_package_path(current_package)}/include/{current_package}/"
     os.makedirs(path, exist_ok=True)
-    system_name = "".join(current_package.split("_")[2:])
     path += f"{system_name}_reconfigure.h"
     print_path("Reconfigure Header", path, end="", tab=True)
     rqt_header = open(path, "w")
@@ -298,7 +297,7 @@ def generate_rqtreconfigure(settings):
     rqt_header.write("#include <mpc_planner_util/parameters.h>\n\n")
     rqt_header.write("// Dynamic Reconfigure server\n")
     rqt_header.write("#include <dynamic_reconfigure/server.h>\n")
-    rqt_header.write(f"#include <{current_package}/Config.h>\n\n")
+    rqt_header.write(f"#include <{current_package}/{system_name}Config.h>\n\n")
     rqt_header.write(f"class {class_name}\n")
     rqt_header.write("{\n")
     rqt_header.write("public:\n")
@@ -309,11 +308,11 @@ def generate_rqtreconfigure(settings):
     rqt_header.write("\t\t// first_reconfigure_callback_ = true;\n")
     rqt_header.write(f'\t\tros::NodeHandle nh_reconfigure("{current_package}");\n')
     rqt_header.write(
-        f"\t\t_reconfigure_server.reset(new dynamic_reconfigure::Server<{current_package}::Config>(_reconfig_mutex, nh_reconfigure));\n"
+        f"\t\t_reconfigure_server.reset(new dynamic_reconfigure::Server<{current_package}::{system_name}Config>(_reconfig_mutex, nh_reconfigure));\n"
     )
     rqt_header.write(f"\t\t_reconfigure_server->setCallback(boost::bind(&{class_name}::reconfigureCallback, this, _1, _2));\n")
     rqt_header.write("\t}\n")
-    rqt_header.write(f"\tvoid reconfigureCallback({current_package}::Config &config, uint32_t level)\n")
+    rqt_header.write(f"\tvoid reconfigureCallback({current_package}::{system_name}Config &config, uint32_t level)\n")
     rqt_header.write("\t{\n")
     rqt_header.write("\t\t(void)level;\n")
     rqt_header.write("\t\tif (_first_reconfigure_callback){\n")
@@ -329,7 +328,7 @@ def generate_rqtreconfigure(settings):
     rqt_header.write("private:\n")
     rqt_header.write("\tbool _first_reconfigure_callback{true};\n")
     rqt_header.write("\t// RQT Reconfigure ROS1\n")
-    rqt_header.write(f"\tboost::shared_ptr<dynamic_reconfigure::Server<{current_package}::Config>> _reconfigure_server;\n")
+    rqt_header.write(f"\tboost::shared_ptr<dynamic_reconfigure::Server<{current_package}::{system_name}Config>> _reconfigure_server;\n")
     rqt_header.write("\tboost::recursive_mutex _reconfig_mutex;\n")
     rqt_header.write("};\n\n")
     rqt_header.write("#endif // __GENERATED_RECONFIGURE_H\n")
