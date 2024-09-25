@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(mpc_planner_jackalsimulator)
 
+set(robot_name "jackalsimulator")
+
 add_compile_options(-std=c++17)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -26,7 +28,7 @@ find_package(catkin REQUIRED COMPONENTS
   ${DEPENDENCIES}
 )
 
-generate_dynamic_reconfigure_options(cfg/settings.cfg)
+generate_dynamic_reconfigure_options(cfg/${robot_name}.cfg)
 
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}
@@ -38,13 +40,13 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(jackalsimulator_planner src/ros1_jackalsimulator.cpp)
-add_dependencies(jackalsimulator_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(jackalsimulator_planner ${catkin_LIBRARIES})
+add_executable(${robot_name}_planner src/ros1_${robot_name}.cpp)
+add_dependencies(${robot_name}_planner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${robot_name}_planner ${catkin_LIBRARIES})
 
 add_definitions(-DMPC_PLANNER_ROS)
 
 install(
-  TARGETS jackalsimulator_planner
+  TARGETS ${robot_name}_planner
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

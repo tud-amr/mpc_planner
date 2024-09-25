@@ -23,7 +23,7 @@ guidance_planner:
     turning_radius: 0.305 # [m]
 
   sampling:
-    n_samples: 50 #50 # Max number of samples for PRM
+    n_samples: 30 #50 # Max number of samples for PRM
     timeout: 10 # Timeout for PRM sampling [ms]
     margin: 0.0 # [m] sampled outside of goals 
 
@@ -40,8 +40,8 @@ guidance_planner:
     acceleration: 1.
 
   goals: # Only used when `LoadReferencePath` is used to set the goals
-    longitudinal: 5 # Number of goals in direction of the path
-    vertical: 5 # Number of goals in direction orthogonal to the path
+    longitudinal: 3 # Number of goals in direction of the path
+    vertical: 3 # Number of goals in direction orthogonal to the path
 
   spline_optimization: # Settings when the splines are optimized and used as reference trajectory
     enable: true

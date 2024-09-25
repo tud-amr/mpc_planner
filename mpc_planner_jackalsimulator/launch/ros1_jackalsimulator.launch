@@ -8,7 +8,7 @@
   <!-- <arg name="roadmap_map" value="maps/straight.xml"/> -->
   <arg name="roadmap_map" value="maps/open_space/24.xml"/>
 
-  <!-- <arg name="pedestrian_scenario" default="random_social/8_corridor.xml" /> -->
+  <!-- <arg name="pedestrian_scenario" default="random_social/12_corridor.xml" /> -->
   <!-- <arg name="pedestrian_scenario" default="static/8_corridor.xml" /> -->
   <arg name="pedestrian_scenario" default="open_space/24.xml" />
   <!-- <arg name="pedestrian_scenario" default="crossing/2_leftstack.xml" /> -->

@@ -1,7 +1,7 @@
 
 #include <mpc_planner_modules/path_reference_velocity.h>
 
-#include <mpc_planner_parameters.h>
+#include <mpc_planner_solver/mpc_planner_parameters.h>
 #include <mpc_planner_util/parameters.h>
 
 #include <ros_tools/visuals.h>

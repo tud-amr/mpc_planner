@@ -2,7 +2,7 @@
 
 #include <costmap_2d/costmap_2d_ros.h>
 
-#include <mpc_planner_parameters.h>
+#include <mpc_planner_solver/mpc_planner_parameters.h>
 
 #include <mpc_planner_util/parameters.h>
 #include <mpc_planner_util/data_visualization.h>

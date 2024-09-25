@@ -11,7 +11,7 @@
 #include "acados_c/external_function_interface.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
-#include "acados_solver_Solver.h"
+#include "Solver/acados_solver_Solver.h"
 
 #include <mpc_planner_util/load_yaml.hpp>
 

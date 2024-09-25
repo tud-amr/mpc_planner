@@ -1,6 +1,6 @@
 #include "mpc_planner_modules/ellipsoid_constraints.h"
 
-#include <mpc_planner_parameters.h>
+#include <mpc_planner_solver/mpc_planner_parameters.h>
 
 #include <mpc_planner_util/parameters.h>
 
