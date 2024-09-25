@@ -16,9 +16,10 @@ This package implements robot agnostic Model Predictive Control (MPC) for motion
 
 
 <!-- Use giphy embedded from different experiments -->
-<p align="center">UGV Simulation</p> | <p align="center">UGV Real-World</p>  |
+https://imgur.com/861MmhI
+UGV Simulation | UGV Real-World  |
 | ------------- | ------------- |
-|<img src="https://imgur.com/T8JvQP9.gif" width="100%">| <img src="https://imgur.com/hSk0uHo.gif" width=100%> |
+| <img src="https://imgur.com/YZNLaww.gif" width="100%"> | <img src="https://imgur.com/861MmhI.gif" width=100%> |
 
 <!-- - **Safe Horizon Model Predictive Control (SH-MPC)** O. de Groot, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Scenario-Based Motion Planning with Bounded Probability of Collision.” arXiv, Jul. 03, 2023. [Online]. Available: https://arxiv.org/pdf/2307.01070.pdf
 - **Scenario-based Model Predictive Contouring Control (S-MPCC)** O. de Groot, B. Brito, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Scenario-Based Trajectory Optimization in Uncertain Dynamic Environments,” IEEE RA-L, pp. 5389–5396, 2021. -->
@@ -317,16 +318,12 @@ Please see the `mpc_planner_jackalsimulator` package for an example of how to cu
 
 Launching this package simulates the Jackal robot in an environment with pedestrians.
 
-<!-- <p align="center"><img src="docs/jackalsimulator.gif" width="80%"/></p> -->
+<!-- 5EjTmYf.gif -->
 
-<p align="center">`jackalsimulator`</p> | <p align="center">`jackal`</p>  |
+`jackalsimulator` | `jackal`  |
 | ------------- | ------------- |
-| <img src="https://imgur.com/T8JvQP9.gif" width="100%"> | <img src="https://imgur.com/hSk0uHo.gif" width=100%> |
+| <img src="https://imgur.com/61i3M78.gif" width="100%"> | <img src="https://imgur.com/861MmhI.gif" width=100%> |
 
-<!-- <p align="center">`rosnavigation`</p> | <p align="center">`autoware`</p> -->
-<!-- | ------------- | ------------- | -->
-<!-- | <img src="docs/dingosimulator.gif" width="100%"> | |  -->
-<!-- https://imgur.com/8Iyd2cX.gif -->
 
 ### Custom Modules
 
