@@ -4,8 +4,8 @@ integrator_step: 0.2
 n_discs: 1
 
 solver_settings:
-  # solver: "acados" # acados or forces
-  solver: "forces" # acados or forces
+  solver: "acados" # acados or forces
+  # solver: "forces" # acados or forces
   acados:
     iterations: 4 #2
     solver_type: SQP_RTI # SQP_RTI (default) or SQP

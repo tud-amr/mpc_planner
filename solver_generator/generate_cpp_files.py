@@ -445,6 +445,7 @@ def generate_solver_cmake(settings):
         solver_cmake.write(")\n")
         solver_cmake.write("set(solver_INCLUDE_DIRS\n")
         solver_cmake.write("    acados/Solver # Generated files\n")
+        solver_cmake.write("    acados # Generated files\n")
         solver_cmake.write("    ${acados_include_path}\n")
         solver_cmake.write("    ${acados_include_path}/blasfeo/include\n")
         solver_cmake.write("    ${acados_include_path}/hpipm/include\n")
