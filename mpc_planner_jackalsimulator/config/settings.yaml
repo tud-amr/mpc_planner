@@ -17,11 +17,11 @@ solver_settings:
   tolstat: 1e-3
 
 recording:
-  enable: false
+  enable: true
   folder: /workspace/src/mpc_planner/data
   file: none #experiment_method
   timestamp: false
-  num_experiments: 5 #1
+  num_experiments: 1
 
 debug_output: false
 debug_limits: false
