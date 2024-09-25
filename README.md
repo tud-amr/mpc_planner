@@ -46,22 +46,22 @@ This planner is designed for mobile robots navigating in 2D dynamic environments
 Implemented modules include costs for:
 
 - **Reference Path Tracking** 
-  - Model Predictive Contouring Control (MPCC)
-  - Curvature-Aware Model Predictive Control (CA-MPC)
+  - Model Predictive Contouring Control ([MPCC](https://ieeexplore.ieee.org/document/8768044))
+  - Curvature-Aware Model Predictive Control ([CA-MPC](https://ieeexplore.ieee.org/abstract/document/10161177))
 - **Goal tracking** 
 
 and constraints for:
 
 - **Dynamic Obstacle Avoidance**
-  - Ellipsoidal constraints ()
+  - Ellipsoidal constraints (https://ieeexplore.ieee.org/document/8768044)
   - Linearized constraints
 - **Chance Constrained Obstacle Avoidance**
-  - Avoiding obstacle predictions modeled as Gaussians (CC-MPC)
-  - Avoiding obstacle predictions modeled as Gaussian Mixtures (Safe Horizon MPC *pending publication*)
+  - Avoiding obstacle predictions modeled as Gaussians ([CC-MPC](https://ieeexplore.ieee.org/abstract/document/8613928))
+  - Avoiding obstacle predictions modeled as Gaussian Mixtures ([Safe Horizon MPC](https://arxiv.org/pdf/2307.01070) *publication pending*)
 - **Static Obstacle Avoidance**
-  - Using `decomp_util` ()
+  - Using `decomp_util` (see [original paper](https://ieeexplore.ieee.org/abstract/document/7839930) and [modified implementation](https://arxiv.org/pdf/2406.11506))
 
-and can combine these to compute multiple topology distinct trajectories in parallel using the **Topology-Driven MPC** module.
+and can combine these to compute multiple topology distinct trajectories in parallel using the [**Topology-Driven MPC**](https://arxiv.org/pdf/2401.06021) [1] module.
 
 To solve the MPC, we support the licensed [**Forces Pro**](https://www.embotech.com/softwareproducts/forcespro/overview/) and open-source [**Acados**](https://docs.acados.org/) solvers. The solver generation runs on `Python`, generating `C++` code for the online planner.
 
