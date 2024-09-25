@@ -15,8 +15,6 @@ This package implements robot agnostic Model Predictive Control (MPC) for motion
 **Conference Paper:** O. de Groot, L. Ferranti, D. Gavrila, and J. Alonso-Mora, *Globally Guided Trajectory Optimization in Dynamic Environments.* IEEE International Conference on Robotics and Automation (ICRA) 2023. Available: https://doi.org/10.1109/ICRA48891.2023.10160379
 
 
-<!-- Use giphy embedded from different experiments -->
-https://imgur.com/861MmhI
 UGV Simulation | UGV Real-World  |
 | ------------- | ------------- |
 | <img src="https://imgur.com/YZNLaww.gif" width="100%"> | <img src="https://imgur.com/861MmhI.gif" width=100%> |
