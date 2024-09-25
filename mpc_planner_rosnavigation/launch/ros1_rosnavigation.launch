@@ -2,7 +2,7 @@
 
 <launch>
 
-  <arg name="gui" default="true" />
+  <arg name="gui" default="false" />
   <arg name="project_name" default="" />
   <arg name="world_name" default="$(find mpc_planner_rosnavigation)/worlds/test.world" />
   

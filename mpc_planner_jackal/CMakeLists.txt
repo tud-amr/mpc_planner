@@ -19,7 +19,7 @@ set(DEPENDENCIES
 # find dependencies
 find_package(catkin REQUIRED COMPONENTS ${DEPENDENCIES})
 
-generate_dynamic_reconfigure_options(cfg/settings.cfg)
+generate_dynamic_reconfigure_options(cfg/jackal.cfg)
 
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}

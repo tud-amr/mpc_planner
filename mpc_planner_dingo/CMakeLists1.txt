@@ -26,7 +26,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(yaml-cpp REQUIRED)
 
-generate_dynamic_reconfigure_options(cfg/settings.cfg)
+generate_dynamic_reconfigure_options(cfg/dingo.cfg)
 
 catkin_package(
   CATKIN_DEPENDS ${DEPENDENCIES}
