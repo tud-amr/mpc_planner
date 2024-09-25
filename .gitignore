@@ -17,6 +17,10 @@ mpc_planner_modules/include/mpc_planner_modules/definitions.h
 mpc_planner_solver/include/mpc_planner_solver/mpc_planner_parameters.h
 mpc_planner_solver/src/mpc_planner_parameters.cpp
 
+mpc_planner_solver/solver.cmake
+mpc_planner_solver/mpc_planner_solver-extras.cmake
+
+
 *_reconfigure.h
 */cfg/settings.cfg
 
