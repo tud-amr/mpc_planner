@@ -136,9 +136,14 @@ The solver generation uses `Python`. Because of Forces Pro limitations, `Python 
 From `ws/src/mpc_planner`:
 ```bash
 conda create -n mpc_planner --file requirements.txt
+conda activate mpc_planner
 ```
 
-If not, you can use `pyenv` and `poetry`.
+You may have to add the `conda-forge` channel if you do not have it yet: `conda config --append channels conda-forge`.
+
+> **Note:** In the remainder of this readme, leave out `poetry run ...` if you installed with `conda`.
+
+Instead of `conda`, another option is to use `pyenv` and `poetry`.
 <details>
     <summary><b  style="display:inline-block">Pyenv</b></summary>
 
@@ -183,11 +188,10 @@ poetry install --no-root
 ```
 </details>
 
+---
 
-With the environment set up, install `Acados` and/or `Forces Pro`
-
-<details>
-    <summary><h3  style="display:inline-block"> Solver: Acados</h3></summary>
+With the environment set up, install `Acados` and/or `Forces Pro`.
+<details><summary><b  style="display:inline-block"> Solver: Acados</b></summary>
 In any folder, clone and build Acados:
 
 ```bash
@@ -203,7 +207,11 @@ make install -j4
 Then link `Acados` in your `Poetry` environment
 
 ```bash
-poetry add -e <path_to_acados>/interfaces/acados_template
+poetry add -e <path_to_acados>/interfaces/acados_template # Poetry
+```
+or
+```bash
+pip install -e <path_to_acados>/interfaces/acados_template # Conda
 ```
 
 And add the acados path in your `~/.bashrc` or similar:
@@ -214,14 +222,12 @@ export ACADOS_SOURCE_DIR="<path_to_acados>"
 ```
 
 </details>
-
-
 <details>
-    <summary><h3  style="display:inline-block"> Solver: Forces Pro</h3></summary>
-
+    <summary><b  style="display:inline-block"> Solver: Forces Pro</b></summary>
 Go to my.embotech.com, log in to your account. Assign a regular license to your computer. Then download the client to `~/forces_pro_client/` **outside of the container**. If you have the solver in a different location, add its path to `PYTHONPATH`.
-
 </details>
+
+---
 
 Finally, to generate a solver, first define which solver to use in `mpc_planner_<your_system>/config/settings.yaml` by setting `solver_settings/solver` to  `acados` or `forces`. Then generate a solver (e.g., for `jackalsimulator`):
 
