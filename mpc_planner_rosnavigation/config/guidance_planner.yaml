@@ -23,7 +23,7 @@ guidance_planner:
     turning_radius: 0.305 # [m]
 
   sampling:
-    n_samples: 50 #50 # Max number of samples for PRM
+    n_samples: 30 # Max number of samples for PRM
     timeout: 10 # Timeout for PRM sampling [ms]
     margin: 0.0 # [m] sampled outside of goals 
 
