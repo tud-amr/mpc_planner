@@ -58,8 +58,8 @@ def configuration_tmpc(settings):
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
 
-    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
-    modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(ContouringModule(settings))
+    modules.add_module(PathReferenceVelocityModule(settings))
 
     # modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
     modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=GaussianConstraintModule))
@@ -76,8 +76,8 @@ def configuration_lmpcc(settings):
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
 
-    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
-    modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(ContouringModule(settings))
+    modules.add_module(PathReferenceVelocityModule(settings))
 
     modules.add_module(EllipsoidConstraintModule(settings))
 

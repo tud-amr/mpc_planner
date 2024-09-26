@@ -54,7 +54,7 @@ road:
 shift_previous_solution_forward: false
 
 contouring:
-  use_ca_mpc: false
+  dynamic_velocity_reference: false
   num_segments: 8
   preview: 0.0
   add_road_constraints: true

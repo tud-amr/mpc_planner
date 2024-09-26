@@ -57,12 +57,10 @@ def define_modules(settings) -> ModuleManager:
     )
 
     # modules.add_module(GoalModule(settings))  # Track a goal
-    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(ContouringModule(settings))
 
-    # modules.add_module(EllipsoidConstraintModule(settings))
-    modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=GaussianConstraintModule))
-    # modules.add_module(LinearizedConstraintModule(settings))
-    # modules.add_module(GaussianConstraintModule(settings))
+    modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
+
 
     return modules
 
@@ -82,11 +80,8 @@ def configuration_lmpcc(settings):
     base_module.weigh_variable(var_name="ay", weight_names="acceleration_y")
 
     modules.add_module(GoalModule(settings))
-    # modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
-    # modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
-    modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
 
-    # modules.add_module(EllipsoidConstraintModule(settings))
+    modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
 
     return model, modules
 
