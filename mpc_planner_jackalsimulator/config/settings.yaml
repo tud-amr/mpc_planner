@@ -12,7 +12,7 @@ solver_settings:
   forces:
     floating_license: true
     enable_timeout: true
-    init: 2 # 0 = cold start, 1 = centerer start, 2 = warm start with the selected primal variables
+    init: 2 # 0 = cold start, 1 = centered start, 2 = warm start with the selected primal variables
     use_sqp: false
   tolstat: 1e-3
 
@@ -51,7 +51,7 @@ road:
 shift_previous_solution_forward: false
 
 contouring:
-  use_ca_mpc: false
+  dynamic_velocity_reference: false
   num_segments: 5
   preview: 0.0
   add_road_constraints: true

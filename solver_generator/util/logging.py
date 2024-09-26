@@ -30,9 +30,9 @@ def print_success(msg):
 
 def print_warning(msg, no_tab=False):
     if no_tab:
-        print(bcolors.BOLD + bcolors.WARNING + f"{msg}" + bcolors.ENDC)
+        print(bcolors.BOLD + bcolors.WARNING + f"Warning: {msg}" + bcolors.ENDC)
     else:
-        print("\t" + bcolors.BOLD + bcolors.WARNING + f"{msg}" + bcolors.ENDC)
+        print("\t" + bcolors.BOLD + bcolors.WARNING + f"Warning: {msg}" + bcolors.ENDC)
 
 def print_header(msg):
     print("==============================================")

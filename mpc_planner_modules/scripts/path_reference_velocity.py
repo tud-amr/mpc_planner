@@ -8,19 +8,16 @@ import numpy as np
 from control_modules import ObjectiveModule, Objective
 from contouring import Spline, Spline2D
 
-
 class PathReferenceVelocityObjective:
     """
     Track a reference velocity along the path component that may change with time
     """
 
-    def __init__(self, settings, num_segments):
-        self.num_segments = num_segments
+    def __init__(self, settings):
+        self.num_segments = settings["contouring"]["num_segments"]
 
     def define_parameters(self, params):
-        # params.add("velocity", add_to_rqt_reconfigure=True)
 
-        # params.add("reference_velocity", add_to_rqt_reconfigure=True)
         for i in range(self.num_segments):
             params.add(f"spline_v{i}_a", bundle_name="spline_v_a")
             params.add(f"spline_v{i}_b", bundle_name="spline_v_b")
@@ -58,12 +55,12 @@ class PathReferenceVelocityObjective:
 
 class PathReferenceVelocityModule(ObjectiveModule):
 
-    def __init__(self, settings, num_segments):
+    def __init__(self, settings):
         super().__init__()
         self.module_name = "PathReferenceVelocity"
         self.import_name = "path_reference_velocity.h"
         self.type = "objective"
-        self.description = "Tracks a velocity in the direction of a 2D path"
+        self.description = "Tracks a dynamic velocity reference along the path"
 
         self.objectives = []
-        self.objectives.append(PathReferenceVelocityObjective(settings, num_segments))
+        self.objectives.append(PathReferenceVelocityObjective(settings))

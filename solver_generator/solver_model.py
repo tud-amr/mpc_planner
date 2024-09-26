@@ -2,6 +2,7 @@ import casadi as cd
 import numpy as np
 
 from util.files import model_map_path, write_to_yaml
+from util.logging import print_warning
 
 from spline import Spline2D
 
@@ -217,6 +218,7 @@ class ContouringSecondOrderUnicycleModelCurvatureAware(DynamicsModel):  # NOT TE
 
     def __init__(self):
         super().__init__()
+        print_warning("ContouringSecondOrderUnicycleModelCurvatureAware is not supported in Acados as discrete dynamics are necessary for the spline state")
         self.nu = 2  # number of control variables
         self.nx = 5  # number of states
 

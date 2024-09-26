@@ -19,7 +19,8 @@ def generate_module_header(modules):
     for module in modules.modules:
         module_header.write(f"#include <mpc_planner_modules/{module.import_name}>\n")
         for source in module.sources:
-            module_header.write(f"#include <mpc_planner_modules/{source}>\n")
+            module_header.write(f"#include <mpc_planner_modules/{source.split('.')[0]}.h>\n")
+        
 
     module_header.write("\n")
 

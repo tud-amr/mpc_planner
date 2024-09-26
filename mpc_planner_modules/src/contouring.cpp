@@ -20,7 +20,7 @@ namespace MPCPlanner
     _n_segments = CONFIG["contouring"]["num_segments"].as<int>();
     _add_road_constraints = CONFIG["contouring"]["add_road_constraints"].as<bool>();
     _two_way_road = CONFIG["road"]["two_way"].as<bool>();
-    _use_ca_mpc = CONFIG["contouring"]["use_ca_mpc"].as<bool>();
+    _dynamic_velocity_reference = CONFIG["contouring"]["dynamic_velocity_reference"].as<bool>();
 
     LOG_INITIALIZED();
   }
@@ -53,48 +53,46 @@ namespace MPCPlanner
     (void)module_data;
 
     // Retrieve weights once
-    static double contouring_weight, lag_weight, preview_weight, reference_velocity, velocity_weight;
+    static double contouring_weight, lag_weight, reference_velocity, velocity_weight;
     static double terminal_angle_weight, terminal_contouring_weight;
     if (k == 0)
     {
       contouring_weight = CONFIG["weights"]["contour"].as<double>();
+      lag_weight = CONFIG["weights"]["lag"].as<double>();
 
-      preview_weight = CONFIG["weights"]["preview"].as<double>();
-      velocity_weight = CONFIG["weights"]["velocity"].as<double>();
       terminal_angle_weight = CONFIG["weights"]["terminal_angle"].as<double>();
       terminal_contouring_weight = CONFIG["weights"]["terminal_contouring"].as<double>();
 
-      if (_use_ca_mpc)
+      if (_dynamic_velocity_reference)
       {
         reference_velocity = CONFIG["weights"]["reference_velocity"].as<double>();
+        velocity_weight = CONFIG["weights"]["velocity"].as<double>();
       }
       else
       {
-        reference_velocity = CONFIG["weights"]["reference_velocity"].as<double>();
-        lag_weight = CONFIG["weights"]["lag"].as<double>();
+        (void)velocity_weight;
       }
     }
 
     {
       setSolverParameterContour(k, _solver->_params, contouring_weight);
-      setSolverParameterVelocity(k, _solver->_params, velocity_weight);
+      setSolverParameterLag(k, _solver->_params, lag_weight);
+
       setSolverParameterTerminalAngle(k, _solver->_params, terminal_angle_weight);
       setSolverParameterTerminalContouring(k, _solver->_params, terminal_contouring_weight);
 
-      if (_use_ca_mpc)
+      if (_dynamic_velocity_reference)
       {
+        setSolverParameterVelocity(k, _solver->_params, velocity_weight);
         setSolverParameterReferenceVelocity(k, _solver->_params, reference_velocity);
       }
-      else
-      {
-        setSolverParameterReferenceVelocity(k, _solver->_params, reference_velocity);
-        setSolverParameterLag(k, _solver->_params, lag_weight);
-      }
-
-      if (preview_weight > 0.)
-        _solver->setParameter(k, "preview", preview_weight);
     }
 
+    setSplineParameters(k);
+  }
+
+  void Contouring::setSplineParameters(int k)
+  {
     double ax, bx, cx, dx;
     double ay, by, cy, dy;
     double start;

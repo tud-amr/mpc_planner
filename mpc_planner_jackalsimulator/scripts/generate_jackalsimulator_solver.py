@@ -19,6 +19,7 @@ from generate_solver import generate_solver
 # Import modules here from mpc_planner_modules
 from mpc_base import MPCBaseModule
 from contouring import ContouringModule
+from curvature_aware_contouring import CurvatureAwareContouringModule
 from goal_module import GoalModule
 from path_reference_velocity import PathReferenceVelocityModule
 
@@ -37,17 +38,22 @@ def configuration_no_obstacles(settings):
     modules = ModuleManager()
     model = ContouringSecondOrderUnicycleModel()
 
-    lower_bound = [-2.0, -0.8, -2000.0, -2000.0, -np.pi * 2, -1.0, -1.0]
-    upper_bound = [2.0, 0.8, 2000.0, 2000.0, np.pi * 2, 3.0, 10000.0]
-    model.set_bounds(lower_bound, upper_bound)
+    # lower_bound = [-2.0, -0.8, -2000.0, -2000.0, -np.pi * 2, -1.0, -1.0]
+    # upper_bound = [2.0, 0.8, 2000.0, 2000.0, np.pi * 2, 3.0, 10000.0]
+    # model.set_bounds(lower_bound, upper_bound)
 
     base_module = modules.add_module(MPCBaseModule(settings))
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
-    # base_module.weigh_variable(var_name="v", weight_names=["velocity", "reference_velocity"], cost_function=lambda x, w: w[0] * (x-w[1])**2)
 
-    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"], use_ca_mpc=False))
-    # modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    if not settings["contouring"]["dynamic_velocity_reference"]:
+        base_module.weigh_variable(var_name="v",    
+                                weight_names=["velocity", "reference_velocity"], 
+                                cost_function=lambda x, w: w[0] * (x-w[1])**2)
+
+    modules.add_module(ContouringModule(settings))
+    if settings["contouring"]["dynamic_velocity_reference"]:
+        modules.add_module(PathReferenceVelocityModule(settings))
 
     return model, modules
 
@@ -73,8 +79,8 @@ def configuration_safe_horizon(settings):
     base_module.weigh_variable(var_name="slack", weight_names="slack", rqt_max_value=10000.0)
 
     # modules.add_module(GoalModule(settings))  # Track a goal
-    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
-    modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(ContouringModule(settings))
+    modules.add_module(PathReferenceVelocityModule(settings))
 
     modules.add_module(ScenarioConstraintModule(settings))
     return model, modules
@@ -98,10 +104,10 @@ def configuration_lmpcc(settings):
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
 
-    # modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    # modules.add_module(ContouringModule(settings))
     modules.add_module(GoalModule(settings))
 
-    modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(PathReferenceVelocityModule(settings))
 
     modules.add_module(EllipsoidConstraintModule(settings))
 

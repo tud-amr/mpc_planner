@@ -82,6 +82,9 @@ class Parameters:
 
         return self._p[self._params[parameter]]
 
+    def has_parameter(self, parameter):
+        return parameter in self._params
+
     def print(self):
         print_header("Parameters")
         print("----------")
