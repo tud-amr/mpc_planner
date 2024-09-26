@@ -36,9 +36,9 @@ def solver_configuration(settings):
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
 
-    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(ContouringModule(settings))
 
-    modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(PathReferenceVelocityModule(settings))
 
     modules.add_module(EllipsoidConstraintModule(settings))
 
@@ -55,6 +55,7 @@ def test_acados_solver_generation():
     settings["integrator_step"] = 0.2
     settings["contouring"] = dict()
     settings["contouring"]["num_segments"] = 8
+    settings["contouring"]["dynamic_velocity_reference"] = False
 
     solver_settings = settings["solver_settings"]
     solver_settings["solver"] = "acados"

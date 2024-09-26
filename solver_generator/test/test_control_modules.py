@@ -21,17 +21,18 @@ def test_module_manager_objective():
     settings = dict()
     settings["contouring"] = dict()
     settings["contouring"]["num_segments"] = 10
+    settings["contouring"]["dynamic_velocity_reference"] = False
     settings["N"] = 20
 
     modules = ModuleManager()
     modules.add_module(
-        ContouringModule(settings, num_segments=settings["contouring"]["num_segments"])
+        ContouringModule(settings)
     )  # Adds weights to the overall weight list
 
     assert len(modules.modules) == 1
     assert modules.modules[0].module_name == "Contouring"
 
-    modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(PathReferenceVelocityModule(settings))
 
     assert len(modules.modules) == 2
 
