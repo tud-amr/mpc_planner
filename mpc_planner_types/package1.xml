@@ -4,7 +4,7 @@
   <name>mpc_planner_types</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="groot.oscar.de@gmail.com">r2c1</maintainer>
+  <maintainer email="o.m.degroot@tudelft.nl">Oscar de Groot</maintainer>
   <license>TODO: License declaration</license>
 
   <buildtool_depend>catkin</buildtool_depend>

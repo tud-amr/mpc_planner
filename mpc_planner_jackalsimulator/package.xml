@@ -3,9 +3,9 @@
 <package format="3">
   <name>mpc_planner_jackalsimulator</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="groot.oscar.de@gmail.com">r2c1</maintainer>
-  <license>TODO: License declaration</license>
+  <description>MPC Package ROS Wrapper for simultating the Clearpath Jackal</description>
+  <maintainer email="o.m.degroot@tudelft.nl">Oscar de Groot</maintainer>
+  <license>Apache 2.0</license>
 
   <buildtool_depend>catkin</buildtool_depend>
 

@@ -7,7 +7,9 @@
 
 # MPC Planner
 
-This package implements robot agnostic Model Predictive Control (MPC) for motion planning in 2D dynamic environments using ROS/ROS2 C++. A complete VSCode docker environment with this planner is available at https://github.com/tud-amr/mpc_planner_ws. This code is associated with the following publications:
+This package implements robot agnostic Model Predictive Control (MPC) for motion planning in 2D dynamic environments using ROS/ROS2 C++. A complete VSCode docker environment with this planner is available at https://github.com/tud-amr/mpc_planner_ws. 
+
+This code is associated with the following publications:
 
 **Journal Paper:** O. de Groot, L. Ferranti, D. Gavrila, and J. Alonso-Mora, *Topology-Driven Parallel Trajectory Optimization in Dynamic Environments.* IEEE Transactions on Robotics 2024. Preprint: http://arxiv.org/abs/2401.06021
 
@@ -33,14 +35,15 @@ UGV Simulation | UGV Real-World  |
 4. [Configuration](#configuration) 
 5. [Examples](#examples) 
 6. [License](#license) 
-7. [Citing](#citing)
+7. [Citing](#citing) 
 
 ## Features
-This planner is designed for mobile robots navigating in 2D dynamic environments. It is designed to be:
+This is a planner implementation for mobile robots navigating in 2D dynamic environments. It is designed to be:
 
 - **Modular** - Cost and constraint components are modular to allow stacking of functionality.
 - **Robot Agnostic** - The robot functionality in ROS wraps the base C++ planner. This allows customization of the control loop, input and output topics and visualization.
 - **ROS/ROS2 Compatible:** - ROS functionality is wrapped in `ros_tools` to support both ROS and ROS2.
+- **Computationally Efficient:** - Typical real-time control frequencies with dynamic and static obstacle avoidance are ~20-30 Hz
 
 Implemented modules include costs for:
 
@@ -66,9 +69,13 @@ To solve the MPC, we support the licensed [**Forces Pro**](https://www.embotech.
 
 ## Installation
 
-We recommend to use the complete VSCode containerized environment, provided here https://github.com/tud-amr/mpc_planner_ws to automatically install the planner and its requirements.
+We recommend to use the complete VSCode containerized environment provided here https://github.com/tud-amr/mpc_planner_ws if you can to automatically install the planner and its requirements.
+
+Both solvers have similar performance. In our publications we have used `Forces Pro`.
 
 > **Note:** To use Forces Pro in the containerized environment, a floating license is required. If you have a regular license, please following the steps below to install the planner manually.
+
+The following steps denote the **manual** installation of the planner.
 
 ---
 
@@ -224,8 +231,10 @@ export ACADOS_SOURCE_DIR="<path_to_acados>"
 ```
 
 </details>
+
 <details>
-    <summary><b  style="display:inline-block"> Solver: Forces Pro</b></summary>
+    <summary><b  style="display:inline-block">Solver: Forces Pro</b></summary>
+
 Go to my.embotech.com, log in to your account. Assign a regular license to your computer. Then download the client to `~/forces_pro_client/` **outside of the container**. If you have the solver in a different location, add its path to `PYTHONPATH`.
 </details>
 
@@ -278,7 +287,7 @@ roslaunch mpc_planner_jackalsimulator ros1_jackalsimulator.launch
 > **Note:** For some systems detailed instructions are available in the `README.md` inside their packages.
 
 ## Configuration
-The MPC problem is configured in the solver definition script (e.g., `scripts/generate_<system>_solver.py`). The following defines a T-MPC that followsa reference path while avoiding dynamic obstacles.
+The MPC problem is configured in the solver definition script (e.g., `scripts/generate_<system>_solver.py`). The following defines a T-MPC that follows a reference path while avoiding dynamic obstacles.
 
 ```python
 settings = load_settings() # Load config/settings.yaml
@@ -289,9 +298,11 @@ model = ContouringSecondOrderUnicycleModel() # Define the dynamic model
 base_module = modules.add_module(MPCBaseModule(settings))
 base_module.weigh_variable(var_name="a", weight_names="acceleration") # Quadratic cost on input acceleration
 base_module.weigh_variable(var_name="w", weight_names="angular_velocity") # Quadratic cost on angular velocity
+base_module.weigh_variable(var_name="v",
+                          weight_names=["velocity", "reference_velocity"], 
+                          cost_function=lambda x, w: w[0] * (x-w[1])**2) # Track a reference velocity
 
-modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"])) # MPCC cost
-modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"])) # Velocity Tracking along the path
+modules.add_module(ContouringModule(settings)) # MPCC cost
 
 modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule)) # T-MPC with ellipsoidal constraints
 
