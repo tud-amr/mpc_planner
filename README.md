@@ -18,8 +18,8 @@ This package implements robot agnostic Model Predictive Control (MPC) for motion
 UGV Simulation | UGV Real-World  |
 | ------------- | ------------- |
 | <img src="https://imgur.com/YZNLaww.gif" width="100%"> | <img src="https://imgur.com/861MmhI.gif" width=100%> |
-Static and Dynamic Obstacles |   |
-| <img src="https://imgur.com/QgYDTRq.gif" width="100%"> | |
+| Static and Dynamic Obstacles |  |
+| <img src="https://imgur.com/QgYDTRq.gif" width="100%"> |  |
 
 <!-- - **Safe Horizon Model Predictive Control (SH-MPC)** O. de Groot, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Scenario-Based Motion Planning with Bounded Probability of Collision.” arXiv, Jul. 03, 2023. [Online]. Available: https://arxiv.org/pdf/2307.01070.pdf
 - **Scenario-based Model Predictive Contouring Control (S-MPCC)** O. de Groot, B. Brito, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Scenario-Based Trajectory Optimization in Uncertain Dynamic Environments,” IEEE RA-L, pp. 5389–5396, 2021. -->
