@@ -109,7 +109,7 @@ namespace MPCPlanner
             }
 
             _warmstart = Trajectory();
-            for (int k = 1; k < _solver->N; k++)
+            for (int k = 0; k < _solver->N; k++)
                 _warmstart.add(_solver->getEgoPrediction(k, "x"), _solver->getEgoPrediction(k, "y"));
 
             _solver->loadWarmstart();

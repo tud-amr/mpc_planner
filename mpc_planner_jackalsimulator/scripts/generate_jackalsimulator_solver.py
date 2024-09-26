@@ -7,6 +7,7 @@ import sys
 sys.path.append(os.path.join(sys.path[0], "..", "..", "solver_generator"))
 sys.path.append(os.path.join(sys.path[0], "..", "..", "mpc_planner_modules", "scripts"))
 
+import numpy as np
 # SET YOUR FORCES PATH HERE (can also be in PYTHONPATH)
 forces_path = os.path.join(os.path.expanduser("~"), "forces_pro_client")
 sys.path.append(forces_path)
@@ -32,22 +33,29 @@ from solver_model import ContouringSecondOrderUnicycleModel, ContouringSecondOrd
 from solver_model import ContouringSecondOrderUnicycleModelCurvatureAware
 
 
-def configuration_basic(settings):
+def configuration_no_obstacles(settings):
     modules = ModuleManager()
     model = ContouringSecondOrderUnicycleModel()
 
-    # Penalize ||a||_2^2 and ||w||_2^2
+    lower_bound = [-2.0, -0.8, -2000.0, -2000.0, -np.pi * 2, -1.0, -1.0]
+    upper_bound = [2.0, 0.8, 2000.0, 2000.0, np.pi * 2, 3.0, 10000.0]
+    model.set_bounds(lower_bound, upper_bound)
+
     base_module = modules.add_module(MPCBaseModule(settings))
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
-    # base_module.weigh_variable(var_name="slack", weight_names="slack", rqt_max_value=10000.0)
+    # base_module.weigh_variable(var_name="v", weight_names=["velocity", "reference_velocity"], cost_function=lambda x, w: w[0] * (x-w[1])**2)
 
-    # modules.add_module(GoalModule(settings))
-    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"]))
-    modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
+    modules.add_module(ContouringModule(settings, num_segments=settings["contouring"]["num_segments"], use_ca_mpc=False))
+    # modules.add_module(PathReferenceVelocityModule(settings, num_segments=settings["contouring"]["num_segments"]))
+
+    return model, modules
+
+
+def configuration_basic(settings):
+    model, modules = configuration_no_obstacles(settings)
 
     modules.add_module(EllipsoidConstraintModule(settings))
-    # modules.add_module(LinearizedConstraintModule(settings))
 
     return model, modules
 
@@ -110,10 +118,11 @@ def configuration_lmpcc(settings):
 
 settings = load_settings()
 
-# model, modules = configuration_basic(settings)
+model, modules = configuration_basic(settings)
+# model, modules = configuration_no_obstacles(settings)
 # model, modules = configuration_safe_horizon(settings)
 # model, modules = configuration_lmpcc(settings)
-model, modules = configuration_tmpc(settings)
+# model, modules = configuration_tmpc(settings)
 
 generate_solver(modules, model, settings)
 exit(0)

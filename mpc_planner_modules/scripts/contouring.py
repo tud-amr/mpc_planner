@@ -82,11 +82,11 @@ class ContouringObjective:
         velocity_weight = params.get("velocity")
 
         # From path
-        path_velocity = Spline(params, "spline_v", self.num_segments, s)
-        reference_velocity = path_velocity.at(s)
+        # path_velocity = Spline(params, "spline_v", self.num_segments, s)
+        # reference_velocity = path_velocity.at(s)
 
         # Static
-        # reference_velocity = params.get("reference_velocity")
+        reference_velocity = params.get("reference_velocity")
 
         path = Spline2D(params, self.num_segments, s)
         path_x, path_y = path.at(s)

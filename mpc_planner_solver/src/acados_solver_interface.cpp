@@ -88,7 +88,6 @@ namespace MPCPlanner
         // _params.printParameters(_parameter_map);
 
         // Set initial state
-        ocp_nlp_constraints_model_set(_nlp_config, _nlp_dims, _nlp_in, 0, "idxbx", _params.getIdxbx0());
         ocp_nlp_constraints_model_set(_nlp_config, _nlp_dims, _nlp_in, 0, "lbx", _params.xinit);
         ocp_nlp_constraints_model_set(_nlp_config, _nlp_dims, _nlp_in, 0, "ubx", _params.xinit);
 
@@ -106,12 +105,10 @@ namespace MPCPlanner
         // solve ocp in loop
         int rti_phase = 0; // 1 = prep, 2 = feedback, 0 = both
 
-        // bool warmstart_qp = true;
-        // ocp_nlp_solver_opts_set(_nlp_config, _nlp_opts, "warm_start_first_qp", &warmstart_qp);
+        ocp_nlp_solver_opts_set(_nlp_config, _nlp_opts, "rti_phase", &rti_phase);
         // ocp_nlp_solver_opts_update(_nlp_config, _nlp_dims, _nlp_opts);
 
         ocp_nlp_precompute(_nlp_solver, _nlp_in, _nlp_out);
-        ocp_nlp_solver_opts_set(_nlp_config, _nlp_opts, "rti_phase", &rti_phase);
         for (int iteration = 0; iteration < _num_iterations; iteration++)
         {
 
@@ -270,30 +267,39 @@ namespace MPCPlanner
         LOG_MARK("Initialize Plan with a Braking Plan");
         initializeWithState(initial_state); // Initialize all variables
 
-        double x, y, psi, v, a;
-        double deceleration = CONFIG["deceleration_at_infeasible"].as<double>();
+        double x, y, psi, v, a, spline;
+        double deceleration = std::abs(CONFIG["deceleration_at_infeasible"].as<double>());
 
         x = initial_state.get("x");
         y = initial_state.get("y");
         psi = initial_state.get("psi");
         v = initial_state.get("v");
-        a = 0.;
+        spline = initial_state.get("spline");
+        a = -deceleration;
 
-        for (int k = 1; k < N; k++) // For all timesteps
+        setEgoPrediction(0, "x", x);
+        setEgoPrediction(0, "y", y);
+        setEgoPrediction(0, "psi", psi);
+        setEgoPrediction(0, "v", v);
+        setEgoPrediction(0, "spline", spline);
+        setEgoPrediction(0, "a", a);
+        setEgoPrediction(0, "w", 0);
+
+        for (int k = 1; k <= N; k++) // For all timesteps
         {
-            a = -deceleration;
-            v = getEgoPrediction(k, "v") + a * k * dt;
+            x += v * dt * std::cos(psi);
+            y += v * dt * std::sin(psi);
+            spline += v * dt;
+            v += a * dt;
             v = std::max(v, 0.);
-            a = (v - getEgoPrediction(k, "v")) / (k * dt);
-
-            x = initial_state.get("x") + v * k * dt * std::cos(initial_state.get("psi"));
-            y = initial_state.get("y") + v * k * dt * std::sin(initial_state.get("psi"));
 
             setEgoPrediction(k, "x", x);
             setEgoPrediction(k, "y", y);
             setEgoPrediction(k, "psi", psi);
             setEgoPrediction(k, "v", v);
+            setEgoPrediction(k, "spline", spline);
             setEgoPrediction(k, "a", a);
+            setEgoPrediction(k, "w", 0);
         }
     }
 
@@ -323,29 +329,10 @@ namespace MPCPlanner
 
             /** @note warmstart maintaining the previous output */
             // [initial_state, x_1, x_2, ..., x_N-1, x_N]
-            for (int k = 0; k <= N; k++) // For all timesteps
+            for (int k = 0; k < N; k++) // For all timesteps
             {
-                // LOG_HEADER(k);
-                for (YAML::const_iterator it = _model_map.begin(); it != _model_map.end(); ++it) // For all inputs and states
-                {
-                    if (k == 0) // Load the current state at k = 0
-                    {
-                        if (_model_map[it->first.as<std::string>()][0].as<std::string>() == "x") // Set states to initial state
-                            setEgoPrediction(0, it->first.as<std::string>(), initial_state.get(it->first.as<std::string>()));
-                        else // For inputs use the previous inputs
-                            setEgoPrediction(0, it->first.as<std::string>(), getOutput(0, it->first.as<std::string>()));
-                    }
-                    else if (k == N)
-                    {
-                        setEgoPrediction(N, it->first.as<std::string>(), getOutput(N - 1, it->first.as<std::string>()));
-                    }
-                    else // use x_{k+1} to initialize x_{k}
-                    {
-                        setEgoPrediction(k, it->first.as<std::string>(), getOutput(k, it->first.as<std::string>()));
-                    }
-
-                    // LOG_VALUE(it->first.as<std::string>(), getEgoPrediction(k, it->first.as<std::string>()));
-                }
+                for (YAML::const_iterator it = _model_map.begin(); it != _model_map.end(); ++it)                 // For all inputs and states
+                    setEgoPrediction(k, it->first.as<std::string>(), getOutput(k, it->first.as<std::string>())); // Initialize with the previous output
             }
         }
     }

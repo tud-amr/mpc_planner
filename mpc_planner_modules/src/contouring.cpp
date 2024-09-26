@@ -70,6 +70,7 @@ namespace MPCPlanner
       }
       else
       {
+        reference_velocity = CONFIG["weights"]["reference_velocity"].as<double>();
         lag_weight = CONFIG["weights"]["lag"].as<double>();
       }
     }
@@ -86,6 +87,7 @@ namespace MPCPlanner
       }
       else
       {
+        setSolverParameterReferenceVelocity(k, _solver->_params, reference_velocity);
         setSolverParameterLag(k, _solver->_params, lag_weight);
       }
 

@@ -15,7 +15,6 @@
   <depend>ros_tools</depend>
 
   <!-- START SOLVER DEPENDENT -->
-	<depend>decomp_util</depend>
   <!-- END SOLVER DEPENDENT -->
 
   <export>
