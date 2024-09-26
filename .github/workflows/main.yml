@@ -111,7 +111,7 @@ jobs:
           remove-link-from-badge: false
           unique-id-for-comment: python3.8.10
       - name: Create the Badge
-        uses: schneegans/dynamic-badges-action@v1.6.0
+        uses: schneegans/dynamic-badges-action@v1.7.0
         with:
           auth: ${{ secrets.GIST_SECRET }}
           gistID: 8356b652d94441ec2318b597dcf4680d
