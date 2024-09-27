@@ -50,21 +50,17 @@ namespace MPCPlanner
 {
     struct AcadosParameters
     {
-        double xinit[NX]; // Initial state
-        // double u0[NU];    // Initial isolver_nput
+        double xinit[NX];                      // Initial state
         double x0[(NU + NX) * (SOLVER_N + 1)]; // Warmstart: [u0, x0 | u1 x1 | ... | uN xN]
 
         double all_parameters[SOLVER_NP * SOLVER_N]; // SOLVER_NP parameters for all stages
 
         double solver_timeout{0.}; // Not functional!
 
-        int *getIdxbx0() { return idxbx0; }
         double *getU0() { return x0; } // Note: should only read the first isolver_nput from this!
 
         AcadosParameters()
         {
-            for (int i = 0; i < NBX0; i++)
-                idxbx0[i] = i;
 
             // Initialize with zeros
             for (int i = 0; i < NX; i++)
@@ -92,7 +88,6 @@ namespace MPCPlanner
         }
 
     private:
-        int idxbx0[NBX0]; // Indices of initial conditions
     };
 
     class Solver
@@ -206,10 +201,10 @@ namespace MPCPlanner
         void setEgoPredictionPosition(unsigned int k, const Eigen::Vector2d &value); // (same for positions)
         Eigen::Vector2d getEgoPredictionPosition(unsigned int k);
 
-        void loadWarmstart();
-        void initializeWithState(const State &initial_state);                               // Load the state for each stage
+        void loadWarmstart();                                                               // Loads ego prediction into the solver
         void initializeWarmstart(const State &state, bool shift_previous_solution_forward); // Use the previous solution as initial guess
-        void initializeWithBraking(const State &initial_state);                             // Load a braking trajectory
+        void initializeWithState(const State &initial_state);                               // Fallback: Load the state for each stage
+        void initializeWithBraking(const State &initial_state);                             // Fallback: Load a braking trajectory
 
         // OUTPUT //
         double getOutput(int k, std::string &&state_name) const;

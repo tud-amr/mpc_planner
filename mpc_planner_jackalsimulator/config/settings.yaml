@@ -1,7 +1,14 @@
 name: "jackal"
-N: 30
-integrator_step: 0.2
-n_discs: 1
+N: 30 # [#] Time Horizon
+integrator_step: 0.2 # [s] Integration step
+n_discs: 1 # Number of discs to model the robot with
+
+enable_output: true # Enable output to the robot
+control_frequency: 20 # [Hz] Control frequency of the MPC
+
+debug_output: false # Show debug output
+debug_limits: false # Show when state/input limits are hit
+debug_visuals: false # Show extra visuals
 
 solver_settings:
   solver: "acados" # acados or forces
@@ -10,64 +17,58 @@ solver_settings:
     iterations: 10
     solver_type: SQP_RTI # SQP_RTI (default) or SQP
   forces:
-    floating_license: true
-    enable_timeout: true
+    floating_license: true # Use a floating license (required in a container)
+    enable_timeout: true # Stop solving at timeout
     init: 2 # 0 = cold start, 1 = centered start, 2 = warm start with the selected primal variables
-    use_sqp: false
-  tolstat: 1e-3
+    use_sqp: false # use SQP instead of PDIP (not recommended)
+  tolstat: 1e-3 # Stationary tolerance
 
 recording:
-  enable: true
-  folder: /workspace/src/mpc_planner/data
-  file: none #experiment_method
-  timestamp: false
-  num_experiments: 1
+  enable: true # Record data if true
+  folder: /workspace/src/mpc_planner/data # Data location
+  file: none # File name for the experiment
+  timestamp: false # Add a timestamp
+  num_experiments: 1 # Stop after this number of experiments
 
-debug_output: false
-debug_limits: false
-debug_visuals: false
-
-enable_output: true
-control_frequency: 20
-deceleration_at_infeasible: 3.0
-max_obstacles: 12 # (solver)
-robot_radius: 0.325
+deceleration_at_infeasible: 3.0 # [m/s^2] Deceleration when MPC is infeasible
+max_obstacles: 12 # Max. number of dynamic obstacles
+robot_radius: 0.325 # [m] Robot radius
 robot:
-  length: 0.65
-  width: 0.65
-  com_to_back: 0.0
-obstacle_radius: 0.4
+  length: 0.65 # [m]
+  width: 0.65 # [m]
+  com_to_back: 0.0 # [m] Distance from center of mass to the back of the robot
+obstacle_radius: 0.4 # [m] Radius of obstacles (not used when provided in the obstacle message)
 
 linearized_constraints:
-  add_halfspaces: 0  # (solver)
+  add_halfspaces: 0  # Add static constraints in T-MPC (e.g., for road boundaries)
 
 scenario_constraints:
   parallel_solvers: 1
 
 road:
-  two_way: false
-  width: 6.0 #6.0
+  two_way: false # Does road go two ways?
+  width: 6.0 # [m]
 
-shift_previous_solution_forward: false
+shift_previous_solution_forward: false # Shift the previous MPC solution forward (recommended: false)
 
 contouring:
-  dynamic_velocity_reference: false
-  num_segments: 5
-  preview: 0.0
-  add_road_constraints: true
+  dynamic_velocity_reference: false # Is the velocity reference dynamically updated?
+  num_segments: 5 # Number of contouring segments to track
+  preview: 0.0 # (not used)
+  add_road_constraints: true # (not used)
 
 t-mpc:
-  use_t-mpc++: true
-  enable_constraints: true
-  highlight_selected: true
-  warmstart_with_mpc_solution: false # 0 = use guidance trajectory always, 1 = use MPC solution if available
+  use_t-mpc++: true # Add the non-guided planner in parallel to guided planners
+  enable_constraints: true # Enable homotopy constraints
+  highlight_selected: true # Highlight the selected trajectory in red
+  warmstart_with_mpc_solution: false # false = use guidance trajectory always, true = use MPC solution if available (recommended: false)
 
 probabilistic:
-  enable: true
-  risk: 0.05
-  propagate_uncertainty: true
+  enable: true # Consider uncertainty when it is provided
+  risk: 0.05 # [0-1] Acceptable risk
+  propagate_uncertainty: true # Propagate the received uncertainty over time
 
-weights:
+weights: # Weights of the MPC, need to correspond to declared weights in the solver
   goal: 1. #10.
   goal_x: 1.
   goal_y: 1.
@@ -83,4 +84,4 @@ weights:
   terminal_contouring: 10.0 # 0.0
 
 visualization:
-  draw_every: 5 # stages
+  draw_every: 5 # Visualize every x stages

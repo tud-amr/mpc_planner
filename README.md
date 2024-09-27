@@ -7,7 +7,7 @@
 
 # MPC Planner
 
-This package implements robot agnostic Model Predictive Control (MPC) for motion planning in 2D dynamic environments using ROS/ROS2 C++. A complete VSCode docker environment with this planner is available at https://github.com/tud-amr/mpc_planner_ws. 
+This package implements Model Predictive Control (MPC) for motion planning in 2D dynamic environments using ROS/ROS2 C++. A complete VSCode docker environment with this planner is available at https://github.com/tud-amr/mpc_planner_ws. 
 
 This code is associated with the following publications:
 
@@ -16,11 +16,13 @@ This code is associated with the following publications:
 
 **Conference Paper:** O. de Groot, L. Ferranti, D. Gavrila, and J. Alonso-Mora, *Globally Guided Trajectory Optimization in Dynamic Environments.* IEEE International Conference on Robotics and Automation (ICRA) 2023. Available: https://doi.org/10.1109/ICRA48891.2023.10160379
 
+This repository includes our implementation of **Topology-Driven MPC** (**T-MPC++**) that computes multiple distinct trajectories in parallel, each passing dynamic obstacles differently.
 
-UGV Simulation | UGV Real-World  |
+
+Simulated Mobile Robot | Real-World Mobile Robot |
 | ------------- | ------------- |
 | <img src="https://imgur.com/YZNLaww.gif" width="100%"> | <img src="https://imgur.com/861MmhI.gif" width=100%> |
-| Static and Dynamic Obstacles |  |
+| **Static and Dynamic Obstacles** |  |
 | <img src="https://imgur.com/QgYDTRq.gif" width="100%"> |  |
 
 <!-- - **Safe Horizon Model Predictive Control (SH-MPC)** O. de Groot, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Scenario-Based Motion Planning with Bounded Probability of Collision.” arXiv, Jul. 03, 2023. [Online]. Available: https://arxiv.org/pdf/2307.01070.pdf
@@ -45,31 +47,31 @@ This is a planner implementation for mobile robots navigating in 2D dynamic envi
 - **ROS/ROS2 Compatible:** - ROS functionality is wrapped in `ros_tools` to support both ROS and ROS2.
 - **Computationally Efficient:** - Typical real-time control frequencies with dynamic and static obstacle avoidance are ~20-30 Hz
 
-Implemented modules include costs for:
+To solve the MPC, we support the licensed [**Forces Pro**](https://www.embotech.com/softwareproducts/forcespro/overview/) and open-source [**Acados**](https://docs.acados.org/) solvers. The solvers can be switched with a single setting when both are installed. The solver generation runs on `Python`, generating `C++` code for the online planner.
 
-- **Reference Path Tracking** 
+Implemented MPC **modules** include:
+
+- **Reference Path Tracking Cost** - Tracking a 2D path
   - Model Predictive Contouring Control ([MPCC](https://ieeexplore.ieee.org/document/8768044))
   - Curvature-Aware Model Predictive Control ([CA-MPC](https://ieeexplore.ieee.org/abstract/document/10161177))
-- **Goal tracking** 
-
-and constraints for:
-
-- **Dynamic Obstacle Avoidance**
+- **Goal Tracking Cost** - Tracking a user defined goal position
+- **State/Input Penalization** - To limit control inputs
+- **Dynamic Obstacle Avoidance Constraints** - Avoiding humans
   - Ellipsoidal constraints (https://ieeexplore.ieee.org/document/8768044)
   - Linearized constraints
-- **Chance Constrained Obstacle Avoidance**
+- **Chance Constrained Obstacle Avoidance Constraints** - Incorporating uncertainty in the future motion of humans
   - Avoiding obstacle predictions modeled as Gaussians ([CC-MPC](https://ieeexplore.ieee.org/abstract/document/8613928))
   - Avoiding obstacle predictions modeled as Gaussian Mixtures ([Safe Horizon MPC](https://arxiv.org/pdf/2307.01070) *publication pending*)
-- **Static Obstacle Avoidance**
+- **Static Obstacle Avoidance Constraints** - Avoiding non-moving obstacles in the environment
   - Using `decomp_util` (see [original paper](https://ieeexplore.ieee.org/abstract/document/7839930) and [modified implementation](https://arxiv.org/pdf/2406.11506))
 
-and can combine these to compute multiple topology distinct trajectories in parallel using the [**Topology-Driven MPC**](https://arxiv.org/pdf/2401.06021) [1] module.
+These functionalities can be stacked to implement the desired behavior (see [Configuration](#configuration)). 
 
-To solve the MPC, we support the licensed [**Forces Pro**](https://www.embotech.com/softwareproducts/forcespro/overview/) and open-source [**Acados**](https://docs.acados.org/) solvers. The solver generation runs on `Python`, generating `C++` code for the online planner.
+The [**Topology-Driven MPC**](https://arxiv.org/pdf/2401.06021) [1] module parallelizes the above functionality over multiple distinct initial guesses, computing several trajectories that pass the obstacles differently.
 
 ## Installation
 
-We recommend to use the complete VSCode containerized environment provided here https://github.com/tud-amr/mpc_planner_ws if you can to automatically install the planner and its requirements.
+We recommend to use the complete VSCode containerized environment provided here https://github.com/tud-amr/mpc_planner_ws, if you can, to automatically install the planner and its requirements.
 
 Both solvers have similar performance. In our publications we have used `Forces Pro`.
 
@@ -81,7 +83,7 @@ The following steps denote the **manual** installation of the planner.
 
 ### Step 1: Clone repos
 
-In your ROS/ROS2 workspace `ws/src` clone the following:
+In your `ROS`/`ROS2` workspace `ws/src` clone the following:
 
 Planner repos:
 ```
@@ -89,9 +91,10 @@ git clone https://github.com/oscardegroot/mpc_planner.git
 git clone https://github.com/oscardegroot/ros_tools.git
 ```
 
-Guidance planner (required for T-MPC):
+Guidance planner (for T-MPC) and `decomp_util` (for static obstacle avoidance):
 ```
 git clone https://github.com/oscardegroot/guidance_planner.git
+git clone https://github.com/oscardegroot/DecompUtil.git
 ```
 
 Pedestrian simulator:
@@ -278,16 +281,23 @@ catkin build mpc_planner-<system>
 ```
 
 ## Usage
-Each system type has its own package (`mpc_planner_<system>`) that usually includes a main file (`src/mpc_planner_<system>`), configuration (`config/settings.yaml`), launch file (e.g., `launch/ros1_<system>.launch`) and solver definition script (`scripts/generate_<system>_solver.py`).. To launch the planner for your system run its launch file, e.g.,
+Each system type has its own package (`mpc_planner_<system>`) that usually includes 
+
+- a main file (`src/mpc_planner_<system>`),
+- configuration (`config/settings.yaml`),
+- launch file (e.g., `launch/ros1_<system>.launch`), and 
+- solver definition script (`scripts/generate_<system>_solver.py`). 
+
+To launch the planner for your system run its launch file, e.g.,
 
 ```bash
 roslaunch mpc_planner_jackalsimulator ros1_jackalsimulator.launch
 ```
 
-> **Note:** For some systems detailed instructions are available in the `README.md` inside their packages.
+> **Note:** For some systems, detailed instructions are available in the `README.md` inside their packages.
 
 ## Configuration
-The MPC problem is configured in the solver definition script (e.g., `scripts/generate_<system>_solver.py`). The following defines a T-MPC that follows a reference path while avoiding dynamic obstacles.
+The MPC problem is configured in the solver definition script (e.g., `mpc_planner_<system>/scripts/generate_<system>_solver.py`). The following defines a T-MPC that follows a reference path while avoiding dynamic obstacles.
 
 ```python
 settings = load_settings() # Load config/settings.yaml
@@ -326,7 +336,7 @@ Settings of the online solver can be modified in `config/settings.yaml`. Importa
 ## Examples
 
 ### Custom System
-Please see the `mpc_planner_jackalsimulator` package for an example of how to customize this planner. See:
+Please see the `mpc_planner_jackalsimulator` package for an example of how to customize this planner. Explicit comments are provided throughout this package. See:
 
 - [C++ Main File](mpc_planner_jackalsimulator/src/ros1_jackalsimulator.cpp) - Defining the input/output topics and control loop
 - [Python Solver Generation File](mpc_planner_jackalsimulator/scripts/generate_jackalsimulator_solver.py) - Defining the MPC problem
@@ -362,8 +372,6 @@ This project is licensed under the Apache 2.0 license - see the LICENSE file for
 ## Citing
 This repository was developed at the Cognitive Robotics group of Delft University of Technology by [Oscar de Groot](https://github.com/oscardegroot) in partial collaboration with [Dennis Benders](https://github.com/dbenders1) and [Thijs Niesten](https://github.com/thijs83) and under supervision of Dr. Laura Ferranti, Dr. Javier Alonso-Mora and Prof. Dariu Gavrila.
 
-If you found this repository useful, please cite the following paper:
+If you found this repository useful in your research, please cite our paper:
 
 - [1] **Topology-Driven Model Predictive Control (T-MPC)** O. de Groot, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Topology-Driven Parallel Trajectory Optimization in Dynamic Environments.” arXiv, Jan. 11, 2024. [Online]. Available: http://arxiv.org/abs/2401.06021
-<!-- - **Safe Horizon Model Predictive Control (SH-MPC)** O. de Groot, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Scenario-Based Motion Planning with Bounded Probability of Collision.” arXiv, Jul. 03, 2023. [Online]. Available: https://arxiv.org/pdf/2307.01070.pdf
-- **Scenario-based Model Predictive Contouring Control (S-MPCC)** O. de Groot, B. Brito, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Scenario-Based Trajectory Optimization in Uncertain Dynamic Environments,” IEEE RA-L, pp. 5389–5396, 2021. -->

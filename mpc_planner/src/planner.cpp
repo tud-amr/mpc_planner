@@ -84,8 +84,8 @@ namespace MPCPlanner
                 // _solver->initializeWithState(state);
                 _solver->initializeWithBraking(state);
             }
-            // Set the initial state
-            _solver->setXinit(state);
+
+            _solver->setXinit(state); // Set the initial state
 
             // Update all modules
             {

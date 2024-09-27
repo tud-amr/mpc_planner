@@ -1,34 +1,34 @@
 guidance_planner:
   debug:
-    output: false
-    visuals: false
+    output: false # Enable debug information
+    visuals: false # Enable debug visuals
 
   T: 6.0 # Time horizon [s]
   N: 30  # Discrete time steps [#]
   seed: 1 # Seed of the visibility-PRM. -1 = random
 
   homotopy:
-    n_paths: 4 # Number of guidance trajectories
+    n_paths: 4 # Number of guidance trajectories P
     comparison_function: Homology # Homology (default) Winding or UVD
     winding:
-      pass_threshold: 0.87 #1.74 # half of pi
-      use_non_passing: true
+      pass_threshold: 0.87 # quarter of pi
+      use_non_passing: false # Experimental setting
     use_learning: false
     track_selected_homology_only: false
 
-  predictions_are_constant_velocity: true
+  predictions_are_constant_velocity: true # Default: true, if set to false then predictions are considered step-by-step
 
   dynamics:
-    connections: Straight # Straight (default) or Dubins
-    turning_radius: 0.305 # [m]
+    connections: Straight # Straight (default) or Dubins (experimental)
+    turning_radius: 0.305 # [m] for Dubins only
 
   sampling:
     n_samples: 30 #50 # Max number of samples for PRM
     timeout: 10 # Timeout for PRM sampling [ms]
     margin: 0.0 # [m] sampled outside of goals 
 
-  max_velocity: 7.0 # Maximum velocity of connections between nodes
-  max_acceleration: 7.0 # Maximum velocity of connections between nodes
+  max_velocity: 7.0 # [m/s] Maximum velocity of connections between nodes
+  max_acceleration: 7.0 # [m/s^2] Maximum velocity of connections between nodes
   connection_filters:
     forward: true
     velocity: false
@@ -43,23 +43,23 @@ guidance_planner:
     longitudinal: 3 # Number of goals in direction of the path
     vertical: 3 # Number of goals in direction orthogonal to the path
 
-  spline_optimization: # Settings when the splines are optimized and used as reference trajectory
+  spline_optimization: # Smoothening settings
     enable: true
-    num_points: 10  # -1 = N
+    num_points: 10
     geometric: 25.
     smoothness: 10.
     collision: 0.5
     velocity_tracking: 0.01
 
   visuals:
-    transparency: 0.5 # The least transparent the obstacle visualization is (0-1)
-    visualize_all_samples: false # Visualizes all PRM samples
-    visualize_homology: false
-    show_indices: false
+    transparency: 0.5 # Transparency of obstacle predictions (0-1)
+    visualize_all_samples: false # Visualize all PRM samples (slow!)
+    visualize_homology: false # Visualize the H-signature
+    show_indices: false # Show trajectory indices
 
   enable:
     dynamically_propagate_nodes: true  # Propagate the nodes in time (dropping them)
     project_from_obstacles: false # Project the guidance trajectory from obstacles if enabled (not necessary by default)
 
   test_node:
-    continuous_replanning: true         # When using the test nodes: keep planning continuously?
+    continuous_replanning: true # When using the example, plan continuously

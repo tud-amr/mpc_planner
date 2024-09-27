@@ -22,28 +22,20 @@ JackalPlanner::JackalPlanner(ros::NodeHandle &nh)
 {
     LOG_INFO("Started Jackal Planner");
 
-    // Initialize the configuration
-    Configuration::getInstance().initialize(SYSTEM_CONFIG_PATH(__FILE__, "settings"));
+    Configuration::getInstance().initialize(SYSTEM_CONFIG_PATH(__FILE__, "settings")); // Initialize the configuration
 
-    _data.robot_area = {Disc(0., CONFIG["robot_radius"].as<double>())};
+    // _data.robot_area = {Disc(0., CONFIG["robot_radius"].as<double>())}; // Zero offset single disc
+    _data.robot_area = defineRobotArea(CONFIG["robot"]["length"].as<double>(),
+                                       CONFIG["robot"]["width"].as<double>(),
+                                       CONFIG["n_discs"].as<int>());
 
-    // Initialize the planner
-    _planner = std::make_unique<Planner>();
+    _planner = std::make_unique<Planner>(); // Initialize the planner
 
-    // Initialize the ROS interface
-    initializeSubscribersAndPublishers(nh);
+    initializeSubscribersAndPublishers(nh); // Initialize the ROS interface
 
-    startEnvironment();
+    startEnvironment(); // Start the simulation
 
-    _reconfigure = std::make_unique<JackalsimulatorReconfigure>();
-
-    _timeout_timer.setDuration(60.);
-    _timeout_timer.start();
-    for (int i = 0; i < CAMERA_BUFFER; i++)
-    {
-        _x_buffer[i] = 0.;
-        _y_buffer[i] = 0.;
-    }
+    _reconfigure = std::make_unique<JackalsimulatorReconfigure>(); // Initialize RQT reconfigure
 
     RosTools::Instrumentor::Get().BeginSession("mpc_planner_jackalsimulator");
 
@@ -60,7 +52,6 @@ JackalPlanner::~JackalPlanner()
 {
     LOG_INFO("Stopped Jackal Planner");
     BENCHMARKERS.print();
-
     RosTools::Instrumentor::Get().EndSession();
 }
 
@@ -68,6 +59,7 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
 {
     LOG_INFO("initializeSubscribersAndPublishers");
 
+    /** @note Topics are mapped in the launch file! */
     _state_sub = nh.subscribe<nav_msgs::Odometry>(
         "/input/state", 5,
         boost::bind(&JackalPlanner::stateCallback, this, _1));
@@ -112,6 +104,7 @@ void JackalPlanner::initializeSubscribersAndPublishers(ros::NodeHandle &nh)
 
 void JackalPlanner::startEnvironment()
 {
+
     LOG_INFO("Starting pedestrian simulator");
     for (int i = 0; i < 20; i++)
     {
@@ -137,14 +130,24 @@ void JackalPlanner::startEnvironment()
         }
     }
     _enable_output = CONFIG["enable_output"].as<bool>();
+
+    // Initialize simulation utilities
+    _timeout_timer.setDuration(60.);
+    _timeout_timer.start();
+    for (int i = 0; i < CAMERA_BUFFER; i++)
+    {
+        _x_buffer[i] = 0.;
+        _y_buffer[i] = 0.;
+    }
+
     LOG_INFO("Environment ready.");
 }
 
 bool JackalPlanner::objectiveReached()
 {
+    // Simple conditions for resetting the simulation
     return _state.get("x") > 25.; //    Straight
     // return RosTools::distance(_state.getPos(), Eigen::Vector2d(24., 24.)) < 4.0; // Diagonal
-    // return RosTools::distance(_state.getPos(), Eigen::Vector2d(_data.reference_path.x.back(), _data.reference_path.y.back())) < 4.0; // Diagonal
 }
 
 void JackalPlanner::loop(const ros::TimerEvent &event)
@@ -155,14 +158,15 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
 
     LOG_DEBUG("============= Loop =============");
 
-    if (_timeout_timer.hasFinished())
+    if (_timeout_timer.hasFinished()) // Timeout
         reset(false);
 
-    if (objectiveReached())
+    if (objectiveReached()) // Objective reached
     {
         reset();
-        BENCHMARKERS.print();
+        // BENCHMARKERS.print();
     }
+
     // Print the state
     if (CONFIG["debug_output"].as<bool>())
         _state.print();
@@ -170,20 +174,20 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
     auto &loop_benchmarker = BENCHMARKERS.getBenchmarker("loop");
     loop_benchmarker.start();
 
-    auto output = _planner->solveMPC(_state, _data);
+    auto output = _planner->solveMPC(_state, _data); // Main MPC Function
 
     LOG_MARK("Success: " << output.success);
 
     geometry_msgs::Twist cmd;
-    if (_enable_output && output.success)
+    if (_enable_output && output.success) // Retrieve the MPC input
     {
-        // Publish the command
+
         cmd.linear.x = _planner->getSolution(1, "v");  // = x1
         cmd.angular.z = _planner->getSolution(0, "w"); // = u0
         LOG_VALUE_DEBUG("Commanded v", cmd.linear.x);
         LOG_VALUE_DEBUG("Commanded w", cmd.angular.z);
     }
-    else
+    else // Braking input
     {
         double deceleration = CONFIG["deceleration_at_infeasible"].as<double>();
         double velocity_after_braking;
@@ -202,11 +206,9 @@ void JackalPlanner::loop(const ros::TimerEvent &event)
 
     loop_benchmarker.stop();
 
-    if (CONFIG["recording"]["enable"].as<bool>())
+    if (CONFIG["recording"]["enable"].as<bool>()) // Record data
     {
-
-        // Save control inputs
-        if (output.success)
+        if (output.success) // Save control inputs
         {
             auto &data_saver = _planner->getDataSaver();
             data_saver.AddData("input_a", _state.get("a"));
@@ -242,7 +244,7 @@ void JackalPlanner::statePoseCallback(const geometry_msgs::PoseStamped::ConstPtr
     _state.set("x", msg->pose.position.x);
     _state.set("y", msg->pose.position.y);
     _state.set("psi", msg->pose.orientation.z);
-    _state.set("v", msg->pose.position.z);
+    _state.set("v", msg->pose.position.z); // Encoded here in this case
 
     if (std::abs(msg->pose.orientation.x) > (M_PI / 8.) || std::abs(msg->pose.orientation.y) > (M_PI / 8.))
     {
@@ -299,7 +301,7 @@ void JackalPlanner::obstacleCallback(const mpc_planner_msgs::ObstacleArray::Cons
 
     for (auto &obstacle : msg->obstacles)
     {
-        // Save the obstacle
+        // Save the obstacle (ID, position, orientation, radius)
         _data.dynamic_obstacles.emplace_back(
             obstacle.id,
             Eigen::Vector2d(obstacle.pose.position.x, obstacle.pose.position.y),
@@ -318,6 +320,7 @@ void JackalPlanner::obstacleCallback(const mpc_planner_msgs::ObstacleArray::Cons
             const auto &mode = obstacle.gaussians[0];
             for (size_t k = 0; k < mode.mean.poses.size(); k++)
             {
+                // Add prediction at time step k (position, orientation, major/minor bivariate Gaussian size)
                 dynamic_obstacle.prediction.modes[0].emplace_back(
                     Eigen::Vector2d(mode.mean.poses[k].pose.position.x, mode.mean.poses[k].pose.position.y),
                     RosTools::quaternionToAngle(mode.mean.poses[k].pose.orientation),
@@ -325,7 +328,7 @@ void JackalPlanner::obstacleCallback(const mpc_planner_msgs::ObstacleArray::Cons
                     mode.minor_semiaxis[k]);
             }
 
-            if (mode.major_semiaxis.back() == 0. || !CONFIG["probabilistic"]["enable"].as<bool>())
+            if (mode.major_semiaxis.back() == 0. || !CONFIG["probabilistic"]["enable"].as<bool>()) // If uncertainty is zero
                 dynamic_obstacle.prediction.type = PredictionType::DETERMINISTIC;
             else
                 dynamic_obstacle.prediction.type = PredictionType::GAUSSIAN;
@@ -335,15 +338,15 @@ void JackalPlanner::obstacleCallback(const mpc_planner_msgs::ObstacleArray::Cons
             ROSTOOLS_ASSERT(false, "Multiple modes not yet supported");
         }
     }
-    ensureObstacleSize(_data.dynamic_obstacles, _state);
+    ensureObstacleSize(_data.dynamic_obstacles, _state); // Ensure that there are `max_obstacles` obstacles (possibly adding dummies)
 
     if (CONFIG["probabilistic"]["propagate_uncertainty"].as<bool>())
         propagatePredictionUncertainty(_data.dynamic_obstacles);
 
-    _planner->onDataReceived(_data, "dynamic obstacles");
+    _planner->onDataReceived(_data, "dynamic obstacles"); // Call modules that need this data
 }
 
-void JackalPlanner::visualize()
+void JackalPlanner::visualize() // Function to visualize anything in this wrapper
 {
     auto &publisher = VISUALS.getPublisher("angle");
     auto &line = publisher.getNewLine();
@@ -357,7 +360,7 @@ void JackalPlanner::reset(bool success)
 {
     LOG_MARK("Resetting");
 
-    _reset_simulation_client.call(_reset_msg);
+    _reset_simulation_client.call(_reset_msg); // Reset simulation
     _reset_ekf_client.call(_reset_pose_msg);
     _reset_simulation_pub.publish(std_msgs::Empty());
 
@@ -369,7 +372,7 @@ void JackalPlanner::reset(bool success)
 
     ros::Duration(1.0 / CONFIG["control_frequency"].as<double>()).sleep();
 
-    _planner->reset(_state, _data, success);
+    _planner->reset(_state, _data, success); // Reset planner
 
     _timeout_timer.start();
 }
@@ -382,7 +385,7 @@ void JackalPlanner::collisionCallback(const std_msgs::Float64::ConstPtr &msg)
         LOG_INFO_THROTTLE(500., "Collision detected (Intrusion: " << _data.intrusion << ")");
 }
 
-void JackalPlanner::publishPose()
+void JackalPlanner::publishPose() // Used for the social forces model to avoid the robot
 {
     geometry_msgs::PoseStamped pose;
     pose.pose.position.x = _state.get("x");
@@ -395,7 +398,7 @@ void JackalPlanner::publishPose()
     _pose_pub.publish(pose);
 }
 
-void JackalPlanner::publishCamera()
+void JackalPlanner::publishCamera() // For a smoothened RViz camera
 {
     geometry_msgs::TransformStamped msg;
     msg.header.stamp = ros::Time::now();
@@ -422,8 +425,8 @@ void JackalPlanner::publishCamera()
         camera_x += _x_buffer[i];
         camera_y += _y_buffer[i];
     }
-    msg.transform.translation.x = camera_x / (double)CAMERA_BUFFER; //_state.get("x");
-    msg.transform.translation.y = camera_y / (double)CAMERA_BUFFER; //_state.get("y");
+    msg.transform.translation.x = camera_x / (double)CAMERA_BUFFER;
+    msg.transform.translation.y = camera_y / (double)CAMERA_BUFFER;
     msg.transform.translation.z = 0.0;
     msg.transform.rotation.x = 0;
     msg.transform.rotation.y = 0;

@@ -2,12 +2,11 @@
 
 import os
 import sys
+import numpy as np
 
-# TODO: Import packages through pypi
 sys.path.append(os.path.join(sys.path[0], "..", "..", "solver_generator"))
 sys.path.append(os.path.join(sys.path[0], "..", "..", "mpc_planner_modules", "scripts"))
 
-import numpy as np
 # SET YOUR FORCES PATH HERE (can also be in PYTHONPATH)
 forces_path = os.path.join(os.path.expanduser("~"), "forces_pro_client")
 sys.path.append(forces_path)
@@ -38,22 +37,23 @@ def configuration_no_obstacles(settings):
     modules = ModuleManager()
     model = ContouringSecondOrderUnicycleModel()
 
+    # You can manually set state/input bounds
     # lower_bound = [-2.0, -0.8, -2000.0, -2000.0, -np.pi * 2, -1.0, -1.0]
     # upper_bound = [2.0, 0.8, 2000.0, 2000.0, np.pi * 2, 3.0, 10000.0]
     # model.set_bounds(lower_bound, upper_bound)
 
     base_module = modules.add_module(MPCBaseModule(settings))
-    base_module.weigh_variable(var_name="a", weight_names="acceleration")
-    base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
+    base_module.weigh_variable(var_name="a", weight_names="acceleration") # w_a * ||a||_2^2
+    base_module.weigh_variable(var_name="w", weight_names="angular_velocity") # w_w * ||w||_2^2
 
     if not settings["contouring"]["dynamic_velocity_reference"]:
         base_module.weigh_variable(var_name="v",    
                                 weight_names=["velocity", "reference_velocity"], 
-                                cost_function=lambda x, w: w[0] * (x-w[1])**2)
+                                cost_function=lambda x, w: w[0] * (x-w[1])**2) # w_v * ||v - v_ref||_2^2
 
-    modules.add_module(ContouringModule(settings))
+    modules.add_module(ContouringModule(settings)) # Contouring costs
     if settings["contouring"]["dynamic_velocity_reference"]:
-        modules.add_module(PathReferenceVelocityModule(settings))
+        modules.add_module(PathReferenceVelocityModule(settings)) # Possibly adaptive v_ref
 
     return model, modules
 
@@ -89,7 +89,10 @@ def configuration_safe_horizon(settings):
 def configuration_tmpc(settings):
     model, modules = configuration_no_obstacles(settings)
 
-    modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
+    modules.add_module(GuidanceConstraintModule(
+        settings, 
+        constraint_submodule=EllipsoidConstraintModule # This configures the obstacle avoidance used in each planner
+    ))
     # modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=GaussianConstraintModule))
 
     return model, modules

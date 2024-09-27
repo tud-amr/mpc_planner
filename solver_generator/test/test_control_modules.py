@@ -15,6 +15,14 @@ from contouring import ContouringModule
 from path_reference_velocity import PathReferenceVelocityModule
 from ellipsoid_constraints import EllipsoidConstraintModule
 
+from mpc_base import MPCBaseModule
+from curvature_aware_contouring import CurvatureAwareContouringModule
+from goal_module import GoalModule
+from gaussian_constraints import GaussianConstraintModule
+from guidance_constraints import GuidanceConstraintModule
+from linearized_constraints import LinearizedConstraintModule
+from scenario_constraints import ScenarioConstraintModule
+
 
 def test_module_manager_objective():
 
@@ -63,6 +71,7 @@ def test_module_manager_constraints():
     settings["n_discs"] = 1
     settings["max_obstacles"] = 1
 
+
     modules = ModuleManager()
     modules.add_module(EllipsoidConstraintModule(settings))
 
@@ -92,3 +101,36 @@ def test_module_manager_constraints():
     for i, c in enumerate(constr):
         assert lb[i] < c
         assert c < ub[i]
+
+
+def test_all_modules():
+    settings = dict()
+    settings["n_discs"] = 1
+    settings["max_obstacles"] = 1
+    settings["contouring"] = dict()
+    settings["contouring"]["num_segments"] = 10
+    settings["contouring"]["dynamic_velocity_reference"] = False
+
+    settings["linearized_constraints"] = dict()
+    settings["linearized_constraints"]["add_halfspaces"] = 2
+    # settings["contouring"]["dynamic_velocity_reference"] = False
+    settings["N"] = 20
+
+    modules = ModuleManager()
+    base_module = modules.add_module(MPCBaseModule(settings))
+    base_module.weigh_variable(var_name="a", weight_names="acceleration")
+    base_module.weigh_variable(var_name="w", weight_names="angular_velocity") 
+    base_module.weigh_variable(var_name="v",    
+                            weight_names=["velocity", "reference_velocity"], 
+                            cost_function=lambda x, w: w[0] * (x-w[1])**2) 
+
+    modules.add_module(GoalModule(settings))
+    modules.add_module(ContouringModule(settings))
+    modules.add_module(CurvatureAwareContouringModule(settings))
+    modules.add_module(PathReferenceVelocityModule(settings))
+
+    modules.add_module(GaussianConstraintModule(settings))
+    modules.add_module(EllipsoidConstraintModule(settings))
+    modules.add_module(GuidanceConstraintModule(settings))
+    modules.add_module(LinearizedConstraintModule(settings))
+    modules.add_module(ScenarioConstraintModule(settings))

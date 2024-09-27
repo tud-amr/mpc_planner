@@ -5,7 +5,7 @@
 #include <mpc_planner_solver/solver_interface.h>
 #include <mpc_planner_types/realtime_data.h>
 
-#include <mpc_planner_msgs/ObstacleArray.h> /** @Todo: Replace! */
+#include <mpc_planner_msgs/ObstacleArray.h>
 
 #include <ros_tools/profiling.h>
 
@@ -62,12 +62,12 @@ public:
     void publishCamera();
 
 private:
-    std::unique_ptr<Planner> _planner;
+    std::unique_ptr<Planner> _planner; // MPC
 
     std::unique_ptr<JackalsimulatorReconfigure> _reconfigure;
 
-    RealTimeData _data;
-    State _state;
+    RealTimeData _data; // All planner data
+    State _state;       // The robot state
 
     ros::Timer _timer;
 

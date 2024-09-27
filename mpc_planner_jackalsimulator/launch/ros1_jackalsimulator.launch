@@ -9,15 +9,9 @@
   <arg name="roadmap_map" value="maps/open_space/24.xml"/>
 
   <!-- <arg name="pedestrian_scenario" default="random_social/12_corridor.xml" /> -->
-  <!-- <arg name="pedestrian_scenario" default="static/8_corridor.xml" /> -->
   <arg name="pedestrian_scenario" default="open_space/24.xml" />
-  <!-- <arg name="pedestrian_scenario" default="crossing/2_leftstack.xml" /> -->
-  <!-- <arg name="pedestrian_scenario" default="static/1_offset_small.xml" /> -->
-
-  <!-- <arg name="pedestrian_scenario" default="new_safe_horizon/8_gaussian.xml" /> -->
 
   <rosparam command="load" file="$(find mpc_planner_jackalsimulator)/config/guidance_planner.yaml"/>
-  <!-- <rosparam command="load" file="$(find lmpcc_scenario_module)/config/params.yaml"/> -->
   <node pkg="mpc_planner_jackalsimulator" type="jackalsimulator_planner" name="jackalsimulator_planner" required="true" respawn="false" output="screen">
         <remap from="/input/state_pose" to="robot_state"/>
         <remap from="/input/goal" to="/move_base_simple/goal"/>
