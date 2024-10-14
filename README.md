@@ -17,11 +17,10 @@ This package implements Model Predictive Control (MPC) for motion planning in 2D
 This repository includes our implementation of **Topology-Driven MPC** (**T-MPC++**) that computes multiple distinct trajectories in parallel, each passing dynamic obstacles differently. For a brief overview of the method, see the [Paper website](https://autonomousrobots.nl/paper_websites/topology-driven-mpc).
 
 
-Simulated Mobile Robot | Real-World Mobile Robot |
-| ------------- | ------------- |
-| <img src="https://imgur.com/YZNLaww.gif" width="100%"> | <img src="https://imgur.com/861MmhI.gif" width=100%> |
-| **Static and Dynamic Obstacles** |  |
-| <img src="https://imgur.com/QgYDTRq.gif" width="100%"> |  |
+Simulated Mobile Robot | Real-World Mobile Robot |  Static and Dynamic Obstacles |
+| -------------- | -------------- | -------------- |
+| <img src="https://imgur.com/YZNLaww.gif" width="100%"> | <img src="https://imgur.com/861MmhI.gif" width=100%> | <img src="https://imgur.com/QgYDTRq.gif" width="100%"> |
+
 
 <!-- - **Safe Horizon Model Predictive Control (SH-MPC)** O. de Groot, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Scenario-Based Motion Planning with Bounded Probability of Collision.” arXiv, Jul. 03, 2023. [Online]. Available: https://arxiv.org/pdf/2307.01070.pdf
 - **Scenario-based Model Predictive Contouring Control (S-MPCC)** O. de Groot, B. Brito, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Scenario-Based Trajectory Optimization in Uncertain Dynamic Environments,” IEEE RA-L, pp. 5389–5396, 2021. -->
@@ -328,13 +327,8 @@ Please see the `mpc_planner_jackalsimulator` package for an example of how to cu
 
 Launching this package simulates the Jackal robot in an environment with pedestrians.
 
-<!-- 5EjTmYf.gif -->
+<p align="center"><img src="https://imgur.com/61i3M78.gif" width="50%"></p>
 
-`jackalsimulator` | `jackal`  |
-| ------------- | ------------- |
-| <img src="https://imgur.com/61i3M78.gif" width="100%"> | <img src="https://imgur.com/861MmhI.gif" width=100%> |
-`rosnavigation` | `autoware` |
-| <img src="https://imgur.com/QgYDTRq.gif" width="100%"> | *Pending publication* |
 
 ### Custom Modules
 
