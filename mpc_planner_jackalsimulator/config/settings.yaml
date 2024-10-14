@@ -28,7 +28,7 @@ recording:
   folder: /workspace/src/mpc_planner/data # Data location
   file: none # File name for the experiment
   timestamp: false # Add a timestamp
-  num_experiments: 1 # Stop after this number of experiments
+  num_experiments: 5 # Stop after this number of experiments
 
 deceleration_at_infeasible: 3.0 # [m/s^2] Deceleration when MPC is infeasible
 max_obstacles: 12 # Max. number of dynamic obstacles
