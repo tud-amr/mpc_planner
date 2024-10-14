@@ -27,11 +27,11 @@ guidance_planner:
     timeout: 10 # Timeout for PRM sampling [ms]
     margin: 0.0 # [m] sampled outside of goals 
 
-  max_velocity: 7.0 # [m/s] Maximum velocity of connections between nodes
+  max_velocity: 3.0 # [m/s] Maximum velocity of connections between nodes
   max_acceleration: 7.0 # [m/s^2] Maximum velocity of connections between nodes
   connection_filters:
     forward: true
-    velocity: false
+    velocity: true
     acceleration: false
   selection_weights: # Weights on the spline selection heuristic cost
     consistency: 0.75 # 0 = consistent, 1 = inconsistent
