@@ -9,10 +9,10 @@
 
 This package implements Model Predictive Control (MPC) for motion planning in 2D dynamic environments using ROS/ROS2 C++. A complete VSCode docker environment with this planner is available at https://github.com/tud-amr/mpc_planner_ws. This code is associated with the following publications:
 
-**Journal Paper:** O. de Groot, L. Ferranti, D. M. Gavrila, and J. Alonso-Mora, *Topology-Driven Parallel Trajectory Optimization in Dynamic Environments.* **IEEE Transactions on Robotics (T-RO)** 2024. Available: https://doi.org/10.1109/TRO.2024.3475047
+**Journal Paper:** O. de Groot, L. Ferranti, D. M. Gavrila, and J. Alonso-Mora, *Topology-Driven Parallel Trajectory Optimization in Dynamic Environments.* **IEEE Transactions on Robotics (T-RO)**, 2024. Available: https://doi.org/10.1109/TRO.2024.3475047
 
 
-**Conference Paper:** O. de Groot, L. Ferranti, D. M. Gavrila, and J. Alonso-Mora, *Globally Guided Trajectory Optimization in Dynamic Environments.* **IEEE International Conference on Robotics and Automation (ICRA)** 2023. Available: https://doi.org/10.1109/ICRA48891.2023.10160379
+**Conference Paper:** O. de Groot, L. Ferranti, D. M. Gavrila, and J. Alonso-Mora, *Globally Guided Trajectory Optimization in Dynamic Environments.* **IEEE International Conference on Robotics and Automation (ICRA)**, 2023. Available: https://doi.org/10.1109/ICRA48891.2023.10160379
 
 This repository includes our implementation of **Topology-Driven MPC** (**T-MPC++**) that computes multiple distinct trajectories in parallel, each passing dynamic obstacles differently. For a brief overview of the method, see the [Paper website](https://autonomousrobots.nl/paper_websites/topology-driven-mpc).
 
