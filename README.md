@@ -7,16 +7,14 @@
 
 # MPC Planner
 
-This package implements Model Predictive Control (MPC) for motion planning in 2D dynamic environments using ROS/ROS2 C++. A complete VSCode docker environment with this planner is available at https://github.com/tud-amr/mpc_planner_ws. 
-
-This code is associated with the following publications:
+This package implements Model Predictive Control (MPC) for motion planning in 2D dynamic environments using ROS/ROS2 C++. A complete VSCode docker environment with this planner is available at https://github.com/tud-amr/mpc_planner_ws. This code is associated with the following publications:
 
 **Journal Paper:** O. de Groot, L. Ferranti, D. M. Gavrila, and J. Alonso-Mora, *Topology-Driven Parallel Trajectory Optimization in Dynamic Environments.* **IEEE Transactions on Robotics (T-RO)** 2024. Available: https://doi.org/10.1109/TRO.2024.3475047
 
 
 **Conference Paper:** O. de Groot, L. Ferranti, D. M. Gavrila, and J. Alonso-Mora, *Globally Guided Trajectory Optimization in Dynamic Environments.* **IEEE International Conference on Robotics and Automation (ICRA)** 2023. Available: https://doi.org/10.1109/ICRA48891.2023.10160379
 
-This repository includes our implementation of **Topology-Driven MPC** (**T-MPC++**) that computes multiple distinct trajectories in parallel, each passing dynamic obstacles differently.
+This repository includes our implementation of **Topology-Driven MPC** (**T-MPC++**) that computes multiple distinct trajectories in parallel, each passing dynamic obstacles differently. For a brief overview of the method, see the [Paper website](https://autonomousrobots.nl/paper_websites/topology-driven-mpc).
 
 
 Simulated Mobile Robot | Real-World Mobile Robot |
@@ -38,16 +36,17 @@ Simulated Mobile Robot | Real-World Mobile Robot |
 5. [Examples](#examples) 
 6. [License](#license) 
 7. [Citing](#citing) 
+8. [Contributing](#contributing)
 
 ## Features
 This is a planner implementation for mobile robots navigating in 2D dynamic environments. It is designed to be:
 
 - **Modular** - Cost and constraint components are modular to allow stacking of functionality.
-- **Robot Agnostic** - The robot functionality in ROS wraps the base C++ planner. This allows customization of the control loop, input and output topics and visualization.
+- **Robot Agnostic** - The robot functionality in ROS wraps the base `C++` planner. This allows customization of the control loop, input and output topics and visualization.
 - **ROS/ROS2 Compatible:** - ROS functionality is wrapped in `ros_tools` to support both ROS and ROS2.
 - **Computationally Efficient:** - Typical real-time control frequencies with dynamic and static obstacle avoidance are ~20-30 Hz
 
-To solve the MPC, we support the licensed [**Forces Pro**](https://www.embotech.com/softwareproducts/forcespro/overview/) and open-source [**Acados**](https://docs.acados.org/) solvers. The solvers can be switched with a single setting when both are installed. The solver generation runs on `Python`, generating `C++` code for the online planner.
+To solve the MPC, we support the licensed [**Forces Pro**](https://www.embotech.com/softwareproducts/forcespro/overview/) and open-source [**Acados**](https://docs.acados.org/) solvers. The solvers can be switched with a single setting when both are installed. The solver generation is implemented in `Python`, generating `C++` code for the online planner.
 
 Implemented MPC **modules** include:
 
@@ -55,7 +54,7 @@ Implemented MPC **modules** include:
   - Model Predictive Contouring Control ([MPCC](https://ieeexplore.ieee.org/document/8768044))
   - Curvature-Aware Model Predictive Control ([CA-MPC](https://ieeexplore.ieee.org/abstract/document/10161177))
 - **Goal Tracking Cost** - Tracking a user defined goal position
-- **State/Input Penalization** - To limit control inputs
+- **State/Input Penalization** - To limit control inputs and track references
 - **Dynamic Obstacle Avoidance Constraints** - Avoiding humans
   - Ellipsoidal constraints (https://ieeexplore.ieee.org/document/8768044)
   - Linearized constraints
@@ -73,7 +72,7 @@ The [**Topology-Driven MPC**](https://arxiv.org/pdf/2401.06021) [1] module paral
 
 We recommend to use the complete VSCode containerized environment provided here https://github.com/tud-amr/mpc_planner_ws, if you can, to automatically install the planner and its requirements.
 
-Both solvers have similar performance. In our publications we have used `Forces Pro`.
+> **Note:** While we support `Forces Pro` and `Acados`, we used `Forces Pro` for the results in our paper.
 
 > **Note:** To use Forces Pro in the containerized environment, a floating license is required. If you have a regular license, please following the steps below to install the planner manually.
 
@@ -83,7 +82,7 @@ The following steps denote the **manual** installation of the planner.
 
 ### Step 1: Clone repos
 
-In your `ROS`/`ROS2` workspace `ws/src` clone the following:
+In your `ROS`/`ROS2` workspace `ws/src`, clone the following:
 
 Planner repos:
 ```
@@ -141,9 +140,13 @@ rosdep install -y -r --from-paths src --ignore-src --rosdistro noetic
 
 ### Step 4: Install your solver
 
-The solver generation uses `Python`. Because of Forces Pro limitations, `Python 3.8` is required. We provide a `poetry` environment for the solver generation. If you have [`miniconda`](https://docs.anaconda.com/miniconda/) installed you can use:
+The solver generation uses `Python3`. Requirements for the python environment are in `requirements.txt` and `pyproject.toml`. For Forces Pro, `Python 3.8` is required. You can set-up the environment yourself if you are familiar with virtual environments. Otherwise, explicit instructions are provided below.
+
+We recomment to either use `poetry` or `conda`. 
 
 **Conda**
+
+If you have [`miniconda`](https://docs.anaconda.com/miniconda/) installed you can use:
 
 From `ws/src/mpc_planner`:
 ```bash
@@ -238,7 +241,7 @@ export ACADOS_SOURCE_DIR="<path_to_acados>"
 <details>
     <summary><b  style="display:inline-block">Solver: Forces Pro</b></summary>
 
-Go to my.embotech.com, log in to your account. Assign a regular license to your computer. Then download the client to `~/forces_pro_client/` **outside of the container**. If you have the solver in a different location, add its path to `PYTHONPATH`.
+Go to [my.embotech.com](my.embotech.com), log in to your account. Assign a regular license to your computer. Download the client to `~/forces_pro_client/` **outside of the container**. If you have the solver in a different location, add its path to `PYTHONPATH`.
 </details>
 
 ---
@@ -253,31 +256,11 @@ You should see output indicating that the solver is being generated.
 
 
 ### Step 5: Build the planner
+Source the ROS workspace `source devel/setup.sh`. Then build with:
 
 ```bash
 catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release # Release, Debug, RelWithDebInfo, MinSizeRel
 catkin build mpc_planner_<your_system>
-```
-
-<!-- sudo apt-get install libeigen3-dev pkg-config libomp-dev yaml-cpp clang -->
-
-
-<details>
-<summary>Ignoring a system</summary>
-To ignore a system you do not care about use:
-
-```bash
-rosdep install --from-paths src --ignore-src -r -y --skip-keys="mpc_planner_jackal"
-```
-</details>
-
-
-
-Build the repository (`source devel/setup.sh`):
-
-```bash
-catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
-catkin build mpc_planner-<system>
 ```
 
 ## Usage
@@ -372,6 +355,10 @@ This project is licensed under the Apache 2.0 license - see the LICENSE file for
 ## Citing
 This repository was developed at the Cognitive Robotics group of Delft University of Technology by [Oscar de Groot](https://github.com/oscardegroot) in partial collaboration with [Dennis Benders](https://github.com/dbenders1) and [Thijs Niesten](https://github.com/thijs83) and under supervision of Dr. Laura Ferranti, Dr. Javier Alonso-Mora and Prof. Dariu Gavrila.
 
-If you found this repository useful in your research, please cite our paper:
+If you found this repository useful, please cite our paper!
 
-- [1] **Topology-Driven Model Predictive Control (T-MPC)** O. de Groot, L. Ferranti, D. Gavrila, and J. Alonso-Mora, “Topology-Driven Parallel Trajectory Optimization in Dynamic Environments.” arXiv, Jan. 11, 2024. [Online]. Available: http://arxiv.org/abs/2401.06021
+- [1] **Journal Paper:** O. de Groot, L. Ferranti, D. M. Gavrila, and J. Alonso-Mora, *Topology-Driven Parallel Trajectory Optimization in Dynamic Environments.* **IEEE Transactions on Robotics (T-RO)** 2024. Available: https://doi.org/10.1109/TRO.2024.3475047
+
+
+## Contributing
+We welcome issues and contributions! If you encounter any bugs, have suggestions for new features, or want to propose improvements, feel free to open an issue or pull request.
