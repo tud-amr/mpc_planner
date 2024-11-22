@@ -114,21 +114,21 @@ namespace MPCPlanner
 
             status = Solver_acados_solve(_acados_ocp_capsule);
 
-            ocp_nlp_get(_nlp_config, _nlp_solver, "time_tot", &_info.elapsed_time);
+            ocp_nlp_get(_nlp_solver, "time_tot", &_info.elapsed_time);
             _info.solvetime += _info.elapsed_time;
             _info.min_time = MIN(_info.elapsed_time, _info.min_time);
 
-            ocp_nlp_get(_nlp_config, _nlp_solver, "qp_status", &_info.qp_status);
+            ocp_nlp_get(_nlp_solver, "qp_status", &_info.qp_status);
 
             if (status != ACADOS_SUCCESS && _info.qp_status != 0)
                 break;
         }
 
-        ocp_nlp_get(_nlp_config, _nlp_solver, "nlp_res", &_info.nlp_res);
+        ocp_nlp_get(_nlp_solver, "nlp_res", &_info.nlp_res);
 
         // Compute and retrieve the cost
         ocp_nlp_eval_cost(_nlp_solver, _nlp_in, _nlp_out);
-        ocp_nlp_get(_nlp_config, _nlp_solver, "cost_value", &_info.pobj);
+        ocp_nlp_get(_nlp_solver, "cost_value", &_info.pobj);
 
         // Get output
         for (int k = 0; k <= _nlp_dims->N; k++)
@@ -152,7 +152,7 @@ namespace MPCPlanner
 
         // Get INFO
         ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, 0, "kkt_norm_inf", &_info.kkt_norm_inf);
-        ocp_nlp_get(_nlp_config, _nlp_solver, "sqp_iter", &_info.sqp_iter);
+        ocp_nlp_get(_nlp_solver, "sqp_iter", &_info.sqp_iter);
 
         // _info.print(_acados_ocp_capsule);
 
