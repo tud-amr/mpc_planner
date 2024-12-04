@@ -9,6 +9,12 @@ Several additional packages are required to run the planner in the lab. These ar
 
 ---
 
+### Demo Instructions
+
+1. Connect to `mrl-wifi-5g`.
+2. `ip a`, set `ROS_IP` in `connect_to_jackal.sh`.
+3. `Ctrl + Shift + B` -> `Jackal: Run Real-World Jackal`
+
 ### Notes
 - The launch file configures the number of pedestrians, which needs to be correct for any pedestrian to be detected.
 - The launch file also allows static obstacles with markers to be added (as dynamic obstacle with zero velocity).

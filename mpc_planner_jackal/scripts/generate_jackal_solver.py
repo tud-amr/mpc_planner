@@ -58,8 +58,14 @@ def configuration_tmpc(settings):
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
 
+    base_module.weigh_variable(
+        var_name="v",
+        weight_names=["velocity", "reference_velocity"],
+        cost_function=lambda x, w: w[0] * (x - w[1]) ** 2,
+    )
+
     modules.add_module(ContouringModule(settings))
-    modules.add_module(PathReferenceVelocityModule(settings))
+    # modules.add_module(PathReferenceVelocityModule(settings))
 
     # modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=EllipsoidConstraintModule))
     modules.add_module(GuidanceConstraintModule(settings, constraint_submodule=GaussianConstraintModule))
@@ -75,9 +81,14 @@ def configuration_lmpcc(settings):
     base_module = modules.add_module(MPCBaseModule(settings))
     base_module.weigh_variable(var_name="a", weight_names="acceleration")
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
+    base_module.weigh_variable(
+        var_name="v",
+        weight_names=["velocity", "reference_velocity"],
+        cost_function=lambda x, w: w[0] * (x - w[1]) ** 2,
+    )
 
     modules.add_module(ContouringModule(settings))
-    modules.add_module(PathReferenceVelocityModule(settings))
+    # modules.add_module(PathReferenceVelocityModule(settings))
 
     modules.add_module(EllipsoidConstraintModule(settings))
 
@@ -86,6 +97,7 @@ def configuration_lmpcc(settings):
 
 settings = load_settings()
 
+# model, modules = configuration_lmpcc(settings)
 model, modules = configuration_tmpc(settings)
 
 generate_solver(modules, model, settings)

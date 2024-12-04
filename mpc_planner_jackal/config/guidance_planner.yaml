@@ -9,10 +9,10 @@ guidance_planner:
 
   homotopy:
     n_paths: 4 # Number of guidance trajectories
-    comparison_function: Homology # Homology (default) Winding or UVD
+    comparison_function: Winding # Homology (default) Winding or UVD
     winding:
       pass_threshold: 0.87 #1.74 # half of pi
-      use_non_passing: true
+      use_non_passing: false
     use_learning: false
     track_selected_homology_only: false
 
@@ -27,8 +27,8 @@ guidance_planner:
     timeout: 10 # Timeout for PRM sampling [ms]
     margin: 0.0 # [m] sampled outside of goals 
 
-  max_velocity: 7.0 # Maximum velocity of connections between nodes
-  max_acceleration: 7.0 # Maximum velocity of connections between nodes
+  max_velocity: 3.0 # Maximum velocity of connections between nodes
+  max_acceleration: 3.0 # Maximum velocity of connections between nodes
   connection_filters:
     forward: true
     velocity: true

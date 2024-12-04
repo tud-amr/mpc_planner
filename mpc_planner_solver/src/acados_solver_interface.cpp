@@ -2,6 +2,8 @@
 
 #include <mpc_planner_util/parameters.h>
 
+#include <ros_tools/profiling.h>
+
 namespace MPCPlanner
 {
     Solver::Solver(int solver_id)
@@ -85,6 +87,10 @@ namespace MPCPlanner
     {
         int status = 1;
 
+        RosTools::Benchmarker iteration_timer("iteration");
+        RosTools::Timer timeout_timer(_params.solver_timeout);
+        timeout_timer.start();
+
         // _params.printParameters(_parameter_map);
 
         // Set initial state
@@ -109,8 +115,11 @@ namespace MPCPlanner
         // ocp_nlp_solver_opts_update(_nlp_config, _nlp_dims, _nlp_opts);
 
         ocp_nlp_precompute(_nlp_solver, _nlp_in, _nlp_out);
+        double iteration_time = 0.;
+
         for (int iteration = 0; iteration < _num_iterations; iteration++)
         {
+            iteration_timer.start();
 
             status = Solver_acados_solve(_acados_ocp_capsule);
 
@@ -122,6 +131,16 @@ namespace MPCPlanner
 
             if (status != ACADOS_SUCCESS && _info.qp_status != 0)
                 break;
+
+            iteration_time += iteration_timer.stop();
+            double avg_iteration_time = iteration_time / ((double)(iteration + 1));
+
+            // Stop iterating if we ran out of time
+            if (timeout_timer.currentDuration() + avg_iteration_time >= _params.solver_timeout)
+            {
+                LOG_WARN_THROTTLE(15000., "Timeout is enabled. Stopping iterations when planning time is exceeded");
+                break;
+            }
         }
 
         ocp_nlp_get(_nlp_solver, "nlp_res", &_info.nlp_res);
@@ -136,6 +155,13 @@ namespace MPCPlanner
         for (int k = 0; k < _nlp_dims->N; k++)
             ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, k, "u", &_output.utraj[k * nu]);
 
+        double res_stat, res_eq, res_ineq, res_comp;
+        ocp_nlp_get(_nlp_solver, "res_eq", &res_eq);
+        if (res_eq > 1e-2 && status == ACADOS_SUCCESS)
+        {
+            // LOG_WARN("Acados gave back success, but the solution is infeasible");
+            status = ACADOS_QP_FAILURE;
+        }
         // _output.print();
 
         if (status == ACADOS_SUCCESS)
