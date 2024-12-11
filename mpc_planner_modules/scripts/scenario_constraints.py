@@ -20,7 +20,7 @@ class ScenarioConstraintModule(ConstraintModule):
         super().__init__()
         self.module_name = "ScenarioConstraints"  # Needs to correspond to the c++ name of the module
         self.import_name = "scenario_constraints.h"
-        self.dependencies.append("lmpcc_scenario_module")
+        self.dependencies.append("scenario_module")
         self.description = "Avoid dynamic obstacles under motion uncertainty using scenario optimization."
 
         self.constraints.append(LinearConstraints(n_discs=settings["n_discs"], n_constraints=24, use_slack=True))
@@ -39,7 +39,7 @@ class LinearConstraints:
     def define_parameters(self, params):
 
         for disc_id in range(self.n_discs):
-            params.add(f"ego_disc_{disc_id}_offset")
+            params.add(f"ego_disc_{disc_id}_offset", bundle_name="ego_disc_offset")
 
             for index in range(self.n_constraints):
                 params.add(self.constraint_name(index, disc_id) + "_a1")

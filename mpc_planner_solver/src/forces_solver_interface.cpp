@@ -221,6 +221,23 @@ namespace MPCPlanner
 		return exit_code;
 	}
 
+	void Solver::initializeOneIteration()
+	{
+		setReinitialize(true);
+	}
+
+	int Solver::solveOneIteration()
+	{
+		_exit_code_one_iter = solve();
+		setReinitialize(false); // Disable reinitialization after each iteration
+		return _exit_code_one_iter;
+	}
+
+	int Solver::completeOneIteration()
+	{
+		return _exit_code_one_iter;
+	}
+
 	double Solver::getOutput(int k, std::string &&state_name) const
 	{
 		return getForcesOutput(_output, k, _model_map[state_name][1].as<int>());

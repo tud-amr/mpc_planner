@@ -78,9 +78,14 @@ def configuration_safe_horizon(settings):
     base_module.weigh_variable(var_name="w", weight_names="angular_velocity")
     base_module.weigh_variable(var_name="slack", weight_names="slack", rqt_max_value=10000.0)
 
-    # modules.add_module(GoalModule(settings))  # Track a goal
-    modules.add_module(ContouringModule(settings))
-    modules.add_module(PathReferenceVelocityModule(settings))
+    if not settings["contouring"]["dynamic_velocity_reference"]:
+        base_module.weigh_variable(var_name="v",    
+                                weight_names=["velocity", "reference_velocity"], 
+                                cost_function=lambda x, w: w[0] * (x-w[1])**2) # w_v * ||v - v_ref||_2^2
+
+    modules.add_module(ContouringModule(settings)) # Contouring costs
+    if settings["contouring"]["dynamic_velocity_reference"]:
+        modules.add_module(PathReferenceVelocityModule(settings)) # Possibly adaptive v_ref
 
     modules.add_module(ScenarioConstraintModule(settings))
     return model, modules

@@ -3,9 +3,7 @@
 
 #include <mpc_planner_modules/controller_module.h>
 
-#include <lmpcc_scenario_module/lmpcc_scenario_module.h>
-
-#include <list>
+#include <scenario_module/scenario_module.h>
 
 namespace MPCPlanner
 {
@@ -22,12 +20,13 @@ namespace MPCPlanner
     void onDataReceived(RealTimeData &data, std::string &&data_name) override;
     bool isDataReady(const RealTimeData &data, std::string &missing_data) override;
 
-    int optimize(State &state, const RealTimeData &data, ModuleData &module_data) override; // Default: no custom optimization
+    // Optimizes multiple trajectories in parallel
+    int optimize(State &state, const RealTimeData &data, ModuleData &module_data) override;
 
     void visualize(const RealTimeData &data, const ModuleData &module_data) override;
 
   private:
-    // std::unique_ptr<ScenarioModule::ScenarioModule> _scenario_module;
+    double _planning_time;
 
     /** @brief a struct to collect parallel scenario optimizations */
     struct ScenarioSolver
@@ -44,7 +43,7 @@ namespace MPCPlanner
     };
     std::vector<std::unique_ptr<ScenarioSolver>> _scenario_solvers;
 
-    // ScenarioSolveStatus solve_status_;
+    ScenarioSolver *_best_solver;
 
     int sequentialScenarioIterations();
   };

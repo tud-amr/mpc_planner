@@ -93,6 +93,33 @@ namespace MPCPlanner
 
         // _params.printParameters(_parameter_map);
 
+        initializeOneIteration();
+        double iteration_time = 0.;
+
+        for (int iteration = 0; iteration < _num_iterations; iteration++)
+        {
+            iteration_timer.start();
+
+            solveOneIteration();
+
+            if (status != ACADOS_SUCCESS && _info.qp_status != 0)
+                break;
+
+            iteration_time += iteration_timer.stop();
+            double avg_iteration_time = iteration_time / ((double)(iteration + 1));
+
+            // Stop iterating if we ran out of time
+            if (timeout_timer.currentDuration() + avg_iteration_time >= _params.solver_timeout)
+            {
+                LOG_WARN_THROTTLE(15000., "Timeout is enabled. Stopping after " << iteration + 1 << " iterations because planning time is exceeded");
+                break;
+            }
+        }
+        return completeOneIteration();
+    }
+
+    void Solver::initializeOneIteration()
+    {
         // Set initial state
         ocp_nlp_constraints_model_set(_nlp_config, _nlp_dims, _nlp_in, 0, "lbx", _params.xinit);
         ocp_nlp_constraints_model_set(_nlp_config, _nlp_dims, _nlp_in, 0, "ubx", _params.xinit);
@@ -112,37 +139,28 @@ namespace MPCPlanner
         int rti_phase = 0; // 1 = prep, 2 = feedback, 0 = both
 
         ocp_nlp_solver_opts_set(_nlp_config, _nlp_opts, "rti_phase", &rti_phase);
-        // ocp_nlp_solver_opts_update(_nlp_config, _nlp_dims, _nlp_opts);
-
         ocp_nlp_precompute(_nlp_solver, _nlp_in, _nlp_out);
-        double iteration_time = 0.;
+    }
 
-        for (int iteration = 0; iteration < _num_iterations; iteration++)
-        {
-            iteration_timer.start();
+    int Solver::solveOneIteration()
+    {
+        int status = -1;
 
-            status = Solver_acados_solve(_acados_ocp_capsule);
+        status = Solver_acados_solve(_acados_ocp_capsule);
 
-            ocp_nlp_get(_nlp_solver, "time_tot", &_info.elapsed_time);
-            _info.solvetime += _info.elapsed_time;
-            _info.min_time = MIN(_info.elapsed_time, _info.min_time);
+        ocp_nlp_get(_nlp_solver, "time_tot", &_info.elapsed_time);
+        _info.solvetime += _info.elapsed_time;
+        _info.min_time = MIN(_info.elapsed_time, _info.min_time);
 
-            ocp_nlp_get(_nlp_solver, "qp_status", &_info.qp_status);
+        ocp_nlp_get(_nlp_solver, "qp_status", &_info.qp_status);
 
-            if (status != ACADOS_SUCCESS && _info.qp_status != 0)
-                break;
+        _exit_code_one_iter = status;
 
-            iteration_time += iteration_timer.stop();
-            double avg_iteration_time = iteration_time / ((double)(iteration + 1));
+        return status;
+    }
 
-            // Stop iterating if we ran out of time
-            if (timeout_timer.currentDuration() + avg_iteration_time >= _params.solver_timeout)
-            {
-                LOG_WARN_THROTTLE(15000., "Timeout is enabled. Stopping iterations when planning time is exceeded");
-                break;
-            }
-        }
-
+    int Solver::completeOneIteration()
+    {
         ocp_nlp_get(_nlp_solver, "nlp_res", &_info.nlp_res);
 
         // Compute and retrieve the cost
@@ -157,14 +175,12 @@ namespace MPCPlanner
 
         double res_stat, res_eq, res_ineq, res_comp;
         ocp_nlp_get(_nlp_solver, "res_eq", &res_eq);
-        if (res_eq > 1e-2 && status == ACADOS_SUCCESS)
+        if (res_eq > 1e-2 && _exit_code_one_iter == ACADOS_SUCCESS)
         {
-            // LOG_WARN("Acados gave back success, but the solution is infeasible");
-            status = ACADOS_QP_FAILURE;
+            _exit_code_one_iter = ACADOS_QP_FAILURE;
         }
-        // _output.print();
 
-        if (status == ACADOS_SUCCESS)
+        if (_exit_code_one_iter == ACADOS_SUCCESS)
         {
             LOG_MARK("Solver_acados_solve(): SUCCESS!");
         }
@@ -172,23 +188,19 @@ namespace MPCPlanner
         {
             Solver_acados_reset(_acados_ocp_capsule, 1);
             ocp_nlp_solver_reset_qp_memory(_nlp_solver, _nlp_in, _nlp_out);
-
-            // LOG_WARN(explainExitFlag(status));
         }
 
         // Get INFO
         ocp_nlp_out_get(_nlp_config, _nlp_dims, _nlp_out, 0, "kkt_norm_inf", &_info.kkt_norm_inf);
         ocp_nlp_get(_nlp_solver, "sqp_iter", &_info.sqp_iter);
 
-        // _info.print(_acados_ocp_capsule);
-
         // Map to FORCES output
-        if (status == ACADOS_SUCCESS) // || status == 2) // Success
-            status = 1;
-        else if (status == 1)
-            status = 0;
+        if (_exit_code_one_iter == ACADOS_SUCCESS) // Success
+            _exit_code_one_iter = 1;
+        else if (_exit_code_one_iter == 1)
+            _exit_code_one_iter = 0;
 
-        return status;
+        return _exit_code_one_iter;
     }
 
     // PARAMETERS //

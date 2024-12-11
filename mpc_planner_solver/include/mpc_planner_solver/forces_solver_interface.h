@@ -55,6 +55,8 @@ namespace MPCPlanner
 
 		YAML::Node _config, _parameter_map, _model_map;
 
+		int _exit_code_one_iter{-1};
+
 		Solver(int solver_id = 0);
 		void reset();
 		~Solver();
@@ -88,6 +90,12 @@ namespace MPCPlanner
 
 		/** @brief Solve the optimization */
 		int solve();
+
+		// One iteration a time interface
+		void initializeOneIteration();
+		int solveOneIteration();
+		int completeOneIteration();
+
 		double getOutput(int k, std::string &&state_name) const;
 
 		// Debugging utilities

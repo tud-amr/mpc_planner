@@ -43,7 +43,7 @@ linearized_constraints:
   add_halfspaces: 0  # Add static constraints in T-MPC (e.g., for road boundaries)
 
 scenario_constraints:
-  parallel_solvers: 1
+  parallel_solvers: 4
 
 road:
   two_way: false # Does road go two ways?

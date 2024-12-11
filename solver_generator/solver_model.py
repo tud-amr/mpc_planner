@@ -281,8 +281,8 @@ class ContouringSecondOrderUnicycleModelWithSlack(DynamicsModel):
         self.states = ["x", "y", "psi", "v", "spline", "slack"]
         self.inputs = ["a", "w"]
 
-        self.lower_bound = [-4.0, -2.0, -2000.0, -2000.0, -np.pi * 4, -3.0, -1.0, 0.0]  # v -0.01
-        self.upper_bound = [4.0, 2.0, 2000.0, 2000.0, np.pi * 4, 3.0, 10000.0, 5000.0]  # w 0.8
+        self.lower_bound = [-2.0, -0.8, -2000.0, -2000.0, -np.pi * 4, -0.01, -1.0, 0.0]  # v -0.01
+        self.upper_bound = [2.0, 0.8, 2000.0, 2000.0, np.pi * 4, 3.0, 10000.0, 5000.0]  # w 0.8
 
     def continuous_model(self, x, u):
 

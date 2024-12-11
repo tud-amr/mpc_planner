@@ -5,6 +5,7 @@
 
 #include <ros_tools/visuals.h>
 #include <ros_tools/math.h>
+#include <ros_tools/profiling.h>
 
 #include <algorithm>
 
@@ -17,13 +18,14 @@ namespace MPCPlanner
   {
     solver = std::make_shared<Solver>(id);
     scenario_module.initialize(solver);
-    // std::make_unique<ScenarioModule::ScenarioModule>(solver);
   }
 
   ScenarioConstraints::ScenarioConstraints(std::shared_ptr<Solver> solver)
       : ControllerModule(ModuleType::CONSTRAINT, solver, "scenario_constraints")
   {
     LOG_INITIALIZE("Scenario Constraints");
+
+    _planning_time = 1. / CONFIG["control_frequency"].as<double>();
 
     _SCENARIO_CONFIG.Init();
     for (int i = 0; i < CONFIG["scenario_constraints"]["parallel_solvers"].as<int>(); i++)
@@ -40,7 +42,7 @@ namespace MPCPlanner
 #pragma omp parallel for num_threads(4)
     for (auto &solver : _scenario_solvers)
     {
-      *solver->solver = *_solver; // Copy the main solver
+      *solver->solver = *_solver; // Copy the main solver, including its initial guess
 
       solver->scenario_module.update(data, module_data);
     }
@@ -51,10 +53,6 @@ namespace MPCPlanner
     (void)module_data;
     (void)data;
     (void)k;
-    // for (auto &solver : _scenario_solvers)
-    // {
-    //   solver->scenario_module.setParameters(data, k);
-    // }
   }
 
   int ScenarioConstraints::optimize(State &state, const RealTimeData &data, ModuleData &module_data)
@@ -62,15 +60,16 @@ namespace MPCPlanner
     (void)state;
     (void)module_data;
 
-    // if (!config_->use_trajectory_sampling_)                        // To test regular optimization with slack
-    // return SimpleSequentialScenarioIterations(solver_interface); // S-MPCC (SQP)
+    omp_set_nested(1);
+    omp_set_max_active_levels(2);
+    omp_set_dynamic(0);
 
 #pragma omp parallel for num_threads(4)
     for (auto &solver : _scenario_solvers)
     {
-
-      // auto &solver = _scenario_solvers[s];
-      solver->solver->_params.solver_timeout = 1. / CONFIG["control_frequency"].as<double>();
+      // Set the planning timeout
+      std::chrono::duration<double> used_time = std::chrono::system_clock::now() - data.planning_start_time;
+      solver->solver->_params.solver_timeout = _planning_time - used_time.count() - 0.008;
 
       // Copy solver parameters and initial guess
       *solver->solver = *_solver; // Copy the main solver
@@ -81,33 +80,31 @@ namespace MPCPlanner
         solver->scenario_module.setParameters(data, k);
       }
 
-      // int exit_code = _solver->solve();
-      // int exit_code = _scenario_module->optimize(data); // Safe Horizon MPC
-      solver->solver->loadWarmstart();
+      solver->solver->loadWarmstart(); // Load the previous solution
 
       solver->exit_code = solver->scenario_module.optimize(data); // Safe Horizon MPC
     }
+    omp_set_dynamic(1);
 
+    // Retrieve the lowest cost solution
     double lowest_cost = 1e9;
-    ScenarioSolver *best_solver = nullptr;
+    _best_solver = nullptr;
     for (auto &solver : _scenario_solvers)
     {
       if (solver->exit_code == 1 && solver->solver->_info.pobj < lowest_cost)
       {
         lowest_cost = solver->solver->_info.pobj;
-        best_solver = solver.get();
+        _best_solver = solver.get();
       }
     }
-    if (best_solver == nullptr) // No feasible solution
+    if (_best_solver == nullptr) // No feasible solution
       return _scenario_solvers.front()->exit_code;
-    // auto &best_solver = *_scenario_solvers.front().solver;
 
-    _solver->_output = best_solver->solver->_output; // Load the solution into the main lmpcc solver
-    _solver->_info = best_solver->solver->_info;
-    _solver->_params = best_solver->solver->_params;
-    _solver->copySolverMemory(*(best_solver->solver)); /** @todo: Verify whether this is necessary */
+    _solver->_output = _best_solver->solver->_output; // Load the solution into the main lmpcc solver
+    _solver->_info = _best_solver->solver->_info;
+    _solver->_params = _best_solver->solver->_params;
 
-    return best_solver->exit_code;
+    return _best_solver->exit_code;
   }
 
   void ScenarioConstraints::onDataReceived(RealTimeData &data, std::string &&data_name)
@@ -119,7 +116,7 @@ namespace MPCPlanner
       if (_SCENARIO_CONFIG.enable_safe_horizon_)
       {
 #pragma omp parallel for num_threads(4)
-        for (auto &solver : _scenario_solvers)
+        for (auto &solver : _scenario_solvers) // Draw different samples for all solvers
         {
           solver->scenario_module.GetSampler().IntegrateAndTranslateToMeanAndVariance(data.dynamic_obstacles, _solver->dt);
         }
@@ -132,7 +129,6 @@ namespace MPCPlanner
 
     if (data.dynamic_obstacles.size() != CONFIG["max_obstacles"].as<unsigned int>())
     {
-
       missing_data += "Obstacles ";
       return false;
     }
@@ -161,14 +157,22 @@ namespace MPCPlanner
   void ScenarioConstraints::visualize(const RealTimeData &data, const ModuleData &module_data)
   {
     (void)module_data;
+    bool visualize_all = false;
 
     LOG_MARK("ScenarioConstraints::visualize");
 
-    for (auto &solver : _scenario_solvers)
-      solver->scenario_module.visualize(data);
+    if (visualize_all)
+    {
+      for (auto &solver : _scenario_solvers)
+        solver->scenario_module.visualize(data);
+    }
+    else if (_best_solver != nullptr)
+    {
+
+      _best_solver->scenario_module.visualize(data);
+    }
 
     // Visualize optimized trajectories
-    // Visualize the optimized trajectory
     for (auto &solver : _scenario_solvers)
     {
       if (solver->exit_code == 1)
