@@ -12,7 +12,7 @@
   <arg name="pedestrian_scenario" default="open_space/24.xml" />
 
   <rosparam command="load" file="$(find mpc_planner_jackalsimulator)/config/guidance_planner.yaml"/>
-  <rosparam command="load" file="$(find scenario_module)/config/params.yaml"/>
+  <!-- <rosparam command="load" file="$(find scenario_module)/config/params.yaml"/> -->
   <node pkg="mpc_planner_jackalsimulator" type="jackalsimulator_planner" name="jackalsimulator_planner" required="true" respawn="false" output="screen">
         <remap from="/input/state_pose" to="robot_state"/>
         <remap from="/input/goal" to="/move_base_simple/goal"/>
