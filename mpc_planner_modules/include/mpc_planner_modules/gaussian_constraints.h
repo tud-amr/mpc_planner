@@ -19,6 +19,7 @@ namespace MPCPlanner
     void visualize(const RealTimeData &data, const ModuleData &module_data) override;
 
   private:
+    double _dummy_x{0.}, _dummy_y{0.};
   };
 }
 #endif // __GAUSSIAN_CONSTRAINTS_H_

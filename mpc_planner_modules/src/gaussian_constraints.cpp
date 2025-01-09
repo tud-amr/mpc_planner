@@ -24,6 +24,8 @@ namespace MPCPlanner
     (void)state;
     (void)data;
     (void)module_data;
+    _dummy_x = state.get("x") + 100.;
+    _dummy_y = state.get("y") + 100.;
   }
 
   void GaussianConstraints::setParameters(const RealTimeData &data, const ModuleData &module_data, int k)
@@ -33,6 +35,21 @@ namespace MPCPlanner
     setSolverParameterEgoDiscRadius(k, _solver->_params, CONFIG["robot_radius"].as<double>());
     for (int d = 0; d < CONFIG["n_discs"].as<int>(); d++)
       setSolverParameterEgoDiscOffset(k, _solver->_params, data.robot_area[d].offset, d);
+
+    if (k == 0) // Dummies
+    {
+
+      for (size_t i = 0; i < data.dynamic_obstacles.size(); i++)
+      {
+        setSolverParameterGaussianObstX(k, _solver->_params, _dummy_x, i);
+        setSolverParameterGaussianObstY(k, _solver->_params, _dummy_y, i);
+        setSolverParameterGaussianObstMajor(k, _solver->_params, 0.1, i);
+        setSolverParameterGaussianObstMinor(k, _solver->_params, 0.1, i);
+        setSolverParameterGaussianObstRisk(k, _solver->_params, 0.05, i);
+        setSolverParameterGaussianObstR(k, _solver->_params, 0.1, i);
+      }
+      return;
+    }
 
     std::vector<DynamicObstacle> copied_obstacles = data.dynamic_obstacles;
 

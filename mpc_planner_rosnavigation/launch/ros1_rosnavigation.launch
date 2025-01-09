@@ -10,6 +10,7 @@
   <arg name="pedestrian_scenario" default="open_space/24.xml" />
 
   <rosparam command="load" file="$(find mpc_planner_rosnavigation)/config/guidance_planner.yaml"/>
+  <!-- <rosparam command="load" file="$(find scenario_module)/config/params.yaml"/> -->
 
   <include file="$(find mpc_planner_rosnavigation)/launch/odom_navigation_demo.launch"/>
 

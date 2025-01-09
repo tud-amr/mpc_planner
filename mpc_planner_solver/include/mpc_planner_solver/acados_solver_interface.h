@@ -156,6 +156,8 @@ namespace MPCPlanner
         ocp_nlp_solver *_nlp_solver;
         void *_nlp_opts;
 
+        int _exit_code_one_iter{-1};
+
     public:
         int _solver_id;
 
@@ -184,6 +186,11 @@ namespace MPCPlanner
         void reset();
 
         int solve();
+
+        // One iteration a time interface
+        void initializeOneIteration();
+        int solveOneIteration();
+        int completeOneIteration();
 
         // PARAMETERS //
         bool hasParameter(std::string &&parameter);
