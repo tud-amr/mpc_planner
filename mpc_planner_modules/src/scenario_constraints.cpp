@@ -113,6 +113,11 @@ namespace MPCPlanner
 
     if (data_name == "dynamic obstacles")
     {
+      // Check if uncertainty was provided
+      for (auto &obs : data.dynamic_obstacles)
+      {
+        ROSTOOLS_ASSERT(obs.prediction.type != PredictionType::DETERMINISTIC, "When using Scenario Constraints, the predictions should have a non-zero uncertainty. If you are using pedestrian_simulator, set `process_noise` in config/configuration.yaml to a non-zero value to add uncertainty.");
+      }
       if (_SCENARIO_CONFIG.enable_safe_horizon_)
       {
 #pragma omp parallel for num_threads(4)

@@ -16,6 +16,12 @@ This package implements Model Predictive Control (MPC) for motion planning in 2D
 
 This repository includes our implementation of **Topology-Driven MPC** (**T-MPC++**) that computes multiple distinct trajectories in parallel, each passing dynamic obstacles differently. For a brief overview of the method, see the [Paper website](https://autonomousrobots.nl/paper_websites/topology-driven-mpc).
 
+---
+>**Update:** This repository now also contains our code for Safe Horizon MPC (SH-MPC) associated with the following publication:
+
+**Journal Paper:** O. de Groot, L. Ferranti, D. M. Gavrila, and J. Alonso-Mora, *Scenario-Based Trajectory Optimization with Bounded Probability of Collision.* **International Journal of Robotics Research (IJRR)**, 2024. Preprint: https://arxiv.org/pdf/2307.01070
+
+SH-MPC can handle non Gaussian uncertainty in the motion predictions of obstacles. For more details on how to use it in `mpc_planner`, see https://github.com/oscardegroot/scenario_module.
 
 Simulated Mobile Robot | Real-World Mobile Robot |  Static and Dynamic Obstacles |
 | -------------- | -------------- | -------------- |
@@ -59,13 +65,15 @@ Implemented MPC **modules** include:
   - Linearized constraints
 - **Chance Constrained Obstacle Avoidance Constraints** - Incorporating uncertainty in the future motion of humans
   - Avoiding obstacle predictions modeled as Gaussians ([CC-MPC](https://ieeexplore.ieee.org/abstract/document/8613928))
-  - Avoiding obstacle predictions modeled as Gaussian Mixtures ([Safe Horizon MPC](https://arxiv.org/pdf/2307.01070) *publication pending*)
+  - Avoiding obstacle predictions modeled as Gaussian Mixtures ([Safe Horizon MPC](https://arxiv.org/pdf/2307.01070))
 - **Static Obstacle Avoidance Constraints** - Avoiding non-moving obstacles in the environment
   - Using `decomp_util` (see [original paper](https://ieeexplore.ieee.org/abstract/document/7839930) and [modified implementation](https://arxiv.org/pdf/2406.11506))
 
 These functionalities can be stacked to implement the desired behavior (see [Configuration](#configuration)). 
 
 The [**Topology-Driven MPC**](https://arxiv.org/pdf/2401.06021) [1] module parallelizes the above functionality over multiple distinct initial guesses, computing several trajectories that pass the obstacles differently.
+
+For more implementation details on [**SH-MPC**](https://arxiv.org/pdf/2307.01070) [2], see https://github.com/oscardegroot/scenario_module.
 
 ## Installation
 
@@ -255,7 +263,7 @@ You should see output indicating that the solver is being generated.
 
 
 ### Step 5: Build the planner
-Source the ROS workspace `source devel/setup.sh`. Then build with:
+Source your ROS distribution (e.g., `source /opt/ros/noetic/setup.bash`). Then build with:
 
 ```bash
 catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release # Release, Debug, RelWithDebInfo, MinSizeRel
@@ -353,6 +361,9 @@ If you found this repository useful, please cite our paper!
 
 - [1] **Journal Paper:** O. de Groot, L. Ferranti, D. M. Gavrila, and J. Alonso-Mora, *Topology-Driven Parallel Trajectory Optimization in Dynamic Environments.* **IEEE Transactions on Robotics (T-RO)** 2024. Available: https://doi.org/10.1109/TRO.2024.3475047
 
+If you use SH-MPC, please cite:
+
+- [2] **Journal Paper:** O. de Groot, L. Ferranti, D. M. Gavrila, and J. Alonso-Mora, *Scenario-Based Trajectory Optimization with Bounded Probability of Collision.* **International Journal of Robotics Research (IJRR)**, 2024. Preprint: https://arxiv.org/pdf/2307.01070
 
 ## Contributing
 We welcome issues and contributions! If you encounter any bugs, have suggestions for new features, or want to propose improvements, feel free to open an issue or pull request.

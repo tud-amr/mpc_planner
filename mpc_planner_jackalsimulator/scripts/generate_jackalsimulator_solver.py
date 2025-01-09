@@ -126,9 +126,16 @@ settings = load_settings()
 
 # model, modules = configuration_basic(settings)
 # model, modules = configuration_no_obstacles(settings)
-# model, modules = configuration_safe_horizon(settings)
+
+# NOTE: LMPCC - basic MPC with deterministic obstacle avoidance
 # model, modules = configuration_lmpcc(settings)
+
+# NOTE: T-MPC - Parallelized MPC optimizing trajectories with several distinct passing behaviors.
 model, modules = configuration_tmpc(settings)
+
+# NOTE: SH-MPC - MPC incorporating non Gaussian uncertainty in obstacle motion. 
+# More configuration parameters in `scenario_module/config/params.yaml`
+# model, modules = configuration_safe_horizon(settings)
 
 generate_solver(modules, model, settings)
 exit(0)
