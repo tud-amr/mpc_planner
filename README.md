@@ -135,6 +135,11 @@ cd ..
 cd pedestrian_simulator
 python3 switch_to_ros.py 1
 cd ..
+
+# For ROS1 only! The main branch is on ROS2.
+cd asr_rapidxml
+git checkout ros1
+cd ..
 ```
 
 ### Step 3: Install dependencies
