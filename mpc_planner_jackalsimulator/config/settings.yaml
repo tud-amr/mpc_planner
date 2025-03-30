@@ -45,6 +45,9 @@ linearized_constraints:
 scenario_constraints:
   parallel_solvers: 4
 
+decomp:
+  max_constraints: 24
+
 road:
   two_way: false # Does road go two ways?
   width: 6.0 # [m]
