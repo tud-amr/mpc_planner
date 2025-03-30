@@ -45,6 +45,10 @@ linearized_constraints:
 scenario_constraints:
   parallel_solvers: 1
 
+decomp:
+  range: 2.0
+  max_constraints: 12
+
 road:
   two_way: false
   width: 7.0
