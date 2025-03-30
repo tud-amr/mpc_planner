@@ -46,7 +46,8 @@ scenario_constraints:
   parallel_solvers: 4
 
 decomp:
-  max_constraints: 24
+  range: 2.0
+  max_constraints: 12
 
 road:
   two_way: false # Does road go two ways?
